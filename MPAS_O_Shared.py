@@ -144,6 +144,12 @@ def ocn_init_routines_compute_max_level(myMPAS_O,printValues=False):
         for k in range(0,myMPAS_O.nVertLevels):
             if myMPAS_O.maxLevelVertexBot[iVertex] >= k:
                 myMPAS_O.vertexMask[iVertex,k] = 1
+    for iEdge in range(0,myMPAS_O.nEdges):
+        if myMPAS_O.boundaryEdge[iEdge,0] == 1.0:
+            myMPAS_O.nNonPeriodicBoundaryEdges += 1
+    for iCell in range(0,myMPAS_O.nCells):
+        if myMPAS_O.boundaryCell[iCell] == 1.0:
+            myMPAS_O.nNonPeriodicBoundaryCells += 1
     if printValues:
         print('maxLevelEdgeTop is:')
         print(myMPAS_O.maxLevelEdgeTop)
@@ -155,10 +161,12 @@ def ocn_init_routines_compute_max_level(myMPAS_O,printValues=False):
         print(myMPAS_O.maxLevelVertexTop)
         print('boundaryEdge is:')
         print(myMPAS_O.boundaryEdge[:,0])
+        print('The number of non-periodic boundary edges is %d.' %(myMPAS_O.nNonPeriodicBoundaryEdges))
         print('edgeMask is:')
         print(myMPAS_O.edgeMask[:,0])
         print('boundaryCell is:')
         print(myMPAS_O.boundaryCell[:,0])
+        print('The number of non-periodic boundary cells is %d.' %(myMPAS_O.nNonPeriodicBoundaryCells))
         print('boundaryVertex is:')
         print(myMPAS_O.boundaryVertex[:,0])
         print('cellMask is:')
@@ -185,8 +193,9 @@ if test_ocn_init_routines_compute_max_level_2:
     mesh_file_name = 'mesh.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O)
 
 
@@ -200,8 +209,9 @@ if test_ocn_init_routines_compute_max_level_3:
     mesh_file_name = 'mesh_P.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -215,8 +225,9 @@ if test_ocn_init_routines_compute_max_level_4:
     mesh_file_name = 'mesh_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -274,8 +285,9 @@ if test_ocn_init_routines_setup_sign_and_index_fields_2:
     mesh_file_name = 'mesh.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -289,8 +301,9 @@ if test_ocn_init_routines_setup_sign_and_index_fields_3:
     mesh_file_name = 'mesh_P.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -304,8 +317,9 @@ if test_ocn_init_routines_setup_sign_and_index_fields_4:
     mesh_file_name = 'mesh_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -345,8 +359,9 @@ if test_ocn_relativeVorticity_circulation_2:
     mesh_file_name = 'mesh.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -360,8 +375,9 @@ if test_ocn_relativeVorticity_circulation_3:
     mesh_file_name = 'mesh_P.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -375,8 +391,9 @@ if test_ocn_relativeVorticity_circulation_4:
     mesh_file_name = 'mesh_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -466,14 +483,15 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
                     myMPAS_O.kineticEnergyCell[iCell,k] += 0.25*r_tmp*dcEdge_temp*normalVelocity[iEdge,k]
     if compute_tangentialVelocity:
         for iEdge in range(0,myMPAS_O.nEdges):
-            myMPAS_O.tangentialVelocity[iEdge,:] = 0.0
-            # Compute tangential velocities
-            for i in range(0,myMPAS_O.nEdgesOnEdge[iEdge]):
-                eoeID = myMPAS_O.edgesOnEdge[iEdge,i]
-                eoe = eoeID - 1
-                weightsOnEdge_temp = myMPAS_O.weightsOnEdge[iEdge,i]
-                for k in range(0,myMPAS_O.maxLevelEdgeTop[iEdge]+1):
-                    myMPAS_O.tangentialVelocity[iEdge,k] += weightsOnEdge_temp*normalVelocity[eoe,k]
+            if myMPAS_O.boundaryEdge[iEdge] == 0: # i.e. if the edge is an interior one
+                myMPAS_O.tangentialVelocity[iEdge,:] = 0.0
+                # Compute tangential velocities
+                for i in range(0,myMPAS_O.nEdgesOnEdge[iEdge]):
+                    eoeID = myMPAS_O.edgesOnEdge[iEdge,i]
+                    eoe = eoeID - 1
+                    weightsOnEdge_temp = myMPAS_O.weightsOnEdge[iEdge,i]
+                    for k in range(0,myMPAS_O.maxLevelEdgeTop[iEdge]+1):
+                        myMPAS_O.tangentialVelocity[iEdge,k] += weightsOnEdge_temp*normalVelocity[eoe,k]
     if (compute_normalizedRelativeVorticityVertex_normalizedPlanetaryVorticityVertex or
         compute_normalizedRelativeVorticityEdge_normalizedPlanetaryVorticityEdge or
         compute_normalizedRelativeVorticityCell):
@@ -541,8 +559,9 @@ if test_ocn_diagnostic_solve_2:
     mesh_file_name = 'mesh.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
@@ -558,8 +577,9 @@ if test_ocn_diagnostic_solve_3:
     mesh_file_name = 'mesh_P.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
@@ -575,8 +595,9 @@ if test_ocn_diagnostic_solve_4:
     mesh_file_name = 'mesh_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear,periodicity)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)

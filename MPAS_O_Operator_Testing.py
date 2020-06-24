@@ -8,6 +8,8 @@
 # In[1]:
 
 import numpy as np
+import sympy as sp
+from sympy.utilities.lambdify import lambdify
 import io as inputoutput
 import os
 import sys
@@ -21,40 +23,28 @@ with io.capture_output() as captured:
 # In[2]:
 
 def surface_elevation_1(lX,lY,x,y):
-    xCenter = 0.5*lX
-    yCenter = 0.5*lY
-    RangeX = 0.2*lX
-    RangeY = 0.2*lY
     eta0 = 0.1
-    eta = eta0*np.exp(-(((x - xCenter)/RangeX)**2.0 + ((y - yCenter)/RangeY)**2.0))
+    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
     return eta
 
 
 # In[3]:
 
 def surface_elevation_gradient_1(lX,lY,x,y):
-    eta = surface_elevation(lX,lY,x,y)
-    xCenter = 0.5*lX
-    yCenter = 0.5*lY
-    RangeX = 0.2*lX
-    RangeY = 0.2*lY
-    eta_x = -2.0*(x - xCenter)*eta/(RangeX**2.0)
-    eta_y = -2.0*(y - yCenter)*eta/(RangeY**2.0)
+    eta0 = 0.1
+    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
+    eta_x = eta0*(2.0*np.pi/lX)*np.cos(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
+    eta_y = eta0*(2.0*np.pi/lY)*np.sin(2.0*np.pi*x/lX)*np.cos(2.0*np.pi*y/lY)
     return eta_x, eta_y
 
 
 # In[4]:
 
 def surface_elevation_laplacian_1(lX,lY,x,y):
-    eta = surface_elevation(lX,lY,x,y)
-    xCenter = 0.5*lX
-    yCenter = 0.5*lY
-    RangeX = 0.2*lX
-    RangeY = 0.2*lY
-    eta_x = -2.0*(x - xCenter)*eta/(RangeX**2.0)
-    eta_y = -2.0*(y - yCenter)*eta/(RangeY**2.0)
-    eta_xx = -2.0/(RangeX**2.0)*((x - xCenter)*eta_x + eta)
-    eta_yy = -2.0/(RangeY**2.0)*((y - yCenter)*eta_y + eta)
+    eta0 = 0.1
+    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
+    eta_xx = -(2.0*np.pi/lX)**2.0*eta
+    eta_yy = -(2.0*np.pi/lY)**2.0*eta
     laplacian = eta_xx + eta_yy
     return laplacian
 
@@ -69,60 +59,93 @@ def problem_specific_prefix_1():
 # In[6]:
 
 def surface_elevation_2(lX,lY,x,y):
+    xCenter = 0.5*lX
+    yCenter = 0.5*lY
+    RangeX = 0.2*lX
+    RangeY = 0.2*lY
     eta0 = 0.1
-    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
+    eta = eta0*np.exp(-((np.sin(2.0*np.pi*x/lX))**2.0 + (np.sin(2.0*np.pi*y/lY))**2.0))
     return eta
 
 
 # In[7]:
 
-def surface_elevation_gradient_2(lX,lY,x,y):
+def surface_elevation_gradient_2_functional_form():
+    lX = sp.Symbol('lX')
+    lY = sp.Symbol('lY')
+    x = sp.Symbol('x')
+    y = sp.Symbol('y')
     eta0 = 0.1
-    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
-    eta_x = eta0*(2.0*np.pi/lX)*np.cos(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
-    eta_y = eta0*(2.0*np.pi/lY)*np.sin(2.0*np.pi*x/lX)*np.cos(2.0*np.pi*y/lY)
-    return eta_x, eta_y
+    eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
+    eta_x = sp.diff(eta,x)
+    eta_y = sp.diff(eta,y)
+    eta_x_np = lambdify((lX,lY,x,y), eta_x, modules=["numpy","sympy"])
+    eta_y_np = lambdify((lX,lY,x,y), eta_y, modules=["numpy","sympy"])
+    return eta_x_np, eta_y_np
 
 
 # In[8]:
 
-def surface_elevation_laplacian_2(lX,lY,x,y):
-    eta0 = 0.1
-    eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
-    eta_xx = -(2.0*np.pi/lX)**2.0*eta
-    eta_yy = -(2.0*np.pi/lY)**2.0*eta
-    laplacian = eta_xx + eta_yy
-    return laplacian
+eta_x_np, eta_y_np = surface_elevation_gradient_2_functional_form()
 
 
 # In[9]:
+
+def surface_elevation_gradient_2(lX,lY,x,y):
+    eta_x = eta_x_np(lX,lY,x,y)
+    eta_y = eta_y_np(lX,lY,x,y)
+    return eta_x, eta_y
+
+
+# In[10]:
+
+def surface_elevation_laplacian_2_functional_form():
+    lX = sp.Symbol('lX')
+    lY = sp.Symbol('lY')
+    x = sp.Symbol('x')
+    y = sp.Symbol('y')
+    eta0 = 0.1
+    eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
+    eta_xx = sp.diff(eta,x,x)
+    eta_yy = sp.diff(eta,y,y)
+    laplacian = eta_xx + eta_yy
+    laplacian_np = lambdify((lX,lY,x,y), laplacian, modules=["numpy","sympy"])
+    return laplacian_np
+
+
+# In[11]:
+
+surface_elevation_laplacian_2 = surface_elevation_laplacian_2_functional_form()
+
+
+# In[12]:
 
 def problem_specific_prefix_2():
     prefix = 'Expt2_'
     return prefix
 
 
-# In[10]:
-
-surface_elevation = surface_elevation_2
-
-
-# In[11]:
-
-surface_elevation_gradient = surface_elevation_gradient_2
-
-
-# In[12]:
-
-surface_elevation_laplacian = surface_elevation_laplacian_2
-
-
 # In[13]:
 
-problem_specific_prefix = problem_specific_prefix_2
+surface_elevation = surface_elevation_1
 
 
 # In[14]:
+
+surface_elevation_gradient = surface_elevation_gradient_1
+
+
+# In[15]:
+
+surface_elevation_laplacian = surface_elevation_laplacian_1
+
+
+# In[16]:
+
+problem_specific_prefix = problem_specific_prefix_1
+
+
+# In[17]:
 
 def velocity(lX,lY,x,y):
     eta_x, eta_y = surface_elevation_gradient(lX,lY,x,y) 
@@ -133,7 +156,7 @@ def velocity(lX,lY,x,y):
     return u, v
 
 
-# In[15]:
+# In[18]:
 
 def velocity_curl(lX,lY,x,y):
     f = 10.0**(-4.0)
@@ -142,7 +165,7 @@ def velocity_curl(lX,lY,x,y):
     return zeta
 
 
-# In[16]:
+# In[19]:
 
 def ComputeNormalAndTangentialComponentsAtEdge(myVectorQuantityAtEdge,angleEdge,returningComponent):
     nEdges = len(angleEdge)
@@ -167,7 +190,7 @@ def ComputeNormalAndTangentialComponentsAtEdge(myVectorQuantityAtEdge,angleEdge,
         return myVectorQuantityAtEdgeNormalComponent, myVectorQuantityAtEdgeTangentialComponent
 
 
-# In[17]:
+# In[20]:
 
 def analytical_gradient_operator(nEdges,myScalarQuantityGradientComponentsAtEdge,angleEdge):
     myScalarQuantityGradientNormalToEdge = (
@@ -175,7 +198,7 @@ def analytical_gradient_operator(nEdges,myScalarQuantityGradientComponentsAtEdge
     return myScalarQuantityGradientNormalToEdge
 
 
-# In[18]:
+# In[21]:
 
 def numerical_gradient_operator(myMPAS_O,myScalarQuantity):
     myScalarQuantityGradientNormalToEdge = np.zeros(myMPAS_O.nEdges)
@@ -189,14 +212,15 @@ def numerical_gradient_operator(myMPAS_O,myScalarQuantity):
     return myScalarQuantityGradientNormalToEdge
 
 
-# In[19]:
+# In[22]:
 
 def plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory):
+                                     periodicity,output_directory):
     if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
     else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
     prefix = problem_specific_prefix()
     mySSH = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
@@ -219,15 +243,16 @@ def plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,b
                                                           'normalVelocity',True,prefix+'normalVelocity',False)
 
 
-# In[20]:
+# In[23]:
 
 do_plot_ssh_velocity_normalVelocity_1 = False
 if do_plot_ssh_velocity_normalVelocity_1:
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    plot_ssh_velocity_normalVelocity(True,True,' ',' ',' ',output_directory)
+    plot_ssh_velocity_normalVelocity(True,True,' ',' ',' ',periodicity,output_directory)
 
 
-# In[21]:
+# In[24]:
 
 do_plot_ssh_velocity_normalVelocity_2 = False
 if do_plot_ssh_velocity_normalVelocity_2:
@@ -236,19 +261,21 @@ if do_plot_ssh_velocity_normalVelocity_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory)
+                                     periodicity,output_directory)
 
 
-# In[22]:
+# In[25]:
 
 def test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory):
+                                     periodicity,output_directory):
     if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
     else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
     prefix = problem_specific_prefix()
     ssh = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
@@ -300,15 +327,17 @@ def test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,b
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
-# In[23]:
+# In[26]:
 
 do_test_numerical_gradient_operator_1 = False
 if do_test_numerical_gradient_operator_1:
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    dc, MaxErrorNorm, L2ErrorNorm = test_numerical_gradient_operator(True,True,' ',' ',' ',output_directory)
+    dc, MaxErrorNorm, L2ErrorNorm = test_numerical_gradient_operator(True,True,' ',' ',' ',periodicity,
+                                                                     output_directory)
 
 
-# In[24]:
+# In[27]:
 
 do_test_numerical_gradient_operator_2 = False
 if do_test_numerical_gradient_operator_2:
@@ -317,13 +346,14 @@ if do_test_numerical_gradient_operator_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory))
+                                     periodicity,output_directory))
 
 
-# In[25]:
+# In[28]:
 
 do_test_numerical_gradient_operator_3 = False
 if do_test_numerical_gradient_operator_3:
@@ -332,13 +362,14 @@ if do_test_numerical_gradient_operator_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory))
+                                     periodicity,output_directory))
 
 
-# In[26]:
+# In[29]:
 
 do_test_numerical_gradient_operator_4 = False
 if do_test_numerical_gradient_operator_4:
@@ -347,28 +378,29 @@ if do_test_numerical_gradient_operator_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     output_directory))
+                                     periodicity,output_directory))
 
 
-# In[27]:
+# In[30]:
 
-def convergence_test_numerical_gradient_operator(problem_type,mesh_directory,output_directory):
+def convergence_test_numerical_gradient_operator(periodicity,mesh_directory,output_directory):
     nCases = 5
     dc = np.zeros(nCases)
     MaxErrorNorm = np.zeros(nCases)
     L2ErrorNorm = np.zeros(nCases)
     prefix = problem_specific_prefix()
     for iCase in range(0,nCases):
-        if problem_type == 'Periodic':
+        if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif problem_type == 'NonPeriodic':
+        elif periodicity == 'NonPeriodic_x':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
-        test_numerical_gradient_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,
+        test_numerical_gradient_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,periodicity,
                                          output_directory))
     A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
@@ -397,27 +429,27 @@ def convergence_test_numerical_gradient_operator(problem_type,mesh_directory,out
                                         FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
-# In[28]:
+# In[31]:
 
 do_convergence_test_numerical_gradient_operator_1 = False
 if do_convergence_test_numerical_gradient_operator_1:
-    problem_type = 'Periodic'
+    periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    convergence_test_numerical_gradient_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_gradient_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[29]:
+# In[32]:
 
 do_convergence_test_numerical_gradient_operator_2 = False
 if do_convergence_test_numerical_gradient_operator_2:
-    problem_type = 'NonPeriodic'
+    periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    convergence_test_numerical_gradient_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_gradient_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[30]:
+# In[33]:
 
 def numerical_divergence_operator(myMPAS_O,myVectorQuantityNormalToEdge):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
@@ -434,14 +466,15 @@ def numerical_divergence_operator(myMPAS_O,myVectorQuantityNormalToEdge):
     return myVectorQuantityDivergence
 
 
-# In[31]:
+# In[34]:
 
 def test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,output_directory):
+                                       mesh_file_name,periodicity,output_directory):
     if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
     else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
     prefix = problem_specific_prefix()
     analyticalSSHLaplacian = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
@@ -480,15 +513,17 @@ def test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
-# In[32]:
+# In[35]:
 
 do_test_numerical_divergence_operator_1 = False
 if do_test_numerical_divergence_operator_1:
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    dc, MaxErrorNorm, L2ErrorNorm = test_numerical_divergence_operator(True,True,' ',' ',' ',output_directory)
+    dc, MaxErrorNorm, L2ErrorNorm = test_numerical_divergence_operator(True,True,' ',' ',' ',periodicity,
+                                                                       output_directory)
 
 
-# In[33]:
+# In[36]:
 
 do_test_numerical_divergence_operator_2 = False
 if do_test_numerical_divergence_operator_2:
@@ -497,13 +532,14 @@ if do_test_numerical_divergence_operator_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,output_directory))
+                                       mesh_file_name,periodicity,output_directory))
 
 
-# In[34]:
+# In[37]:
 
 do_test_numerical_divergence_operator_3 = False
 if do_test_numerical_divergence_operator_3:
@@ -512,13 +548,14 @@ if do_test_numerical_divergence_operator_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,output_directory))
+                                       mesh_file_name,periodicity,output_directory))
 
 
-# In[35]:
+# In[38]:
 
 do_test_numerical_divergence_operator_4 = False
 if do_test_numerical_divergence_operator_4:
@@ -527,29 +564,30 @@ if do_test_numerical_divergence_operator_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,output_directory))
+                                       mesh_file_name,periodicity,output_directory))
 
 
-# In[36]:
+# In[39]:
 
-def convergence_test_numerical_divergence_operator(problem_type,mesh_directory,output_directory):
+def convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory):
     nCases = 5
     dc = np.zeros(nCases)
     MaxErrorNorm = np.zeros(nCases)
     L2ErrorNorm = np.zeros(nCases)
     prefix = problem_specific_prefix()
     for iCase in range(0,nCases):
-        if problem_type == 'Periodic':
+        if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif problem_type == 'NonPeriodic':
+        elif periodicity == 'NonPeriodic_x':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_numerical_divergence_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                           output_directory))
+                                           periodicity,output_directory))
     A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
     y = m*(np.log10(1.0/dc)) + c
@@ -577,37 +615,37 @@ def convergence_test_numerical_divergence_operator(problem_type,mesh_directory,o
                                         FigureTitle,False,drawGrid=True,legendWithinBox=True)    
 
 
-# In[37]:
+# In[40]:
 
 do_convergence_test_numerical_divergence_operator_1 = False
 if do_convergence_test_numerical_divergence_operator_1:
-    problem_type = 'Periodic'
+    periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    convergence_test_numerical_divergence_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[38]:
+# In[41]:
 
 do_convergence_test_numerical_divergence_operator_2 = False
 if do_convergence_test_numerical_divergence_operator_2:
-    problem_type = 'NonPeriodic'
+    periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    convergence_test_numerical_divergence_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[39]:
+# In[42]:
 
-def numerical_curl_operator(myMPAS_O,myVectorQuantityNormalToEdge,problem_type='Periodic'):
+def numerical_curl_operator(myMPAS_O,myVectorQuantityNormalToEdge,periodicity='Periodic'):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
-    if problem_type == 'NonPeriodic':
+    if periodicity == 'NonPeriodic_x':
         MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
     myVectorQuantityCurlAtVertex = np.zeros(myMPAS_O.nVertices)
     myVectorQuantityCurlAtCellCenter = np.zeros(myMPAS_O.nCells)
     for iVertex in range(0,myMPAS_O.nVertices):
-        if problem_type == 'NonPeriodic' and myMPAS_O.boundaryVertex[iVertex] == 1.0:
+        if periodicity == 'NonPeriodic_x' and myMPAS_O.boundaryVertex[iVertex] == 1.0:
             myVectorQuantityCurlAtVertex[iVertex] = (
             velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xVertex[iVertex],myMPAS_O.yVertex[iVertex]))
         else:
@@ -629,14 +667,15 @@ def numerical_curl_operator(myMPAS_O,myVectorQuantityNormalToEdge,problem_type='
     return myVectorQuantityCurlAtVertex, myVectorQuantityCurlAtCellCenter
 
 
-# In[40]:
+# In[43]:
 
 def test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                 output_directory,problem_type='Periodic'):
+                                 periodicity,output_directory):
     if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
     else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
     prefix = problem_specific_prefix()
     analyticalVelocityCurlAtVertex = np.zeros(myMPAS_O.nVertices)
     for iVertex in range(0,myMPAS_O.nVertices):
@@ -666,7 +705,7 @@ def test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_
     analyticalVelocityNormalToEdge = (
     ComputeNormalAndTangentialComponentsAtEdge(analyticalVelocityComponentsAtEdge,myMPAS_O.angleEdge,'normal'))
     numericalVelocityCurlAtVertex, numericalVelocityCurlAtCellCenter = (
-    numerical_curl_operator(myMPAS_O,analyticalVelocityNormalToEdge,problem_type))
+    numerical_curl_operator(myMPAS_O,analyticalVelocityNormalToEdge,periodicity))
     if plotFigures:
         Title = 'Numerical Velocity Curl At Vertex'
         FigureTitle = prefix + 'VelocityCurlAtVertex_Numerical'
@@ -705,16 +744,17 @@ def test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_
     return returningArguments
 
 
-# In[41]:
+# In[44]:
 
 do_test_numerical_curl_operator_1 = False
 if do_test_numerical_curl_operator_1:
+    periodicity='Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
-    test_numerical_curl_operator(True,True,' ',' ',' ',output_directory))
+    test_numerical_curl_operator(True,True,' ',' ',' ',periodicity,output_directory))
 
 
-# In[42]:
+# In[45]:
 
 do_test_numerical_curl_operator_2 = False
 if do_test_numerical_curl_operator_2:
@@ -723,14 +763,14 @@ if do_test_numerical_curl_operator_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    problem_type = 'NonPeriodic'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                 output_directory,problem_type))
+                                 periodicity,output_directory))
 
 
-# In[43]:
+# In[46]:
 
 do_test_numerical_curl_operator_3 = False
 if do_test_numerical_curl_operator_3:
@@ -739,13 +779,14 @@ if do_test_numerical_curl_operator_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    periodicity='Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                 output_directory))
+                                 periodicity,output_directory))
 
 
-# In[44]:
+# In[47]:
 
 do_test_numerical_curl_operator_4 = False
 if do_test_numerical_curl_operator_4:
@@ -754,16 +795,16 @@ if do_test_numerical_curl_operator_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    problem_type = 'NonPeriodic'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                 output_directory,problem_type))
+                                 periodicity,output_directory))
 
 
-# In[45]:
+# In[48]:
 
-def convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_directory):
+def convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory):
     nCases = 5
     dc = np.zeros(nCases)
     MaxErrorNorm_Vertex = np.zeros(nCases)
@@ -772,15 +813,15 @@ def convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_
     L2ErrorNorm_CellCenter = np.zeros(nCases)    
     prefix = problem_specific_prefix()
     for iCase in range(0,nCases):
-        if problem_type == 'Periodic':
+        if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif problem_type == 'NonPeriodic':
+        elif periodicity == 'NonPeriodic_x':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         [dc[iCase], MaxErrorNorm_Vertex[iCase], L2ErrorNorm_Vertex[iCase], MaxErrorNorm_CellCenter[iCase], 
          L2ErrorNorm_CellCenter[iCase]] = test_numerical_curl_operator(False,False,mesh_directory,
                                                                        base_mesh_file_name,mesh_file_name,
-                                                                       output_directory,problem_type)
+                                                                       periodicity,output_directory)
     A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm_Vertex))[0]
     y = m*(np.log10(1.0/dc)) + c
@@ -832,34 +873,34 @@ def convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_
                                         True,FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
-# In[46]:
+# In[49]:
 
 do_convergence_test_numerical_curl_operator_1 = False
 if do_convergence_test_numerical_curl_operator_1:
-    problem_type = 'Periodic'
+    periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[47]:
+# In[50]:
 
 do_convergence_test_numerical_curl_operator_2 = False
 if do_convergence_test_numerical_curl_operator_2:
-    problem_type = 'NonPeriodic'
+    periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_directory)
+    convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[48]:
+# In[51]:
 
-def numerical_tangential_velocity(myMPAS_O,myNormalVelocity,problem_type='Periodic'):
-    if problem_type == 'NonPeriodic':
+def numerical_tangential_velocity(myMPAS_O,myNormalVelocity,periodicity='Periodic'):
+    if periodicity == 'NonPeriodic_x':
         MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
     myTangentialVelocity = np.zeros(myMPAS_O.nEdges)
     for iEdge in range(0,myMPAS_O.nEdges):
-        if problem_type == 'NonPeriodic' and myMPAS_O.boundaryEdge[iEdge] == 1.0:
+        if periodicity == 'NonPeriodic_x' and myMPAS_O.boundaryEdge[iEdge] == 1.0:
             u, v = velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge])
             myTangentialVelocity[iEdge] = v*np.cos(myMPAS_O.angleEdge[iEdge]) - u*np.sin(myMPAS_O.angleEdge[iEdge])
         else:
@@ -873,14 +914,15 @@ def numerical_tangential_velocity(myMPAS_O,myNormalVelocity,problem_type='Period
     return myTangentialVelocity
 
 
-# In[49]:
+# In[52]:
 
 def test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                             output_directory,problem_type='Periodic'):
+                             periodicity,output_directory):
     if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
     else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name)
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
     prefix = problem_specific_prefix()
     analyticalVelocityComponentsAtEdge = np.zeros((myMPAS_O.nEdges,2))
     analyticalNormalVelocity = np.zeros(myMPAS_O.nEdges)
@@ -896,7 +938,7 @@ def test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                           analyticalTangentialVelocity,300,False,[0.0,0.0],'x',10,
                                                           'y',10,Title,True,FigureTitle,False) 
-    numericalTangentialVelocity = numerical_tangential_velocity(myMPAS_O,analyticalNormalVelocity,problem_type)
+    numericalTangentialVelocity = numerical_tangential_velocity(myMPAS_O,analyticalNormalVelocity,periodicity)
     if plotFigures:
         Title = 'Numerical Tangential Velocity'
         FigureTitle = prefix + 'TangentialVelocity_Numerical'
@@ -917,15 +959,16 @@ def test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
-# In[50]:
+# In[53]:
 
 do_test_tangential_velocity_1 = False
 if do_test_tangential_velocity_1:
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    dc, MaxErrorNorm, L2ErrorNorm = test_tangential_velocity(True,True,' ',' ',' ',output_directory)
+    dc, MaxErrorNorm, L2ErrorNorm = test_tangential_velocity(True,True,' ',' ',' ',periodicity,output_directory)
 
 
-# In[51]:
+# In[54]:
 
 do_test_tangential_velocity_2 = False
 if do_test_tangential_velocity_2:
@@ -934,14 +977,14 @@ if do_test_tangential_velocity_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    problem_type = 'NonPeriodic'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                             output_directory,problem_type))
+                             periodicity,output_directory))
 
 
-# In[52]:
+# In[55]:
 
 do_test_tangential_velocity_3 = False
 if do_test_tangential_velocity_3:
@@ -950,13 +993,14 @@ if do_test_tangential_velocity_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                             output_directory))
+                             periodicity,output_directory))
 
 
-# In[53]:
+# In[56]:
 
 do_test_tangential_velocity_4 = False
 if do_test_tangential_velocity_4:
@@ -965,30 +1009,30 @@ if do_test_tangential_velocity_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    periodicity = 'NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    problem_type = 'NonPeriodic'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                             output_directory,problem_type))
+                             periodicity,output_directory))
 
 
-# In[54]:
+# In[57]:
 
-def convergence_test_tangential_velocity(problem_type,mesh_directory,output_directory):
+def convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory):
     nCases = 5
     dc = np.zeros(nCases)
     MaxErrorNorm = np.zeros(nCases)
     L2ErrorNorm = np.zeros(nCases)
     prefix = problem_specific_prefix()
     for iCase in range(0,nCases):
-        if problem_type == 'Periodic':
+        if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif problem_type == 'NonPeriodic':
+        elif periodicity == 'NonPeriodic_x':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
-        test_tangential_velocity(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,output_directory,
-                                 problem_type))
+        test_tangential_velocity(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,periodicity,
+                                 output_directory))
     A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
     y = m*(np.log10(1.0/dc)) + c
@@ -1016,21 +1060,21 @@ def convergence_test_tangential_velocity(problem_type,mesh_directory,output_dire
                                         FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
-# In[55]:
+# In[58]:
 
 do_convergence_test_tangential_velocity_1 = False
 if do_convergence_test_tangential_velocity_1:
-    problem_type = 'Periodic'
+    periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    convergence_test_tangential_velocity(problem_type,mesh_directory,output_directory)
+    convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)
 
 
-# In[56]:
+# In[59]:
 
 do_convergence_test_tangential_velocity_2 = False
 if do_convergence_test_tangential_velocity_2:
-    problem_type = 'NonPeriodic'
+    periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    convergence_test_tangential_velocity(problem_type,mesh_directory,output_directory)
+    convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)

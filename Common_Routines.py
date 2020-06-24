@@ -9,6 +9,10 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+usePlotly = True
+if usePlotly:
+    import plotly.graph_objects as go
+    from plotly.graph_objs import *
 import os
 
 
@@ -43,13 +47,13 @@ InitializeCharacterArrays()
 
 def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,color,marker,markersize,labels,
                           labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
-                          drawGrid=False):
+                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawGrid=False):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)    
-    fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     if marker:
         if plot_type == 'regular':
@@ -74,8 +78,12 @@ def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,col
             plt.loglog(x,y,linewidth=linewidth,linestyle=linestyle,color=color)
     plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
     plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
-    plt.xticks(fontsize=tickfontsizes[0])
-    plt.yticks(fontsize=tickfontsizes[1])
+    if useDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
     ax.set_title(title,fontsize=titlefontsize,y=1.035)
     if drawGrid:
         plt.grid()
@@ -93,7 +101,8 @@ def TestPythonPlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
     y = np.arange(0.0,20.0,2)
     PythonPlot1DSaveAsPNG('MPAS_O_Shallow_Water_Output','regular',x,y,2.0,'-','k','s',7.5,['x','y'],[17.5,17.5],
-                          [10.0,10.0],[15.0,15.0],'Python Plot 1D',20.0,True,'PythonPlot1D',True,drawGrid=True)
+                          [10.0,10.0],[15.0,15.0],'Python Plot 1D',20.0,True,'PythonPlot1D',True,
+                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawGrid=True)
 
 do_TestPythonPlot1DSaveAsPNG = False
 if do_TestPythonPlot1DSaveAsPNG:
@@ -101,6 +110,59 @@ if do_TestPythonPlot1DSaveAsPNG:
 
 
 # In[6]:
+
+def PythonPlotly1DSaveAsPNG(output_directory,plot_type,x,y,line_color,line_width,marker_symbol,marker_size,labels,
+                            labelfontsizes,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
+                            fig_size=[700.0,700.0],dtickvalues=[0.0,0.0]):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)  
+    layout = dict(plot_bgcolor='white',height=fig_size[1],width=fig_size[0])
+    fig = go.Figure(layout=layout)
+    fig.add_trace(go.Scatter(x=x,y=y,line=dict(color=line_color,width=line_width),
+                             marker=dict(symbol=marker_symbol,color=line_color,size=marker_size)))
+    fig.update_xaxes(showline=True,linecolor='black',linewidth=1.0,mirror=True,
+                     zeroline=True,zerolinecolor='lightgray',zerolinewidth=1.0,
+                     showgrid=True,gridcolor='lightgray',gridwidth=1.0,
+                     ticks='outside',tickfont=dict(size=tickfontsizes[1]))
+    fig.update_yaxes(showline=True,linecolor='black',linewidth=1.0,mirror=True,
+                     zeroline=True,zerolinecolor='lightgray',zerolinewidth=1.0,
+                     showgrid=True,gridcolor='lightgray',gridwidth=1.0,
+                     ticks='outside',tickfont=dict(size=tickfontsizes[1]))
+    fig.update_layout(title={'text':title,'y':0.925,'x':0.5,'xanchor':'center','yanchor':'top',
+                             'font':dict(size=titlefontsize,color='black')},
+                      xaxis_title={'text':labels[0],'font':dict(size=labelfontsizes[0],color='black')},
+                      yaxis_title={'text':labels[1],'font':dict(size=labelfontsizes[1],color='black')})
+    if plot_type == 'semi-log_x':  
+        fig.update_layout(xaxis_type='log',xaxis={'dtick':dtickvalues[0]})
+    elif plot_type == 'semi-log_y':  
+        fig.update_layout(yaxis_type='log',yaxis={'dtick':dtickvalues[1]})  
+    elif plot_type == 'log-log':
+        fig.update_layout(xaxis_type='log',xaxis={'dtick':dtickvalues[0]},
+                          yaxis_type='log',yaxis={'dtick':dtickvalues[1]})
+    if SaveAsPNG:
+        fig.write_image(FigureTitle+'.png')
+    if Show:
+        fig.show()
+    os.chdir(cwd)
+
+
+# In[7]:
+
+def TestPythonPlotly1DSaveAsPNG():
+    x = np.arange(1.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
+    y = x**(-10.0)
+    PythonPlotly1DSaveAsPNG('MPAS_O_Shallow_Water_Output','log-log',x,y,'black',2.0,'square',10.0,['x','y'],
+                            [20.0,20.0],[17.5,17.5],'Python Plot 1D',25.0,True,'PythonPlotly1D',False)
+
+do_TestPythonPlotly1DSaveAsPNG = False
+if do_TestPythonPlotly1DSaveAsPNG:
+    TestPythonPlotly1DSaveAsPNG()
+
+
+# In[8]:
 
 def PythonPlots1DSaveAsPNG(output_directory,x,y1,y2,line_width,y1stem,y2stem,xlabel,xlabelpad,ylabel,ylabelpad,
                            y1legend,y2legend,legend_position,title,marker,marker_size,SaveAsPNG,FigureTitle,Show):
@@ -146,7 +208,7 @@ if do_TestPythonPlots1DSaveAsPNG:
     TestPythonPlots1DSaveAsPNG()
 
 
-# In[7]:
+# In[9]:
 
 def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,line_width,y1stem,y2stem,xlabel,
                                      xlabelpad,ylabel,ylabelpad,y1legend,y2legend,legend_position,title,marker,
@@ -189,7 +251,7 @@ def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,li
     os.chdir(cwd)
 
 
-# In[8]:
+# In[10]:
 
 def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidths,linestyles,colors,useMarkers,
                                      markers,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
@@ -265,7 +327,7 @@ def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidt
     os.chdir(cwd)
 
 
-# In[9]:
+# In[11]:
 
 def TestPythonConvergencePlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -281,7 +343,7 @@ if do_TestPythonConvergencePlot1DSaveAsPNG:
     TestPythonConvergencePlot1DSaveAsPNG()
 
 
-# In[10]:
+# In[12]:
 
 def LagrangeInterpolation1D(xData,fData,x):
     N = len(xData) - 1
@@ -307,7 +369,77 @@ if do_TestLagrangeInterpolation1D:
     TestLagrangeInterpolation1D()
 
 
-# In[11]:
+# In[13]:
+
+def WriteCurve1D(output_directory,x,y,filename):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)
+    N = len(y)
+    filename = filename + '.curve'
+    outputfile = open(filename, 'w')
+    outputfile.write('#phi\n')
+    for i in range(0,N):
+        outputfile.write('%.15g %.15g\n' %(x[i],y[i]))
+    outputfile.close()
+    os.chdir(cwd)
+    
+def TestWriteCurve1D():
+    x = np.arange(0.0,10.0,1.0)
+    y = np.arange(0.0,20.0,2.0)
+    WriteCurve1D('MPAS_O_Shallow_Water_Output',x,y,'TestWriteCurve1D')
+    
+do_TestWriteCurve1D = False
+if do_TestWriteCurve1D:
+    TestWriteCurve1D()
+
+
+# In[14]:
+
+def ReadCurve1D(output_directory,filename):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)
+    data = [];
+    cnt = 0;
+    with open(filename, 'r') as infile:
+        for line in infile:
+            if cnt != 0:
+                data.append(line)
+            cnt += 1
+    data = np.loadtxt(data)
+    N = data.shape[0]
+    x = np.zeros(N)
+    y = np.zeros(N)
+    for i in range(0,N):
+        x[i] = data[i,0]
+        y[i] = data[i,1]
+    os.chdir(cwd)
+    return x, y
+    
+def TestReadCurve1D():
+    x1 = np.arange(0.0,10.0,1.0)
+    y1 = np.arange(0.0,20.0,2.0)
+    print('Write to file:')
+    for i in range(0,np.size(x1)):
+        print('%4.2f %5.2f' %(x1[i],y1[i]))
+    WriteCurve1D('MPAS_O_Shallow_Water_Output',x1,y1,'TestWriteCurve1D')
+    x2, y2 = ReadCurve1D('MPAS_O_Shallow_Water_Output','TestWriteCurve1D.curve')
+    print(' ')
+    print('Read from file:')
+    for i in range(0,np.size(x2)):
+        print('%4.2f %5.2f' %(x2[i],y2[i]))
+    
+do_TestReadCurve1D = False
+if do_TestReadCurve1D:
+    TestReadCurve1D()
+
+
+# In[15]:
 
 def WriteTecPlot2DStructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -323,7 +455,7 @@ def WriteTecPlot2DStructured(output_directory,x,y,phi,filename):
     outputfile.write('ZONE T="EL00001", I=%d, J=%d, F=POINT\n' %(nX+1,nY+1))
     for iY in range(0,nY+1):
         for iX in range(0,nX+1):
-            outputfile.write("%.15f %.15f %.15f\n" %(x[iX],y[iY],phi[iX,iY]))
+            outputfile.write('%.15g %.15g %.15g\n' %(x[iX],y[iY],phi[iX,iY]))
     outputfile.close()
     os.chdir(cwd)
     
@@ -349,7 +481,7 @@ if do_TestWriteTecPlot2DStructured:
     TestWriteTecPlot2DStructured()
 
 
-# In[12]:
+# In[16]:
 
 def WriteTecPlot2DUnstructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -363,7 +495,7 @@ def WriteTecPlot2DUnstructured(output_directory,x,y,phi,filename):
     outputfile.write('VARIABLES = "X", "Y", "PHI"\n')
     for i in range(0,N):
         outputfile.write('ZONE T="EL%5.5d", I=1, J=1, F=BLOCK\n' %(i+1))
-        outputfile.write("%.15f %.15f %.15f\n" %(x[i],y[i],phi[i]))
+        outputfile.write('%.15g %.15g %.15g\n' %(x[i],y[i],phi[i]))
     outputfile.close()
     os.chdir(cwd)
     
@@ -395,11 +527,11 @@ if do_TestWriteTecPlot2DUnstructured:
     TestWriteTecPlot2DUnstructured()
 
 
-# In[13]:
+# In[17]:
 
 def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
                                                  ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,
-                                                 FigureTitle,Show):
+                                                 FigureTitle,Show,cbarlabelformat='%.2g'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -432,7 +564,7 @@ def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nConto
     cbar = plt.colorbar(shrink=cbarShrinkRatio) # draw colorbar
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
-    cbar.ax.set_yticklabels(['{:.2g}'.format(x) for x in cbarlabels], fontsize=13.75)
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=13.75)
     plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
     plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
     plt.xticks(fontsize=15)
@@ -481,7 +613,7 @@ if do_PythonReadFileAndFilledStructuredContourPlot2D:
                                                    'TestWriteTecPlot2DStructured',True)
 
 
-# In[14]:
+# In[18]:
 
 def line_contains_text(line):
     return line[0] == 'V' or line[0] == 'Z'
@@ -489,7 +621,7 @@ def line_contains_text(line):
 def PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
                                                    ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,
                                                    SaveAsPNG,FigureTitle,Show,myXTicks=np.zeros(6),
-                                                   myYTicks=np.zeros(6)):
+                                                   myYTicks=np.zeros(6),cbarlabelformat='%.2g'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -522,7 +654,7 @@ def PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nCon
     cbar = plt.colorbar(shrink=cbarShrinkRatio) # draw colorbar
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
-    cbar.ax.set_yticklabels(['{:.2g}'.format(x) for x in cbarlabels], fontsize=13.75)
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=13.75)
     plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
     plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
     if max(abs(myXTicks)) == 0.0:

@@ -21,16 +21,16 @@ with io.capture_output() as captured:
 
 class Namelist:
     
-    def __init__(myNamelist,problem_type='default',problem_is_linear=True):
+    def __init__(myNamelist,problem_type='default',problem_is_linear=True,periodicity='Periodic',
+                 time_integrator='forward_backward_predictor'):
         myNamelist.config_problem_type = problem_type
         myNamelist.config_problem_is_linear = problem_is_linear
-        if problem_is_linear:
-            myNamelist.config_linearity_prefactor = 0.0
-        else:
-            myNamelist.config_linearity_prefactor = 1.0        
+        myNamelist.config_periodicity = periodicity
+        myNamelist.config_time_integrator = time_integrator
         if problem_type == 'default' or problem_type == 'Coastal_Kelvin_Wave':
-            myNamelist.config_time_integrator = 'forward_backward_predictor'
             myNamelist.config_dt = 180.0
+            # The default timestep is dictated by a Courant Number of 0.36 for a wave speed of 100 m/s and a 
+            # uniform grid spacing of 50 km.
             myNamelist.config_forward_backward_predictor_parameter_gamma = 1.0
             myNamelist.config_gravity = 10.0
             myNamelist.config_mean_depth = 1000.0
@@ -38,6 +38,10 @@ class Namelist:
             myNamelist.config_use_wetting_drying = False
             # Derived Parameters
             myNamelist.config_wave_speed = np.sqrt(myNamelist.config_gravity*myNamelist.config_mean_depth)
+        if problem_is_linear:
+            myNamelist.config_linearity_prefactor = 0.0
+        else:
+            myNamelist.config_linearity_prefactor = 1.0 
 
 
 # In[3]:
@@ -64,9 +68,10 @@ if do_CheckDimensions_kiteAreasOnVertex:
 
 # In[5]:
 
-def DetermineCoriolisParameterAndBottomDepth(myMPAS_O,problem_type='default'):
+def DetermineCoriolisParameterAndBottomDepth(myMPAS_O):
     CoriolisParameter = 10.0**(-4.0)
     BottomDepthParameter = 1000.0
+    problem_type = myMPAS_O.myNamelist.config_problem_type
     if problem_type == 'default' or problem_type == 'Coastal_Kelvin_Wave':
         myMPAS_O.fCell[:] = CoriolisParameter        
         myMPAS_O.fEdge[:] = CoriolisParameter
@@ -80,8 +85,11 @@ class MPAS_O:
     
     def __init__(myMPAS_O,print_basic_geometry,mesh_directory='Mesh+Initial_Condition+Registry_Files/Periodic',
                  base_mesh_file_name='base_mesh.nc',mesh_file_name='mesh.nc',problem_type='default',
-                 problem_is_linear=True,do_fixAngleEdge=True,print_Output=False):
-        myMPAS_O.myNamelist = Namelist(problem_type,problem_is_linear)
+                 problem_is_linear=True,periodicity='Periodic',do_fixAngleEdge=True,print_Output=False,
+                 CourantNumber=0.5,useCourantNumberToDetermineTimeStep=False,
+                 time_integrator='forward_backward_predictor',
+                 specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False):
+        myMPAS_O.myNamelist = Namelist(problem_type,problem_is_linear,periodicity,time_integrator)
         cwd = os.getcwd()
         path = cwd + '/' + mesh_directory + '/'
         if not os.path.exists(path):
@@ -99,6 +107,8 @@ class MPAS_O:
         myMPAS_O.maxEdges2 = len(mesh_file.dimensions['maxEdges2'])
         myMPAS_O.vertexDegree = len(mesh_file.dimensions['vertexDegree'])
         myMPAS_O.nVertLevels = 1
+        myMPAS_O.nNonPeriodicBoundaryEdges = 0
+        myMPAS_O.nNonPeriodicBoundaryCells = 0
         nCells = myMPAS_O.nCells
         nEdges = myMPAS_O.nEdges
         nVertices = myMPAS_O.nVertices
@@ -167,16 +177,28 @@ class MPAS_O:
         # The following two arrays are contained only within the mesh file.
         myMPAS_O.boundaryVertex = mesh_file.variables['boundaryVertex'][:]
         myMPAS_O.gridSpacing = mesh_file.variables['gridSpacing'][:]
+        # Define the grid spacing magnitude for a uniform mesh.
+        useGridSpacingMagnitudeDefaultDefinition = True
+        if useGridSpacingMagnitudeDefaultDefinition:
+            myMPAS_O.gridSpacingMagnitude = myMPAS_O.gridSpacing[0]
+        else:
+            myMPAS_O.gridSpacingMagnitude = myMPAS_O.xCell[1] - myMPAS_O.xCell[0]
+        # For a mesh with non-periodic zonal boundaries, adjust the zonal coordinates of the cell centers, 
+        # vertices and edges.
+        if periodicity == 'NonPeriodic_x':
+            myMPAS_O.xCell[:] -= myMPAS_O.gridSpacingMagnitude
+            myMPAS_O.xVertex[:] -= myMPAS_O.gridSpacingMagnitude
+            myMPAS_O.xEdge[:] -= myMPAS_O.gridSpacingMagnitude
+        # Specify the zonal and meridional extents of the domain.
+        myMPAS_O.lX = max(myMPAS_O.xCell)
+        myMPAS_O.lY = max(myMPAS_O.yVertex)
         # Define and initialize the following arrays not contained within either the base mesh file or the mesh 
         # file.
         myMPAS_O.fVertex = np.zeros(nVertices)
         myMPAS_O.fCell = np.zeros(nCells)
         myMPAS_O.fEdge = np.zeros(nEdges)
         myMPAS_O.bottomDepth = np.zeros(nCells)
-        DetermineCoriolisParameterAndBottomDepth(myMPAS_O,problem_type='default')
-        myMPAS_O.lX = max(myMPAS_O.xCell)
-        myMPAS_O.lY = max(myMPAS_O.yVertex)
-        myMPAS_O.gridSpacingMagnitude = myMPAS_O.xCell[1] - myMPAS_O.xCell[0]
+        DetermineCoriolisParameterAndBottomDepth(myMPAS_O)
         myMPAS_O.boundaryCell = np.zeros((nCells,nVertLevels))
         myMPAS_O.boundaryEdge = np.zeros((nEdges,nVertLevels))
         myMPAS_O.boundaryVertex = np.zeros((nVertices,nVertLevels))        
@@ -201,12 +223,10 @@ class MPAS_O:
         myMPAS_O.normalizedRelativeVorticityEdge = np.zeros((nEdges,nVertLevels))
         myMPAS_O.normalizedRelativeVorticityVertex = np.zeros((nVertices,nVertLevels))
         myMPAS_O.normalVelocityCurrent = np.zeros((nEdges,nVertLevels))
-        myMPAS_O.normalVelocityExact = np.zeros((nEdges,nVertLevels))
         myMPAS_O.normalVelocityNew = np.zeros((nEdges,nVertLevels))
         myMPAS_O.relativeVorticity = np.zeros((nVertices,nVertLevels))
         myMPAS_O.relativeVorticityCell = np.zeros((nCells,nVertLevels))
         myMPAS_O.sshCurrent = np.zeros(nCells)
-        myMPAS_O.sshExact = np.zeros(nCells)
         myMPAS_O.sshNew = np.zeros(nCells)
         myMPAS_O.tangentialVelocity = np.zeros((nEdges,nVertLevels))
         myMPAS_O.vertexMask = np.zeros((nVertices,nVertLevels))
@@ -219,6 +239,14 @@ class MPAS_O:
             myMPAS_O.angleEdge[:] = (
             fixAngleEdge.fix_angleEdge(mesh_directory,my_mesh_file_name,determineYCellAlongLatitude=True,
                                        printOutput=print_Output,printRelevantMeshData=False))
+        if useCourantNumberToDetermineTimeStep:
+            dx = myMPAS_O.gridSpacingMagnitude # i.e. dx = myMPAS_O.dcEdge[0]
+            WaveSpeed = myMPAS_O.myNamelist.config_wave_speed
+            myMPAS_O.myNamelist.config_dt = CourantNumber*dx/WaveSpeed
+            print('The timestep for Courant number %.2f is %.2f seconds.' 
+                  %(CourantNumber,myMPAS_O.myNamelist.config_dt))
+        myMPAS_O.specifyExactSurfaceElevationAtNonPeriodicBoundaryCells = (
+        specifyExactSurfaceElevationAtNonPeriodicBoundaryCells)
 
 
 # In[7]:
@@ -240,8 +268,9 @@ if test_MPAS_O_2:
     mesh_file_name = 'mesh.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,do_fixAngleEdge=True,print_Output=False)
+                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
 
 
 # In[9]:
@@ -254,8 +283,9 @@ if test_MPAS_O_3:
     mesh_file_name = 'mesh_P.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'Periodic'
     myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,do_fixAngleEdge=True,print_Output=True)
+                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
 
 
 # In[10]:
@@ -270,5 +300,6 @@ if test_MPAS_O_4:
     mesh_file_name = 'mesh_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,do_fixAngleEdge=True,print_Output=True)
+                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
