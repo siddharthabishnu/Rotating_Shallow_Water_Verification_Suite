@@ -9,6 +9,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 from matplotlib.ticker import FuncFormatter
 import io as inputoutput
 import os
@@ -18,6 +20,7 @@ with io.capture_output() as captured:
     import Common_Routines as CR
     import MPAS_O_Mode_Init
     import MPAS_O_Shared
+    import MPAS_O_Mesh_Interpolation_Routines as MOMIR
     import MPAS_O_Mode_Forward
 
 
@@ -48,11 +51,11 @@ def ComputeNormalAndTangentialComponentsAtEdge(myVectorQuantityAtEdge,angleEdge,
 
 # In[3]:
 
-def PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
-                                                      ColorBarLimits,nColorBarTicks,colormap,
-                                                      colorbarfontsize,labels,labelfontsizes,labelpads,
-                                                      tickfontsizes,title,titlefontsize,SaveAsPDF,FigureTitle,
-                                                      Show,cbarlabelformat='%.2g'):
+def PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
+                                                        ColorBarLimits,nColorBarTicks,colormap,
+                                                        colorbarfontsize,labels,labelfontsizes,labelpads,
+                                                        tickfontsizes,title,titlefontsize,SaveAsPDF,FigureTitle,
+                                                        Show,cbarlabelformat='%.2g'):
     cwd = CR.CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -109,6 +112,98 @@ def PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,x,y,phi,n
 
 # In[4]:
 
+def PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,phi,nContours,
+                                                        useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,
+                                                        colormap,colorbarfontsize,labels,labelfontsizes,labelpads,
+                                                        tickfontsizes,title,titlefontsize,SaveAsPDF,FigureTitle,
+                                                        Show,cbarlabelformat='%.2g'):
+    cwd = CR.CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)
+    fig = plt.figure(figsize=(10,10)) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    set_aspect_equal = False
+    if set_aspect_equal:
+        ax.set_aspect('equal')
+    else:
+        xMin = 0.0 
+        xMax = myMPAS_O.lX + myMPAS_O.gridSpacingMagnitude/2.0
+        yMin = 0.0 
+        yMax = myMPAS_O.lY + myMPAS_O.gridSpacingMagnitude/(2.0*np.sqrt(3.0))   
+        aspect_ratio = (xMax - xMin)/(yMax - yMin)
+        ax.set_aspect(aspect_ratio,adjustable='box')
+    if useGivenColorBarLimits:
+        cbar_min = ColorBarLimits[0]
+        cbar_max = ColorBarLimits[1]
+    else:
+        cbar_min = np.min(phi)
+        cbar_max = np.max(phi)
+    n_cbar_ticks = nColorBarTicks
+    cbarlabels = np.linspace(cbar_min,cbar_max,num=n_cbar_ticks,endpoint=True)
+    patches = []
+    ComparisonTolerance = 10.0**(-10.0)
+    for iCell in range(0,myMPAS_O.nCells):
+        nVerticesOnCell = myMPAS_O.nEdgesOnCell[iCell] 
+        vertexIndices = np.zeros(nVerticesOnCell,dtype=int)
+        vertexIndices[:] = myMPAS_O.verticesOnCell[iCell,:]
+        vertexIndices -= 1
+        vertices = np.zeros((nVerticesOnCell,2))
+        xCell = myMPAS_O.xCell[iCell]
+        yCell = myMPAS_O.yCell[iCell]
+        for iVertexOnCell in range(0,nVerticesOnCell):
+            xVertex = myMPAS_O.xVertex[vertexIndices[iVertexOnCell]]
+            yVertex = myMPAS_O.yVertex[vertexIndices[iVertexOnCell]]
+            if abs(yVertex - yCell) > (2.0/np.sqrt(3.0))*myMPAS_O.gridSpacingMagnitude and yVertex < yCell:
+                yVertex = yCell + myMPAS_O.gridSpacingMagnitude/np.sqrt(3.0)  
+            if abs(yVertex - yCell) > (2.0/np.sqrt(3.0))*myMPAS_O.gridSpacingMagnitude and yVertex > yCell:
+                yVertex = yCell - myMPAS_O.gridSpacingMagnitude/np.sqrt(3.0)                 
+            if abs(xVertex - xCell) > myMPAS_O.gridSpacingMagnitude and xVertex < xCell:
+                if abs(yVertex - (yCell + myMPAS_O.gridSpacingMagnitude/np.sqrt(3.0))) < ComparisonTolerance:
+                    xVertex = xCell
+                elif abs(yVertex - (yCell - myMPAS_O.gridSpacingMagnitude/np.sqrt(3.0))) < ComparisonTolerance:
+                    xVertex = xCell
+                else:                
+                    xVertex = xCell + 0.5*myMPAS_O.gridSpacingMagnitude      
+            vertices[iVertexOnCell,0] = xVertex
+            vertices[iVertexOnCell,1] = yVertex
+        polygon = Polygon(vertices,True)
+        patches.append(polygon)    
+    localPatches = PatchCollection(patches,cmap=colormap,alpha=1.0) 
+    localPatches.set_array(phi)
+    ax.add_collection(localPatches)
+    localPatches.set_clim([cbar_min,cbar_max])
+    plt.axis([xMin,xMax,yMin,yMax])
+    plt.title(title,fontsize=titlefontsize,y=1.035)
+    cbarShrinkRatio = 0.825
+    m = plt.cm.ScalarMappable(cmap=colormap)
+    m.set_array(phi)
+    m.set_clim(cbar_min,cbar_max)
+    make_colorbar_boundaries_discrete = False
+    if make_colorbar_boundaries_discrete:
+        cbar = plt.colorbar(m,boundaries=cbarlabels,shrink=cbarShrinkRatio)
+    else:
+        cbar = plt.colorbar(m,shrink=cbarShrinkRatio)
+    cbar.set_ticks(cbarlabels)
+    cbar.set_ticklabels(cbarlabels)
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=colorbarfontsize)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    plt.xticks(fontsize=tickfontsizes[0])
+    plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+    plt.yticks(fontsize=tickfontsizes[1])
+    plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+    if SaveAsPDF:
+        plt.savefig(FigureTitle+'.png',format='png')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+
+
+# In[5]:
+
 def PrintDisplayTime(time,displaytime):
     hours = np.floor(time/3600.0)
     remainingtime = np.mod(time,3600.0)
@@ -119,12 +214,12 @@ def PrintDisplayTime(time,displaytime):
     return hours, minutes, seconds
 
 
-# In[5]:
+# In[6]:
 
 hours, minutes, seconds = PrintDisplayTime(10983.0,True)
 
 
-# In[6]:
+# In[7]:
 
 def CoastalKelvinWaveFunctionalForm(lY,y,returnAmplitude=False):
     yCenter = 0.5*lY
@@ -136,35 +231,35 @@ def CoastalKelvinWaveFunctionalForm(lY,y,returnAmplitude=False):
         return eta
 
 
-# In[7]:
+# In[8]:
 
 def DetermineCoastalKelvinWaveExactSurfaceElevation(H,c,R,lY,x,y,time):
     CoastalKelvinWaveExactSurfaceElevation = -H*CoastalKelvinWaveFunctionalForm(lY,y+c*time)*np.exp(-x/R)
     return CoastalKelvinWaveExactSurfaceElevation
 
 
-# In[8]:
+# In[9]:
 
 def DetermineCoastalKelvinWaveExactZonalVelocity():
     CoastalKelvinWaveExactZonalVelocity = 0.0
     return CoastalKelvinWaveExactZonalVelocity
 
 
-# In[9]:
+# In[10]:
 
 def DetermineCoastalKelvinWaveExactMeridionalVelocity(c,R,lY,x,y,time):
     CoastalKelvinWaveExactMeridionalVelocity = c*CoastalKelvinWaveFunctionalForm(lY,y+c*time)*np.exp(-x/R)
     return CoastalKelvinWaveExactMeridionalVelocity
 
 
-# In[10]:
+# In[11]:
 
 def DetermineTimeStepForGivenCourantNumber(CourantNumber,dx,WaveSpeed):
     dt = CourantNumber*dx/WaveSpeed
     return dt
 
 
-# In[11]:
+# In[12]:
 
 do_DetermineTimeStepForGivenCourantNumber = False
 if do_DetermineTimeStepForGivenCourantNumber:    
@@ -172,11 +267,12 @@ if do_DetermineTimeStepForGivenCourantNumber:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     CourantNumber = 0.36
     dx = myMPAS_O.dcEdge[0]
     WaveSpeed = myMPAS_O.myNamelist.config_wave_speed
@@ -184,7 +280,7 @@ if do_DetermineTimeStepForGivenCourantNumber:
     print('The timestep for Courant Number %.2f is %.2f seconds.' %(CourantNumber,dt))
 
 
-# In[12]:
+# In[13]:
 
 def DetermineGeophysicalWaveExactSolutions(myMPAS_O,DetermineGeophysicalWaveExactSurfaceElevation,
                                            DetermineGeophysicalWaveExactZonalVelocity,
@@ -217,17 +313,45 @@ def DetermineGeophysicalWaveExactSolutions(myMPAS_O,DetermineGeophysicalWaveExac
             GeophysicalWaveExactMeridionalVelocities]
 
 
-# In[13]:
+# In[14]:
+
+def DetermineGeophysicalWaveExactSolutionsOnCoarsestRectilinearMesh(
+myMPAS_O,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh,DetermineGeophysicalWaveExactSurfaceElevation,
+DetermineGeophysicalWaveExactZonalVelocity,DetermineGeophysicalWaveExactMeridionalVelocity):
+    H = myMPAS_O.myNamelist.config_mean_depth
+    c = myMPAS_O.myNamelist.config_wave_speed
+    lY = myMPAS_O.lY
+    time = myMPAS_O.time
+    GeophysicalWaveExactSurfaceElevations = np.zeros(myMPAS_O.nCells) 
+    GeophysicalWaveExactZonalVelocities = np.zeros(myMPAS_O.nCells)
+    GeophysicalWaveExactMeridionalVelocities = np.zeros(myMPAS_O.nCells) 
+    for iCell in range(0,myMPAS_O.nCells):
+        fCell = myMPAS_O.fCell[iCell]
+        RCell = c/fCell
+        xCell = xCell_CoarsestRectilinearMesh[iCell]
+        yCell = yCell_CoarsestRectilinearMesh[iCell]
+        if myMPAS_O.myNamelist.config_problem_type == 'Coastal_Kelvin_Wave':
+            GeophysicalWaveExactSurfaceElevations[iCell] = (
+            DetermineGeophysicalWaveExactSurfaceElevation(H,c,RCell,lY,xCell,yCell,time))
+            GeophysicalWaveExactZonalVelocities[iCell] = DetermineGeophysicalWaveExactZonalVelocity()
+            GeophysicalWaveExactMeridionalVelocities[iCell] = (
+            DetermineCoastalKelvinWaveExactMeridionalVelocity(c,RCell,lY,xCell,yCell,time))
+    return [GeophysicalWaveExactSurfaceElevations, GeophysicalWaveExactZonalVelocities, 
+            GeophysicalWaveExactMeridionalVelocities]
+
+
+# In[15]:
 
 def DetermineCoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters():
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
     periodicity='NonPeriodic_x'
-    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                                       problem_is_linear,periodicity)    
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                       problem_type,problem_is_linear,periodicity)    
     H = myMPAS_O.myNamelist.config_mean_depth
     lY = myMPAS_O.lY
     yCell = 0.0
@@ -242,20 +366,20 @@ def DetermineCoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters():
           %abs(CoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters))
 
 
-# In[14]:
+# In[16]:
 
 do_DetermineCoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters = False
 if do_DetermineCoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters:
     DetermineCoastalKelvinWaveSurfaceElevationAmplitudeAtCellCenters()
 
 
-# In[15]:
+# In[17]:
 
-def testDetermineGeophysicalWaveExactSolutions(mesh_directory,base_mesh_file_name,mesh_file_name,
+def testDetermineGeophysicalWaveExactSolutions(mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
                                                problem_type,problem_is_linear,CourantNumber,plotFigures):
-    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                                       problem_is_linear,periodicity='NonPeriodic_x',CourantNumber=CourantNumber,
-                                       useCourantNumberToDetermineTimeStep=True)
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                       problem_type,problem_is_linear,periodicity='NonPeriodic_x',
+                                       CourantNumber=CourantNumber,useCourantNumberToDetermineTimeStep=True)
     myMPAS_O.myNamelist.config_dt = round(myMPAS_O.myNamelist.config_dt)
     dt = myMPAS_O.myNamelist.config_dt 
     nTime = 250 + 1
@@ -274,64 +398,70 @@ def testDetermineGeophysicalWaveExactSolutions(mesh_directory,base_mesh_file_nam
                 wave_type_figure_title = 'CoastalKelvinWave'
                 plotExactZonalVelocity = False
             else:
-                plotExactZonalVelocity = True 
+                plotExactZonalVelocity = True
             hours, minutes, seconds = PrintDisplayTime(myMPAS_O.time,False)
             if problem_type == 'Coastal_Kelvin_Wave':
                 ColorBarLimits = [-0.97531,0.97531]
             Title = (wave_type_title + ': Exact Surface Elevation after\n%d Hours %2d Minutes %2d Seconds'
                      %(hours,minutes,seconds))
             FigureTitle = wave_type_figure_title + '_ExactSurfaceElevation_' + '%3.3d' %iTime
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                              GeophysicalWaveExactSurfaceElevations,300,True,
-                                                              ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                              ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                              [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                              cbarlabelformat='%.5f') 
-            if plotExactZonalVelocity:
+            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                GeophysicalWaveExactSurfaceElevations,300,True,
+                                                                ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                cbarlabelformat='%.5f')
+            if plotExactZonalVelocity:               
+                GeophysicalWaveExactZonalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                myMPAS_O,GeophysicalWaveExactZonalVelocities)                
                 Title = (wave_type_title + ': Exact Zonal Velocity after\n%d Hours %2d Minutes %2d Seconds' 
                          %(hours,minutes,seconds))
                 FigureTitle = wave_type_figure_title + '_ExactZonalVelocity_' + '%3.3d' %iTime
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  GeophysicalWaveExactZonalVelocities,300,False,
-                                                                  [0.0,0.0],6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    GeophysicalWaveExactZonalVelocities,300,False,
+                                                                    [0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
             if problem_type == 'Coastal_Kelvin_Wave':
-                ColorBarLimits = [-0.1,0.1]
+                ColorBarLimits = [-0.1,0.1] 
+            GeophysicalWaveExactMeridionalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+            myMPAS_O,GeophysicalWaveExactMeridionalVelocities)
             Title = (wave_type_title + ': Exact Meridional Velocity after\n%d Hours %2d Minutes %2d Seconds' 
                      %(hours,minutes,seconds))
             FigureTitle = wave_type_figure_title + '_ExactMeridionalVelocity_' + '%3.3d' %iTime
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                              GeophysicalWaveExactMeridionalVelocities,300,True,
-                                                              ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                              ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                              [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                              cbarlabelformat='%.5f')
+            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                GeophysicalWaveExactMeridionalVelocities,300,True,
+                                                                ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                cbarlabelformat='%.5f')
 
 
-# In[16]:
+# In[18]:
 
 do_testDetermineGeophysicalWaveExactSolutions = False
 if do_testDetermineGeophysicalWaveExactSolutions:    
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
     CourantNumber = 0.36
-    plotFigures = True
-    testDetermineGeophysicalWaveExactSolutions(mesh_directory,base_mesh_file_name,mesh_file_name,
+    plotFigures = True    
+    testDetermineGeophysicalWaveExactSolutions(mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
                                                problem_type,problem_is_linear,CourantNumber,plotFigures)
 
 
-# In[17]:
+# In[19]:
 
-def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_is_linear,CourantNumber,
+def Main(mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,problem_type,problem_is_linear,CourantNumber,
          time_integrator,output_these_variables,plot_these_variables,display_range_of_variables):
-    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                                       problem_is_linear,periodicity='NonPeriodic_x',CourantNumber=CourantNumber,
-                                       useCourantNumberToDetermineTimeStep=True,time_integrator=time_integrator,
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                       problem_type,problem_is_linear,periodicity='NonPeriodic_x',
+                                       CourantNumber=CourantNumber,useCourantNumberToDetermineTimeStep=True,
+                                       time_integrator=time_integrator,
                                        specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False)
     myMPAS_O.myNamelist.config_dt = round(myMPAS_O.myNamelist.config_dt)
     MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
@@ -340,10 +470,7 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
     nTime = 250 + 1
     nDumpFrequency = 10
     compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = False
     compute_these_variables[4] = True # compute_these_variables[4] = compute_tangentialVelocity
-    numericalZonalVelocities = np.zeros(myMPAS_O.nEdges)
-    numericalMeridionalVelocities = np.zeros(myMPAS_O.nEdges)
     if problem_type == 'Coastal_Kelvin_Wave':
         wave_type_title = 'Coastal Kelvin Wave'
         wave_type_figure_title = 'CoastalKelvinWave'
@@ -353,6 +480,9 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
         wave_nature = 'NonLinear'
     if time_integrator == 'forward_backward_predictor':    
         time_integrator_short_form = 'FBP'
+    max_yEdge_index = np.argmax(myMPAS_O.yEdge)
+    xEdge_Plot = CR.RemoveElementFrom1DArray(myMPAS_O.xEdge,max_yEdge_index)
+    yEdge_Plot = CR.RemoveElementFrom1DArray(myMPAS_O.yEdge,max_yEdge_index)
     for iTime in range(0,nTime):
         myMPAS_O.time = float(iTime)*dt
         hours, minutes, seconds = PrintDisplayTime(myMPAS_O.time,False)
@@ -360,7 +490,9 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
         if printProgress:
             print('Computing Numerical Solution after %2d Hours %2d Minutes %2d Seconds!'
                   %(hours,minutes,seconds))        
-        if np.mod(iTime,nDumpFrequency) == 0.0: 
+        if np.mod(iTime,nDumpFrequency) == 0.0:
+            numericalZonalVelocities = np.zeros(myMPAS_O.nEdges)
+            numericalMeridionalVelocities = np.zeros(myMPAS_O.nEdges)
             if problem_type == 'Coastal_Kelvin_Wave':
                 [GeophysicalWaveExactSurfaceElevations, GeophysicalWaveExactZonalVelocities,
                  GeophysicalWaveExactMeridionalVelocities] = (
@@ -400,28 +532,32 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[0]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   GeophysicalWaveExactSurfaceElevations,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                                  GeophysicalWaveExactSurfaceElevations,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    GeophysicalWaveExactSurfaceElevations,300,
+                                                                    True,ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,
+                                                                    False,cbarlabelformat='%.5f')
             if plot_these_variables[1]: # if plotExactZonalVelocity:
+                GeophysicalWaveExactZonalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                myMPAS_O,GeophysicalWaveExactZonalVelocities)
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_ExactZonalVelocity')                
                 Title = (wave_type_title + ': Exact Zonal Velocity after\n%d Hours %2d Minutes %2d Seconds' 
                          %(hours,minutes,seconds)) 
                 FigureTitle = wave_type_figure_title + '_ExactZonalVelocity_' + '%3.3d' %iTime
                 if output_these_variables[1]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                  GeophysicalWaveExactZonalVelocities,FigureTitle)                
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  GeophysicalWaveExactZonalVelocities,300,False,
-                                                                  [0.0,0.0],6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
+                                                  GeophysicalWaveExactZonalVelocities,FigureTitle)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    GeophysicalWaveExactZonalVelocities,300,False,
+                                                                    [0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
             if plot_these_variables[2]: # if plotExactMeridionalVelocity:
+                GeophysicalWaveExactMeridionalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                myMPAS_O,GeophysicalWaveExactMeridionalVelocities)
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_ExactMeridionalVelocity')
                 if problem_type == 'Coastal_Kelvin_Wave':
@@ -430,14 +566,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                          %(hours,minutes,seconds))                 
                 FigureTitle = wave_type_figure_title + '_ExactMeridionalVelocity_' + '%3.3d' %iTime       
                 if output_these_variables[2]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   GeophysicalWaveExactMeridionalVelocities,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  GeophysicalWaveExactMeridionalVelocities,300,
-                                                                  True,ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    GeophysicalWaveExactMeridionalVelocities,300,
+                                                                    True,ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
             if plot_these_variables[3]: # if plotExactNormalVelocity:
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_ExactNormalVelocity')                
@@ -449,12 +585,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[3]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                   GeophysicalWaveExactNormalVelocities,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  GeophysicalWaveExactNormalVelocities,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                GeophysicalWaveExactNormalVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(GeophysicalWaveExactNormalVelocities,max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    GeophysicalWaveExactNormalVelocities_Plot,300,
+                                                                    True,ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         ExactNormalVelocity_Min = min(GeophysicalWaveExactNormalVelocities)
@@ -478,12 +616,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[4]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                   GeophysicalWaveExactTangentialVelocities,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  GeophysicalWaveExactTangentialVelocities,300,
-                                                                  True,ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')        
+                GeophysicalWaveExactTangentialVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(GeophysicalWaveExactTangentialVelocities,max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    GeophysicalWaveExactTangentialVelocities_Plot,
+                                                                    300,True,ColorBarLimits,6,plt.cm.seismic,
+                                                                    13.75,['x (km)','y (km)'],[17.5,17.5],
+                                                                    [10.0,10.0],[15.0,15.0],Title,20.0,True,
+                                                                    FigureTitle,False,cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         ExactTangentialVelocity_Min = min(GeophysicalWaveExactTangentialVelocities)
@@ -509,11 +649,11 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[5]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   myMPAS_O.sshCurrent,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                                  myMPAS_O.sshCurrent,300,True,ColorBarLimits,6,
-                                                                  plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                                  [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                                  True,FigureTitle,False,cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,myMPAS_O.sshCurrent,
+                                                                    300,True,ColorBarLimits,6,plt.cm.seismic,
+                                                                    13.75,['x (km)','y (km)'],[17.5,17.5],
+                                                                    [10.0,10.0],[15.0,15.0],Title,20.0,True,
+                                                                    FigureTitle,False,cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         NumericalSurfaceElevation_Min = min(myMPAS_O.sshCurrent)
@@ -527,6 +667,8 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                         print('The range of numerical surface elevation is [%.6f,%.6f].'
                               %(NumericalSurfaceElevation_Min,NumericalSurfaceElevation_Max))
             if plot_these_variables[6]: # if plotNumericalZonalVelocity:
+                numericalZonalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                myMPAS_O,numericalZonalVelocities)
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_NumericalZonalVelocity')
@@ -537,14 +679,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
                                + '_NumericalZonalVelocity_' + '%3.3d' %iTime)        
                 if output_these_variables[6]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   numericalZonalVelocities,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  numericalZonalVelocities,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    numericalZonalVelocities,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         NumericalZonalVelocity_Min = min(numericalZonalVelocities)
@@ -555,7 +697,9 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                     if iTime == nTime - 1:
                         print('The range of numerical zonal velocity is [%.6f,%.6f].'
                               %(NumericalZonalVelocity_Min,NumericalZonalVelocity_Max))
-            if plot_these_variables[7]: # if plotNumericalMeridionalVelocity:                
+            if plot_these_variables[7]: # if plotNumericalMeridionalVelocity:  
+                numericalMeridionalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                myMPAS_O,numericalMeridionalVelocities)
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_NumericalMeridionalVelocity')
@@ -567,14 +711,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
                                + '_NumericalMeridionalVelocity_' + '%3.3d' %iTime)
                 if output_these_variables[7]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   numericalMeridionalVelocities,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  numericalMeridionalVelocities,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    numericalMeridionalVelocities,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         NumericalMeridionalVelocity_Min = min(numericalMeridionalVelocities)
@@ -600,12 +744,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[8]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                   myMPAS_O.normalVelocityCurrent[:,0],FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  myMPAS_O.normalVelocityCurrent[:,0],300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                numericalNormalVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(myMPAS_O.normalVelocityCurrent[:,0],max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    numericalNormalVelocities_Plot,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == 0:
                         NumericalNormalVelocity_Min = min(myMPAS_O.normalVelocityCurrent[:,0])
@@ -632,12 +778,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[9]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                   myMPAS_O.tangentialVelocity[:,0],FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  myMPAS_O.tangentialVelocity[:,0],300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')    
+                numericalTangentialVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(myMPAS_O.tangentialVelocity[:,0],max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    numericalTangentialVelocities_Plot,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')    
                 if display_range_of_variables:
                     if iTime == 0:
                         NumericalTangentialVelocity_Min = min(myMPAS_O.tangentialVelocity[:,0])
@@ -651,13 +799,13 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                         print('The range of numerical tangential velocity is [%.6f,%.6f].'
                               %(NumericalTangentialVelocity_Min,NumericalTangentialVelocity_Max))    
             if plot_these_variables[10] and myMPAS_O.time > 0.0: 
-            # if plotSurfaceElevationError and myMPAS_O.time > 0.0:                    
+            # if plotSurfaceElevationError and myMPAS_O.time > 0.0:
+                SurfaceElevationError = myMPAS_O.sshCurrent - GeophysicalWaveExactSurfaceElevations
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_SurfaceElevationError')                
                 if problem_type == 'Coastal_Kelvin_Wave' and time_integrator == 'forward_backward_predictor':
                     ColorBarLimits = [-0.00877,0.00877]
-                SurfaceElevationError = myMPAS_O.sshCurrent - GeophysicalWaveExactSurfaceElevations
                 Title = (wave_type_title + ': Surface Elevation Error after\n%d Hours %2d Minutes %2d Seconds' 
                          %(hours,minutes,seconds))                          
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
@@ -665,11 +813,12 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[10]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   SurfaceElevationError,FigureTitle)
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                                  SurfaceElevationError,300,True,ColorBarLimits,
-                                                                  6,plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                                  [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                                  True,FigureTitle,False,cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    SurfaceElevationError,300,True,ColorBarLimits,
+                                                                    6,plt.cm.seismic,13.75,['x (km)','y (km)'],
+                                                                    [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,
+                                                                    20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == nDumpFrequency:
                         SurfaceElevationError_Min = min(SurfaceElevationError)
@@ -681,23 +830,23 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                         print('The range of surface elevation error is [%.6f,%.6f].'
                               %(SurfaceElevationError_Min,SurfaceElevationError_Max))    
             if plot_these_variables[11] and myMPAS_O.time > 0.0: 
-            # if plotZonalVelocityError and myMPAS_O.time > 0.0:  
+            # if plotZonalVelocityError and myMPAS_O.time > 0.0:                    
+                ZonalVelocityError = numericalZonalVelocities - GeophysicalWaveExactZonalVelocities               
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
-                                    + time_integrator_short_form + '_ZonalVelocityError')                  
-                ZonalVelocityError = numericalZonalVelocities - GeophysicalWaveExactZonalVelocities
+                                    + time_integrator_short_form + '_ZonalVelocityError')                
                 Title = (wave_type_title + ': Zonal Velocity Error after\n%d Hours %2d Minutes %2d Seconds'
                          %(hours,minutes,seconds))
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
                                + '_ZonalVelocityError_' + '%3.3d' %iTime)   
                 if output_these_variables[11]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   ZonalVelocityError,FigureTitle)                
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  ZonalVelocityError,300,False,[0.0,0.0],6,
-                                                                  plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                                  [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                                  True,FigureTitle,False,cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,ZonalVelocityError,
+                                                                    300,False,[0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == nDumpFrequency:
                         ZonalVelocityError_Min = min(ZonalVelocityError)
@@ -709,26 +858,26 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                         print('The range of zonal velocity error is [%.6f,%.6f].'
                               %(ZonalVelocityError_Min,ZonalVelocityError_Max))   
             if plot_these_variables[12] and myMPAS_O.time > 0.0:
-            # if plotMeridionalVelocityError and myMPAS_O.time > 0.0:   
+            # if plotMeridionalVelocityError and myMPAS_O.time > 0.0:
+                MeridionalVelocityError = numericalMeridionalVelocities - GeophysicalWaveExactMeridionalVelocities
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_MeridionalVelocityError')                    
                 if problem_type == 'Coastal_Kelvin_Wave' and time_integrator == 'forward_backward_predictor':
                     ColorBarLimits = [-0.00213,0.00213]
-                MeridionalVelocityError = numericalMeridionalVelocities - GeophysicalWaveExactMeridionalVelocities
                 Title = (wave_type_title + ': Meridional Velocity Error after\n%d Hours %2d Minutes %2d Seconds'
                          %(hours,minutes,seconds))               
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
                                + '_MeridionalVelocityError_' + '%3.3d' %iTime)    
                 if output_these_variables[12]:
-                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                    CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                   MeridionalVelocityError,FigureTitle) 
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  MeridionalVelocityError,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_2(myMPAS_O,output_directory,
+                                                                    MeridionalVelocityError,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == nDumpFrequency:
                         MeridionalVelocityError_Min = min(MeridionalVelocityError)
@@ -743,24 +892,27 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                               %(MeridionalVelocityError_Min,MeridionalVelocityError_Max))                     
             if plot_these_variables[13] and myMPAS_O.time > 0.0:
             # if plotNormalVelocityError and myMPAS_O.time > 0.0:   
+                NormalVelocityError = (
+                myMPAS_O.normalVelocityCurrent[:,0] - GeophysicalWaveExactNormalVelocities[:])
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_NormalVelocityError')
                 if problem_type == 'Coastal_Kelvin_Wave' and time_integrator == 'forward_backward_predictor':
-                    ColorBarLimits = [-0.00193,0.00193]
-                NormalVelocityError = myMPAS_O.normalVelocityCurrent[:,0] - GeophysicalWaveExactNormalVelocities
+                    ColorBarLimits = [-0.00193,0.00193]               
                 Title = (wave_type_title + ': Normal Velocity Error after\n%d Hours %2d Minutes %2d Seconds'
                          %(hours,minutes,seconds))               
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
                                + '_NormalVelocityError_' + '%3.3d' %iTime)    
                 if output_these_variables[13]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                  NormalVelocityError,FigureTitle) 
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  NormalVelocityError,300,True,ColorBarLimits,6,
-                                                                  plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                                  [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                                  True,FigureTitle,False,cbarlabelformat='%.5f')
+                                                  NormalVelocityError,FigureTitle)
+                NormalVelocityError_Plot = CR.RemoveElementFrom1DArray(NormalVelocityError,max_yEdge_index)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    NormalVelocityError_Plot,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == nDumpFrequency:
                         NormalVelocityError_Min = min(NormalVelocityError)
@@ -773,13 +925,13 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                               %(NormalVelocityError_Min,NormalVelocityError_Max))   
             if plot_these_variables[14] and myMPAS_O.time > 0.0:
             # if plotTangentialVelocityError and myMPAS_O.time > 0.0:   
+                TangentialVelocityError = (
+                myMPAS_O.tangentialVelocity[:,0] - GeophysicalWaveExactTangentialVelocities[:])
                 output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves/' 
                                     + wave_type_figure_title + '_' + wave_nature + '_' 
                                     + time_integrator_short_form + '_TangentialVelocityError')                    
                 if problem_type == 'Coastal_Kelvin_Wave' and time_integrator == 'forward_backward_predictor':
                     ColorBarLimits = [-0.00206,0.00206]
-                TangentialVelocityError = (
-                myMPAS_O.tangentialVelocity[:,0] - GeophysicalWaveExactTangentialVelocities[:])
                 Title = (wave_type_title + ': Tangential Velocity Error after\n%d Hours %2d Minutes %2d Seconds'
                          %(hours,minutes,seconds))               
                 FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
@@ -787,12 +939,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
                 if output_these_variables[14]:
                     CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
                                                   TangentialVelocityError,FigureTitle) 
-                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                                  TangentialVelocityError,300,True,
-                                                                  ColorBarLimits,6,plt.cm.seismic,13.75,
-                                                                  ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                                  [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                                  cbarlabelformat='%.5f')                
+                TangentialVelocityError_Plot = (
+                CR.RemoveElementFrom1DArray(TangentialVelocityError,max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    TangentialVelocityError_Plot,300,True,
+                                                                    ColorBarLimits,6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
                 if display_range_of_variables:
                     if iTime == nDumpFrequency:
                         TangentialVelocityError_Min = min(TangentialVelocityError)
@@ -813,13 +967,14 @@ def Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_
             MPAS_O_Mode_Forward.ocn_shift_time_levels(myMPAS_O)
 
 
-# In[18]:
+# In[20]:
 
 runMain_LinearCoastalKelvinWave_FBP = False
 if runMain_LinearCoastalKelvinWave_FBP:    
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
     CourantNumber = 0.36
@@ -846,11 +1001,11 @@ if runMain_LinearCoastalKelvinWave_FBP:
                             plotNumericalTangentialVelocity,plotSurfaceElevationError,plotZonalVelocityError,
                             plotMeridionalVelocityError,plotNormalVelocityError,plotTangentialVelocityError]
     display_range_of_variables = False
-    Main(mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,problem_is_linear,CourantNumber,
+    Main(mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,problem_type,problem_is_linear,CourantNumber,
          time_integrator,output_these_variables,plot_these_variables,display_range_of_variables)
 
 
-# In[19]:
+# In[21]:
 
 def ComputeL2NormOfStateVariableDefinedAtEdges(nEdges,nNonPeriodicBoundaryEdges,boundaryEdge,
                                                StateVariableDefinedAtEdges):
@@ -858,11 +1013,11 @@ def ComputeL2NormOfStateVariableDefinedAtEdges(nEdges,nNonPeriodicBoundaryEdges,
     for iEdge in range(0,nEdges):
         if boundaryEdge[iEdge] == 0.0:
             L2Norm += (StateVariableDefinedAtEdges[iEdge])**2.0
-    L2Norm = np.sqrt(L2Norm/nNonPeriodicBoundaryEdges)
+    L2Norm = np.sqrt(L2Norm/float(nNonPeriodicBoundaryEdges))
     return L2Norm
 
 
-# In[20]:
+# In[22]:
 
 def ComputeL2NormOfStateVariableDefinedAtCellCenters(nCells,nNonPeriodicBoundaryCells,boundaryCell,
                                                      StateVariableDefinedAtCellCenters):
@@ -870,34 +1025,53 @@ def ComputeL2NormOfStateVariableDefinedAtCellCenters(nCells,nNonPeriodicBoundary
     for iCell in range(0,nCells):
         if boundaryCell[iCell] == 0.0:
             L2Norm += (StateVariableDefinedAtCellCenters[iCell])**2.0
-    L2Norm = np.sqrt(L2Norm/nNonPeriodicBoundaryCells)
+    L2Norm = np.sqrt(L2Norm/float(nNonPeriodicBoundaryCells))
     return L2Norm
 
 
-# In[21]:
+# In[23]:
 
-def Main_ConvergenceTest_SpaceAndTime_GeophysicalWave(mesh_directory,base_mesh_file_name,mesh_file_name,
-                                                      problem_type,problem_is_linear,CourantNumber,
-                                                      time_integrator,plotNumericalSolution=False):
-    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                                       problem_is_linear,periodicity='NonPeriodic_x',CourantNumber=CourantNumber,
-                                       useCourantNumberToDetermineTimeStep=True,time_integrator=time_integrator,
+def Main_ConvergenceTest_GeophysicalWave(convergence_type,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                         mesh_type,problem_type,problem_is_linear,CourantNumber,time_integrator,
+                                         Ratio_of_FinalTime_to_TimePeriod,specified_lY,specified_dt,
+                                         plotNumericalSolution=False,coarsestMesh=False,
+                                         xCell_CoarsestRectilinearMesh=[],yCell_CoarsestRectilinearMesh=[],
+                                         GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh=[],
+                                         GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh=[],
+                                         GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh=[]):    
+    if convergence_type == 'Space':
+        uCNTDTS = False
+    else:
+        uCNTDTS = True    
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                       problem_type,problem_is_linear,periodicity='NonPeriodic_x',
+                                       CourantNumber=CourantNumber,useCourantNumberToDetermineTimeStep=uCNTDTS,
+                                       time_integrator=time_integrator,
                                        specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False)
     MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
-    WaveSpeed = myMPAS_O.myNamelist.config_wave_speed
+    if convergence_type == 'Space' or convergence_type == 'SpaceAndTime':
+        myMPAS_O.lY = specified_lY
+    if convergence_type == 'Space' or convergence_type == 'Time':
+        myMPAS_O.myNamelist.config_dt = specified_dt
+    if convergence_type == 'Space':
+        print('The timestep for Courant number %.2f is %.2f seconds.' %(CourantNumber,
+                                                                        myMPAS_O.myNamelist.config_dt))        
+    WaveSpeed = myMPAS_O.myNamelist.config_wave_speed   
     TimePeriod = myMPAS_O.lY/WaveSpeed
-    FinalTime = 0.5*TimePeriod
+    FinalTime = Ratio_of_FinalTime_to_TimePeriod*TimePeriod
     dt = myMPAS_O.myNamelist.config_dt
     nTime = int(FinalTime/dt)
-    print('TimePeriod is %.6f and FinalTime is %.6f.' %(TimePeriod,FinalTime))
-    print('For nCells in each direction = %3d, nTime = %3d.' %(int(np.sqrt(myMPAS_O.nCells)),nTime))
-    myMPAS_O.myNamelist.config_dt = FinalTime/float(nTime)
-    ModifiedCourantNumber = CourantNumber*myMPAS_O.myNamelist.config_dt/dt
-    print('The final timestep for the modified Courant number of %.6f is %.6f seconds.' 
-          %(ModifiedCourantNumber,myMPAS_O.myNamelist.config_dt))
+    if convergence_type == 'SpaceAndTime':
+        print('TimePeriod is %.6f and FinalTime is %.6f.' %(TimePeriod,FinalTime))
+        print('For nCells in each direction = %3d, nTime = %3d.' %(int(np.sqrt(float(myMPAS_O.nCells))),nTime))
+        myMPAS_O.myNamelist.config_dt = FinalTime/float(nTime)
+        ModifiedCourantNumber = CourantNumber*myMPAS_O.myNamelist.config_dt/dt
+        print('The final timestep for the modified Courant number of %.6f is %.6f seconds.' 
+              %(ModifiedCourantNumber,myMPAS_O.myNamelist.config_dt))
+        print('The increase in timestep is %.6f seconds and that in the Courant Number is %.6f.'
+              %(myMPAS_O.myNamelist.config_dt-dt,ModifiedCourantNumber-CourantNumber))
     compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = False
     compute_these_variables[4] = True # compute_these_variables[4] = compute_tangentialVelocity
     numericalZonalVelocities = np.zeros(myMPAS_O.nEdges)
     numericalMeridionalVelocities = np.zeros(myMPAS_O.nEdges)
@@ -929,7 +1103,7 @@ def Main_ConvergenceTest_SpaceAndTime_GeophysicalWave(mesh_directory,base_mesh_f
             myMPAS_O.normalVelocityCurrent[:,0] = GeophysicalWaveExactNormalVelocities[:]
         if iTime == nTime:
             print('The final time for the %3d x %3d mesh is %.6f seconds.' 
-                  %(int(np.sqrt(myMPAS_O.nCells)),int(np.sqrt(myMPAS_O.nCells)),myMPAS_O.time))
+                  %(int(np.sqrt(float(myMPAS_O.nCells))),int(np.sqrt(float(myMPAS_O.nCells))),myMPAS_O.time))
             MPAS_O_Shared.ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,
                                                compute_these_variables)
             for iEdge in range(0,myMPAS_O.nEdges):
@@ -945,127 +1119,232 @@ def Main_ConvergenceTest_SpaceAndTime_GeophysicalWave(mesh_directory,base_mesh_f
                     (myMPAS_O.normalVelocityCurrent[iEdge,0]*np.sin(myMPAS_O.angleEdge[iEdge])
                      + myMPAS_O.tangentialVelocity[iEdge,0]*np.cos(myMPAS_O.angleEdge[iEdge])))
             SurfaceElevationError = myMPAS_O.sshCurrent - GeophysicalWaveExactSurfaceElevations
-            if myMPAS_O.specifyExactSurfaceElevationAtNonPeriodicBoundaryCells:
-                SurfaceElevationL2ErrorNorm = (
-                ComputeL2NormOfStateVariableDefinedAtCellCenters(myMPAS_O.nCells,
-                                                                 myMPAS_O.nNonPeriodicBoundaryCells,
-                                                                 myMPAS_O.boundaryCell,SurfaceElevationError))
-            else:
-                SurfaceElevationL2ErrorNorm = np.linalg.norm(SurfaceElevationError)/np.sqrt(myMPAS_O.nCells)
             ZonalVelocityError = numericalZonalVelocities - GeophysicalWaveExactZonalVelocities
-            ZonalVelocityL2ErrorNorm = (
-            ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
-                                                       myMPAS_O.boundaryEdge,ZonalVelocityError))
             MeridionalVelocityError = numericalMeridionalVelocities - GeophysicalWaveExactMeridionalVelocities
-            MeridionalVelocityL2ErrorNorm = (
-            ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
-                                                       myMPAS_O.boundaryEdge,MeridionalVelocityError))
             NormalVelocityError = myMPAS_O.normalVelocityCurrent[:,0] - GeophysicalWaveExactNormalVelocities[:]
-            NormalVelocityL2ErrorNorm = (
-            ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
-                                                       myMPAS_O.boundaryEdge,NormalVelocityError))
             TangentialVelocityError = (
             myMPAS_O.tangentialVelocity[:,0] - GeophysicalWaveExactTangentialVelocities[:])
-            TangentialVelocityL2ErrorNorm = (
-            ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
-                                                       myMPAS_O.boundaryEdge,TangentialVelocityError))
-        if plotNumericalSolution and iTime == nTime:
-            hours, minutes, seconds = PrintDisplayTime(myMPAS_O.time,False)
-            output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves'      
-            Title = (wave_type_title + ': Exact Surface Elevation after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_ExactSurfaceElevation_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells)))
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                          GeophysicalWaveExactSurfaceElevations,FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                              GeophysicalWaveExactSurfaceElevations,300,False,
-                                                              [0.0,0.0],6,plt.cm.seismic,13.75,
-                                                              ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                              [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                              cbarlabelformat='%.5f')
-            Title = (wave_type_title + ': Numerical Surface Elevation after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_NumericalSurfaceElevation_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells)))
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myMPAS_O.sshCurrent,
-                                          FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                              myMPAS_O.sshCurrent,300,False,[0.0,0.0],6,
-                                                              plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                              [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
-                                                              FigureTitle,False,cbarlabelformat='%.5f')
-            Title = (wave_type_title + ': Surface Elevation Error after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_SurfaceElevationError_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells)))
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,SurfaceElevationError,
-                                          FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                              SurfaceElevationError,300,False,[0.0,0.0],6,
-                                                              plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                              [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                              True,FigureTitle,False,cbarlabelformat='%.5f')
-            Title = (wave_type_title + ': Exact Normal Velocity after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_ExactNormalVelocity_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells))) 
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                          GeophysicalWaveExactNormalVelocities,FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                              GeophysicalWaveExactNormalVelocities,300,False,
-                                                              [0.0,0.0],6,plt.cm.seismic,13.75,
-                                                              ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                              [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                              cbarlabelformat='%.5f')
-            Title = (wave_type_title + ': Numerical Normal Velocity after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_NumericalNormalVelocity_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells))) 
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                          myMPAS_O.normalVelocityCurrent[:,0],FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                              myMPAS_O.normalVelocityCurrent[:,0],300,False,
-                                                              [0.0,0.0],6,plt.cm.seismic,13.75,
-                                                              ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
-                                                              [15.0,15.0],Title,20.0,True,FigureTitle,False,
-                                                              cbarlabelformat='%.5f')
-            Title = (wave_type_title + ': Normal Velocity Error after\n%d Hours %2d Minutes %.6f Seconds' 
-                     %(hours,minutes,seconds))                          
-            FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                           + '_NormalVelocityError_nCellsInEachHorizontalDirection_' + '%3.3d' 
-                           %int(np.sqrt(myMPAS_O.nCells))) 
-            CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,NormalVelocityError,
-                                          FigureTitle)
-            PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                              NormalVelocityError,300,False,[0.0,0.0],6,
-                                                              plt.cm.seismic,13.75,['x (km)','y (km)'],
-                                                              [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,
-                                                              True,FigureTitle,False,cbarlabelformat='%.5f') 
+            if plotNumericalSolution:
+                max_yEdge_index = np.argmax(myMPAS_O.yEdge)
+                xEdge_Plot = CR.RemoveElementFrom1DArray(myMPAS_O.xEdge,max_yEdge_index)
+                yEdge_Plot = CR.RemoveElementFrom1DArray(myMPAS_O.yEdge,max_yEdge_index)
+                hours, minutes, seconds = PrintDisplayTime(myMPAS_O.time,False)
+                output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves'      
+                Title = (wave_type_title + ': Exact Surface Elevation after\n%d Hours %2d Minutes %.6f Seconds'
+                         %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_ExactSurfaceElevation_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells))))
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
+                                              GeophysicalWaveExactSurfaceElevations,FigureTitle)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,myMPAS_O.xCell,
+                                                                    myMPAS_O.yCell,
+                                                                    GeophysicalWaveExactSurfaceElevations,300,
+                                                                    False,[0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
+                Title = (
+                wave_type_title + ': Numerical Surface Elevation after\n%d Hours %2d Minutes %.6f Seconds'
+                %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_NumericalSurfaceElevation_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells))))
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myMPAS_O.sshCurrent,
+                                              FigureTitle)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,myMPAS_O.xCell,
+                                                                    myMPAS_O.yCell,myMPAS_O.sshCurrent,300,False,
+                                                                    [0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
+                Title = (wave_type_title + ': Surface Elevation Error after\n%d Hours %2d Minutes %.6f Seconds' 
+                         %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_SurfaceElevationError_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells))))
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
+                                              SurfaceElevationError,FigureTitle)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,myMPAS_O.xCell,
+                                                                    myMPAS_O.yCell,SurfaceElevationError,300,
+                                                                    False,[0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
+                Title = (wave_type_title + ': Exact Normal Velocity after\n%d Hours %2d Minutes %.6f Seconds' 
+                         %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_ExactNormalVelocity_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells)))) 
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                                              GeophysicalWaveExactNormalVelocities,FigureTitle)                
+                GeophysicalWaveExactNormalVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(GeophysicalWaveExactNormalVelocities,max_yEdge_index))                
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    GeophysicalWaveExactNormalVelocities_Plot,300,
+                                                                    False,[0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
+                Title = (wave_type_title + ': Numerical Normal Velocity after\n%d Hours %2d Minutes %.6f Seconds' 
+                         %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_NumericalNormalVelocity_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells)))) 
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
+                                              myMPAS_O.normalVelocityCurrent[:,0],FigureTitle)
+                numericalNormalVelocities_Plot = (
+                CR.RemoveElementFrom1DArray(myMPAS_O.normalVelocityCurrent[:,0],max_yEdge_index))
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    numericalNormalVelocities_Plot,300,False,
+                                                                    [0.0,0.0],6,plt.cm.seismic,13.75,
+                                                                    ['x (km)','y (km)'],[17.5,17.5],[10.0,10.0],
+                                                                    [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')
+                Title = (wave_type_title + ': Normal Velocity Error after\n%d Hours %2d Minutes %.6f Seconds' 
+                         %(hours,minutes,seconds))                          
+                FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
+                               + '_NormalVelocityError_nCellsInEachHorizontalDirection_' + '%3.3d' 
+                               %int(np.sqrt(float(myMPAS_O.nCells)))) 
+                CR.WriteTecPlot2DUnstructured(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,NormalVelocityError,
+                                              FigureTitle)
+                NormalVelocityError_Plot = CR.RemoveElementFrom1DArray(NormalVelocityError,max_yEdge_index)
+                PythonFilledUnstructuredContourPlot2DSaveAsPNG_GW_1(output_directory,xEdge_Plot,yEdge_Plot,
+                                                                    NormalVelocityError_Plot,300,False,[0.0,0.0],
+                                                                    6,plt.cm.seismic,13.75,['x (km)','y (km)'],
+                                                                    [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,
+                                                                    20.0,True,FigureTitle,False,
+                                                                    cbarlabelformat='%.5f')            
+            if convergence_type == 'Time':
+                if myMPAS_O.specifyExactSurfaceElevationAtNonPeriodicBoundaryCells:
+                    SurfaceElevationL2ErrorNorm = (
+                    ComputeL2NormOfStateVariableDefinedAtCellCenters(myMPAS_O.nCells,
+                                                                     myMPAS_O.nNonPeriodicBoundaryCells,
+                                                                     myMPAS_O.boundaryCell,SurfaceElevationError))
+                else:
+                    SurfaceElevationL2ErrorNorm = np.linalg.norm(SurfaceElevationError)/np.sqrt(myMPAS_O.nCells)
+                ZonalVelocityL2ErrorNorm = (
+                ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
+                                                           myMPAS_O.boundaryEdge,ZonalVelocityError))
+                MeridionalVelocityL2ErrorNorm = (
+                ComputeL2NormOfStateVariableDefinedAtEdges(myMPAS_O.nEdges,myMPAS_O.nNonPeriodicBoundaryEdges,
+                                                           myMPAS_O.boundaryEdge,MeridionalVelocityError))
+            else:
+                if coarsestMesh:
+                    xCell_CoarsestRectilinearMesh, yCell_CoarsestRectilinearMesh = (
+                    MOMIR.Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O))     
+                    if problem_type == 'Coastal_Kelvin_Wave':
+                        [GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh, 
+                         GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh, 
+                         GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh] = (
+                        DetermineGeophysicalWaveExactSolutionsOnCoarsestRectilinearMesh(
+                        myMPAS_O,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh,
+                        DetermineCoastalKelvinWaveExactSurfaceElevation,
+                        DetermineCoastalKelvinWaveExactZonalVelocity,
+                            DetermineCoastalKelvinWaveExactMeridionalVelocity))
+                    numericalSurfaceElevations = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,myMPAS_O.sshCurrent))                
+                    SurfaceElevationError = (
+                    numericalSurfaceElevations - GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh)
+                    SurfaceElevationL2ErrorNorm = (
+                    np.linalg.norm(SurfaceElevationError)/np.sqrt(float(myMPAS_O.nCells)))                
+                    numericalZonalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                    myMPAS_O,numericalZonalVelocities)                
+                    numericalZonalVelocities = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,numericalZonalVelocities))                   
+                    ZonalVelocityError = (
+                    numericalZonalVelocities - GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh)
+                    ZonalVelocityL2ErrorNorm = np.linalg.norm(ZonalVelocityError)/np.sqrt(float(myMPAS_O.nCells))
+                    numericalMeridionalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                    myMPAS_O,numericalMeridionalVelocities)                
+                    numericalMeridionalVelocities = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,numericalMeridionalVelocities))                   
+                    MeridionalVelocityError = (
+                    (numericalMeridionalVelocities 
+                     - GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh))
+                    MeridionalVelocityL2ErrorNorm = (
+                    np.linalg.norm(MeridionalVelocityError)/np.sqrt(float(myMPAS_O.nCells)))                
+                else:
+                    nCells_CoarsestRectilinearMesh = len(xCell_CoarsestRectilinearMesh)
+                    xCell_FineRectilinearMesh, yCell_FineRectilinearMesh = (
+                    MOMIR.Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O))                
+                    numericalSurfaceElevations = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,myMPAS_O.sshCurrent))
+                    numericalSurfaceElevations = (
+                    MOMIR.Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O.gridSpacingMagnitude,xCell_FineRectilinearMesh,yCell_FineRectilinearMesh,
+                    numericalSurfaceElevations,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh))
+                    SurfaceElevationError = (
+                    numericalSurfaceElevations - GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh)
+                    SurfaceElevationL2ErrorNorm = (
+                    np.linalg.norm(SurfaceElevationError)/np.sqrt(float(myMPAS_O.nCells)))                
+                    numericalZonalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                    myMPAS_O,numericalZonalVelocities)
+                    numericalZonalVelocities = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,numericalZonalVelocities))                
+                    numericalZonalVelocities = (
+                    MOMIR.Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O.gridSpacingMagnitude,xCell_FineRectilinearMesh,yCell_FineRectilinearMesh,
+                    numericalZonalVelocities,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh))
+                    ZonalVelocityError = (
+                    numericalZonalVelocities - GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh)
+                    ZonalVelocityL2ErrorNorm = (
+                    np.linalg.norm(ZonalVelocityError)/np.sqrt(float(nCells_CoarsestRectilinearMesh)))  
+                    numericalMeridionalVelocities = MOMIR.Interpolate_Solution_From_Edges_To_Cell_Centers(
+                    myMPAS_O,numericalMeridionalVelocities)
+                    numericalMeridionalVelocities = (
+                    MOMIR.Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O,numericalMeridionalVelocities))                
+                    numericalMeridionalVelocities = (
+                    MOMIR.Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(
+                    myMPAS_O.gridSpacingMagnitude,xCell_FineRectilinearMesh,yCell_FineRectilinearMesh,
+                    numericalMeridionalVelocities,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh))
+                    MeridionalVelocityError = (
+                    (numericalMeridionalVelocities 
+                     - GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh))
+                    MeridionalVelocityL2ErrorNorm = (
+                    np.linalg.norm(MeridionalVelocityError)/np.sqrt(float(nCells_CoarsestRectilinearMesh)))
         if iTime < nTime and time_integrator == 'forward_backward_predictor':
             if problem_type == 'Coastal_Kelvin_Wave':
                 MPAS_O_Mode_Forward.ocn_time_integration_forward_backward_predictor_Geophysical_Wave(
                 myMPAS_O,DetermineCoastalKelvinWaveExactSurfaceElevation,
-                DetermineCoastalKelvinWaveExactZonalVelocity,DetermineCoastalKelvinWaveExactMeridionalVelocity)   
+                DetermineCoastalKelvinWaveExactZonalVelocity,DetermineCoastalKelvinWaveExactMeridionalVelocity)
             MPAS_O_Mode_Forward.ocn_shift_time_levels(myMPAS_O)
-    return [myMPAS_O.gridSpacingMagnitude, SurfaceElevationL2ErrorNorm, ZonalVelocityL2ErrorNorm, 
-            MeridionalVelocityL2ErrorNorm, NormalVelocityL2ErrorNorm, TangentialVelocityL2ErrorNorm]
+    if not(convergence_type == 'Time') and coarsestMesh:
+        return [myMPAS_O.gridSpacingMagnitude, SurfaceElevationL2ErrorNorm, ZonalVelocityL2ErrorNorm, 
+                MeridionalVelocityL2ErrorNorm, xCell_CoarsestRectilinearMesh, yCell_CoarsestRectilinearMesh,
+                GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh,
+                GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh,
+                GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh]
+    else:
+        return [myMPAS_O.gridSpacingMagnitude, SurfaceElevationL2ErrorNorm, ZonalVelocityL2ErrorNorm, 
+                MeridionalVelocityL2ErrorNorm]
 
 
-# In[22]:
+# In[24]:
 
-def ConvergenceTest_SpaceAndTime_GeophysicalWave(problem_type,problem_is_linear,CourantNumber,time_integrator,
-                                                 output_these_variables):
-    nCellsXMin = 50
-    nCellsXMax = 250
-    d_nCellsX = 10
-    nCases = int((nCellsXMax - nCellsXMin)/d_nCellsX) + 1
-    nCellsX = np.linspace(nCellsXMin,nCellsXMax,nCases,dtype=int)
+def ConvergenceTest_GeophysicalWave(convergence_type,mesh_type,problem_type,problem_is_linear,CourantNumber,
+                                    time_integrator,Ratio_of_FinalTime_to_TimePeriod,output_these_variables):  
+    if convergence_type == 'Space':
+        nCellsX = np.array([16,32,64,128,256])
+        nCases = len(nCellsX)
+    elif convergence_type == 'Time':
+        CourantNumberMin = 0.25
+        CourantNumberMax = 0.75
+        nCases = 21
+        CourantNumberArray = np.linspace(CourantNumberMin,CourantNumberMax,nCases)
+        nCellsX = np.ones(nCases,dtype=int)*150
+    elif convergence_type == 'SpaceAndTime':
+        nCellsXMin = 50
+        nCellsXMax = 250
+        d_nCellsX = 10
+        nCases = int((nCellsXMax - nCellsXMin)/d_nCellsX) + 1
+        nCellsX = np.linspace(nCellsXMin,nCellsXMax,nCases,dtype=int)
     dc = np.zeros(nCases)
     SurfaceElevationL2ErrorNorm = np.zeros(nCases)
     ZonalVelocityL2ErrorNorm = np.zeros(nCases)
@@ -1080,64 +1359,145 @@ def ConvergenceTest_SpaceAndTime_GeophysicalWave(problem_type,problem_is_linear,
         wave_nature = 'NonLinear'
     if time_integrator == 'forward_backward_predictor':    
         time_integrator_short_form = 'FBP'
+    if convergence_type == 'Space' or convergence_type == 'SpaceAndTime':
+        if problem_type == 'Coastal_Kelvin_Wave':
+            mesh_directory = (
+            'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/ConvergenceStudyMeshes')
+            base_mesh_file_name = 'culled_mesh_%s.nc' %(nCellsX[nCases-1])
+            mesh_file_name = 'mesh_%s.nc' %(nCellsX[nCases-1])
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                           problem_type,problem_is_linear,periodicity='NonPeriodic_x',
+                                           CourantNumber=CourantNumber,useCourantNumberToDetermineTimeStep=True,
+                                           time_integrator=time_integrator,
+                                           specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False)
+        specified_lY = myMPAS_O.lY 
+    if convergence_type == 'Space':    
+        WaveSpeed = myMPAS_O.myNamelist.config_wave_speed
+        TimePeriod = myMPAS_O.lY/WaveSpeed
+        FinalTime = Ratio_of_FinalTime_to_TimePeriod*TimePeriod
+        specified_dt = myMPAS_O.myNamelist.config_dt
+        nTime = int(FinalTime/specified_dt)
+        specified_dt = FinalTime/float(nTime)
+    elif convergence_type == 'Time':
+        if problem_type == 'Coastal_Kelvin_Wave':
+            mesh_directory = (
+            'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/ConvergenceStudyMeshes')
+            base_mesh_file_name = 'culled_mesh_%s.nc' %(nCellsX[0])
+            mesh_file_name = 'mesh_%s.nc' %(nCellsX[0])
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                                           problem_type,problem_is_linear,periodicity='NonPeriodic_x',
+                                           CourantNumber=CourantNumber,useCourantNumberToDetermineTimeStep=False,
+                                           time_integrator=time_integrator,
+                                           specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False)
+        specified_lY = 0.0
+        dx = myMPAS_O.gridSpacingMagnitude
+        WaveSpeed = myMPAS_O.myNamelist.config_wave_speed
+        TimePeriod = myMPAS_O.lY/WaveSpeed
+        FinalTime = Ratio_of_FinalTime_to_TimePeriod*TimePeriod
+    elif convergence_type == 'SpaceAndTime':
+        specified_dt = 1.0
     for iCase in range(0,nCases):
+        if convergence_type == 'Time':
+            CourantNumber = CourantNumberArray[iCase]
+            dt = CourantNumber*dx/WaveSpeed
+            nTime = int(FinalTime/dt)
+            specified_dt = FinalTime/float(nTime)
         if problem_type == 'Coastal_Kelvin_Wave':
             mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/ConvergenceStudyMeshes'
             base_mesh_file_name = 'culled_mesh_%s.nc' %(nCellsX[iCase])
-            mesh_file_name = 'mesh_%s.nc' %(nCellsX[iCase])
-        [dc[iCase], SurfaceElevationL2ErrorNorm[iCase], ZonalVelocityL2ErrorNorm[iCase], 
-         MeridionalVelocityL2ErrorNorm[iCase], NormalVelocityL2ErrorNorm[iCase], 
-         TangentialVelocityL2ErrorNorm[iCase]] = (
-        Main_ConvergenceTest_SpaceAndTime_GeophysicalWave(mesh_directory,base_mesh_file_name,mesh_file_name,
-                                                          problem_type,problem_is_linear,CourantNumber,
-                                                          time_integrator,plotNumericalSolution=False))
+            mesh_file_name = 'mesh_%s.nc' %(nCellsX[iCase])               
+        if convergence_type == 'Time':        
+            [dc[iCase], SurfaceElevationL2ErrorNorm[iCase], ZonalVelocityL2ErrorNorm[iCase], 
+             MeridionalVelocityL2ErrorNorm[iCase]] = (
+            Main_ConvergenceTest_GeophysicalWave(convergence_type,mesh_directory,base_mesh_file_name,
+                                                 mesh_file_name,mesh_type,problem_type,problem_is_linear,
+                                                 CourantNumber,time_integrator,Ratio_of_FinalTime_to_TimePeriod,
+                                                 specified_lY,specified_dt,plotNumericalSolution=False))
+        else:
+            if iCase == 0:
+                [dc[iCase], SurfaceElevationL2ErrorNorm[iCase], ZonalVelocityL2ErrorNorm[iCase], 
+                 MeridionalVelocityL2ErrorNorm[iCase], xCell_CoarsestRectilinearMesh, 
+                 yCell_CoarsestRectilinearMesh, GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh,
+                 GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh,
+                 GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh] = (
+                Main_ConvergenceTest_GeophysicalWave(convergence_type,mesh_directory,base_mesh_file_name,
+                                                     mesh_file_name,mesh_type,problem_type,problem_is_linear,
+                                                     CourantNumber,time_integrator,
+                                                     Ratio_of_FinalTime_to_TimePeriod,specified_lY,specified_dt,
+                                                     plotNumericalSolution=False,coarsestMesh=True))
+            else:    
+                [dc[iCase], SurfaceElevationL2ErrorNorm[iCase], ZonalVelocityL2ErrorNorm[iCase], 
+                 MeridionalVelocityL2ErrorNorm[iCase]] = (
+                Main_ConvergenceTest_GeophysicalWave(
+                convergence_type,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,problem_type,
+                problem_is_linear,CourantNumber,time_integrator,Ratio_of_FinalTime_to_TimePeriod,specified_lY,
+                specified_dt,False,False,xCell_CoarsestRectilinearMesh,yCell_CoarsestRectilinearMesh,
+                GeophysicalWaveExactSurfaceElevations_CoarsestRectilinearMesh,
+                GeophysicalWaveExactZonalVelocities_CoarsestRectilinearMesh,
+                GeophysicalWaveExactMeridionalVelocities_CoarsestRectilinearMesh))
+        if convergence_type == 'Time':
+            dc[iCase] = specified_dt
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves'
     output_surface_elevation_convergence_data = output_these_variables[0]
     if output_surface_elevation_convergence_data:
         FileName = (wave_type_file_name + '_' + wave_nature + '_' + time_integrator_short_form
-                    + '_NumericalSurfaceElevationConvergencePlot_SpaceAndTime_L2ErrorNorm')  
+                    + '_NumericalSurfaceElevationConvergencePlot_' + convergence_type + '_L2ErrorNorm')  
         CR.WriteCurve1D(output_directory,dc,SurfaceElevationL2ErrorNorm,FileName)
     output_zonal_velocity_convergence_data = output_these_variables[1]
     if output_zonal_velocity_convergence_data:        
         FileName = (wave_type_file_name + '_' + wave_nature + '_' + time_integrator_short_form
-                    + '_NumericalZonalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')  
+                    + '_NumericalZonalVelocityConvergencePlot_' + convergence_type + '_L2ErrorNorm')  
         CR.WriteCurve1D(output_directory,dc,ZonalVelocityL2ErrorNorm,FileName)
     output_meridional_velocity_convergence_data = output_these_variables[2]
     if output_meridional_velocity_convergence_data:              
         FileName = (wave_type_file_name + '_' + wave_nature + '_' + time_integrator_short_form
-                    + '_NumericalMeridionalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')     
+                    + '_NumericalMeridionalVelocityConvergencePlot_' + convergence_type + '_L2ErrorNorm')     
         CR.WriteCurve1D(output_directory,dc,MeridionalVelocityL2ErrorNorm,FileName)
-    output_normal_velocity_convergence_data = output_these_variables[3]
-    if output_normal_velocity_convergence_data:          
-        FileName = (wave_type_file_name + '_' + wave_nature + '_' + time_integrator_short_form
-                    + '_NumericalNormalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')        
-        CR.WriteCurve1D(output_directory,dc,NormalVelocityL2ErrorNorm,FileName)
-    output_tangential_velocity_convergence_data = output_these_variables[4]
-    if output_tangential_velocity_convergence_data:              
-        FileName = (wave_type_file_name + '_' + wave_nature + '_' + time_integrator_short_form
-                    + '_NumericalTangentialVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm') 
-        CR.WriteCurve1D(output_directory,dc,TangentialVelocityL2ErrorNorm,FileName)
 
 
-# In[23]:
+# In[25]:
 
-run_ConvergenceTest_SpaceAndTime_LinearCoastalKelvinWave = False
-if run_ConvergenceTest_SpaceAndTime_LinearCoastalKelvinWave:
+def run_ConvergenceTest_LinearCoastalKelvinWave(convergence_type):
+    mesh_type = 'uniform'
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
     CourantNumber = 0.75
     time_integrator = 'forward_backward_predictor'
-    output_these_variables = np.zeros(8,dtype=bool)
-    output_these_variables[0] = True # output_these_variables[0] = output_surface_elevation_convergence_data
-    output_these_variables[3] = True # output_these_variables[3] = output_normal_velocity_convergence_data
-    ConvergenceTest_SpaceAndTime_GeophysicalWave(problem_type,problem_is_linear,CourantNumber,time_integrator,
-                                                 output_these_variables)
+    Ratio_of_FinalTime_to_TimePeriod = 0.5
+    output_these_variables = np.zeros(3,dtype=bool)
+    output_these_variables[0] = True
+    # output_these_variables[0] = output_surface_elevation_convergence_data
+    # output_these_variables[1] = output_zonal_velocity_convergence_data
+    # output_these_variables[2] = output_meridional_velocity_convergence_data
+    ConvergenceTest_GeophysicalWave(convergence_type,mesh_type,problem_type,problem_is_linear,CourantNumber,
+                                    time_integrator,Ratio_of_FinalTime_to_TimePeriod,output_these_variables)
 
 
-# In[24]:
+# In[26]:
 
-def PlotConvergenceData(problem_type,problem_is_linear,time_integrator,plot_these_variables,
-                        plotAgainstCellWidthInverse=True,usePlotly=False):
+run_ConvergenceTest_Space_LinearCoastalKelvinWave = False
+if run_ConvergenceTest_Space_LinearCoastalKelvinWave:
+    run_ConvergenceTest_LinearCoastalKelvinWave('Space')
+
+
+# In[27]:
+
+run_ConvergenceTest_Time_LinearCoastalKelvinWave = False
+if run_ConvergenceTest_Time_LinearCoastalKelvinWave:
+    run_ConvergenceTest_LinearCoastalKelvinWave('Time')
+
+
+# In[28]:
+
+run_ConvergenceTest_SpaceAndTime_LinearCoastalKelvinWave = False
+if run_ConvergenceTest_SpaceAndTime_LinearCoastalKelvinWave:
+    run_ConvergenceTest_LinearCoastalKelvinWave('SpaceAndTime')
+
+
+# In[29]:
+
+def PlotConvergenceData(convergence_type,problem_type,problem_is_linear,CourantNumber,time_integrator,
+                        plot_these_variables,plotAgainstCellWidthInverse=True,usePlotly=False,useMeanCurve=False):
     if problem_type == 'Coastal_Kelvin_Wave':
         wave_type_figure_title = 'CoastalKelvinWave'
     if problem_is_linear:
@@ -1147,21 +1507,47 @@ def PlotConvergenceData(problem_type,problem_is_linear,time_integrator,plot_thes
     if time_integrator == 'forward_backward_predictor':    
         time_integrator_short_form = 'FBP'        
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Geophysical_Waves'
-    xLabel = 'Grid Spacing Inverse'
+    if convergence_type == 'Time':
+        xLabel = 'Inverse of Time Step'
+    else: # if convergence_type == 'Space' or convergence_type == 'SpaceAndTime':
+        xLabel = 'Inverse of Cell Width'
+    if convergence_type == 'Space':
+        Title = 'Convergence in Space w.r.t. L2 Error Norm'
+    elif convergence_type == 'Time':
+        Title = 'Convergence in Time w.r.t. L2 Error Norm'
+    elif convergence_type == 'SpaceAndTime':
+        Title = 'Convergence at Constant Courant Number of %.2f w.r.t. L2 Error Norm' %CourantNumber
+    myTitle = Title
     plot_surface_elevation_convergence_data = plot_these_variables[0]
     if plot_surface_elevation_convergence_data:  
-        yLabel = 'L2 Error Norm of Numerical Surface Elevation'
-        Title = 'Convergence Plot w.r.t. L2 Error Norm' 
+        yLabel = 'L2 Error Norm of Numerical Surface Elevation'         
         FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                       + '_NumericalSurfaceElevationConvergencePlot_SpaceAndTime_L2ErrorNorm') 
+                       + '_NumericalSurfaceElevationConvergencePlot_' + convergence_type + '_L2ErrorNorm') 
         dc, SurfaceElevationL2ErrorNorm = CR.ReadCurve1D(output_directory,FigureTitle+'.curve')
+        if convergence_type == 'Space':
+            yLabel = 'Difference in ' + yLabel
+            nCases = len(dc)
+            dc = dc[1:nCases]
+            SurfaceElevationL2ErrorNormDifference = np.zeros(nCases-1)
+            for iCase in range(0,nCases-1):
+                SurfaceElevationL2ErrorNormDifference[iCase] = (
+                SurfaceElevationL2ErrorNorm[iCase] - SurfaceElevationL2ErrorNorm[iCase+1])
+            SurfaceElevationL2ErrorNorm = SurfaceElevationL2ErrorNormDifference
+        if useMeanCurve:
+            A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+            m, c = np.linalg.lstsq(A,np.log10(SurfaceElevationL2ErrorNorm))[0]
+            SurfaceElevationL2ErrorNorm = m*(np.log10(1.0/dc)) + c
+            SurfaceElevationL2ErrorNorm = 10.0**SurfaceElevationL2ErrorNorm    
+            myTitle = Title + ': Slope is %.3g' %m
+            FigureTitle += '_MeanCurve'
         if not(plotAgainstCellWidthInverse):
             dc = 1.0/dc  
         if not(usePlotly):
             CR.PythonPlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,SurfaceElevationL2ErrorNorm,2.0,'-','k',
-                                     's',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
-                                     FigureTitle,False,fig_size=[9.25,9.25],
-                                     useDefaultMethodToSpecifyTickFontSize=False,drawGrid=True) 
+                                     's',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],myTitle,20.0,
+                                     True,FigureTitle,False,fig_size=[9.25,9.25],
+                                     useDefaultMethodToSpecifyTickFontSize=False,drawMajorGrid=True,
+                                     drawMinorGrid=True) 
         else:
             CR.PythonPlotly1DSaveAsPNG(output_directory,'log-log',1.0/dc,SurfaceElevationL2ErrorNorm,'black',2.0,
                                        'square',10.0,[xLabel,yLabel],[20.0,20.0],[17.5,17.5],Title,25.0,True,
@@ -1169,17 +1555,33 @@ def PlotConvergenceData(problem_type,problem_is_linear,time_integrator,plot_thes
     plot_zonal_velocity_convergence_data = plot_these_variables[1]
     if plot_zonal_velocity_convergence_data: 
         yLabel = 'L2 Error Norm of Numerical Zonal Velocity'
-        Title = 'Convergence Plot w.r.t. L2 Error Norm' 
         FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                       + '_NumericalZonalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm') 
+                       + '_NumericalZonalVelocityConvergencePlot_' + convergence_type + '_L2ErrorNorm') 
         dc, ZonalVelocityL2ErrorNorm = CR.ReadCurve1D(output_directory,FigureTitle+'.curve')
+        if convergence_type == 'Space':
+            yLabel = 'Difference in ' + yLabel
+            nCases = len(dc)
+            dc = dc[1:nCases]
+            ZonalVelocityL2ErrorNormDifference = np.zeros(nCases-1)
+            for iCase in range(0,nCases-1):
+                ZonalVelocityL2ErrorNormDifference[iCase] = (
+                ZonalVelocityL2ErrorNorm[iCase] - ZonalVelocityL2ErrorNorm[iCase+1])
+            ZonalVelocityL2ErrorNorm = ZonalVelocityL2ErrorNormDifference
+        if useMeanCurve:
+            A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+            m, c = np.linalg.lstsq(A,np.log10(ZonalVelocityL2ErrorNorm))[0]
+            ZonalVelocityL2ErrorNorm = m*(np.log10(1.0/dc)) + c
+            ZonalVelocityL2ErrorNorm = 10.0**ZonalVelocityL2ErrorNorm  
+            myTitle = Title + ': Slope is %.3g' %m
+            FigureTitle += '_MeanCurve'
         if not(plotAgainstCellWidthInverse):
             dc = 1.0/dc 
         if not(usePlotly):
             CR.PythonPlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,ZonalVelocityL2ErrorNorm,2.0,'-','k','s',
-                                     7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
+                                     7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],myTitle,20.0,True,
                                      FigureTitle,False,fig_size=[9.25,9.25],
-                                     useDefaultMethodToSpecifyTickFontSize=False,drawGrid=True) 
+                                     useDefaultMethodToSpecifyTickFontSize=False,drawMajorGrid=True,
+                                     drawMinorGrid=True) 
         else:
             CR.PythonPlotly1DSaveAsPNG(output_directory,'log-log',1.0/dc,ZonalVelocityL2ErrorNorm,'black',2.0,
                                        'square',10.0,[xLabel,yLabel],[20.0,20.0],[17.5,17.5],Title,25.0,True,
@@ -1187,70 +1589,74 @@ def PlotConvergenceData(problem_type,problem_is_linear,time_integrator,plot_thes
     plot_meridional_velocity_convergence_data = plot_these_variables[2]
     if plot_meridional_velocity_convergence_data:            
         yLabel = 'L2 Error Norm of Numerical Meridional Velocity'
-        Title = 'Convergence Plot w.r.t. L2 Error Norm' 
         FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                       + '_NumericalMeridionalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')     
+                       + '_NumericalMeridionalVelocityConvergencePlot_' + convergence_type + '_L2ErrorNorm')     
         dc, MeridionalVelocityL2ErrorNorm = CR.ReadCurve1D(output_directory,FigureTitle+'.curve')
+        if convergence_type == 'Space':
+            yLabel = 'Difference in ' + yLabel
+            nCases = len(dc)
+            dc = dc[1:nCases]
+            MeridionalVelocityL2ErrorNormDifference = np.zeros(nCases-1)
+            for iCase in range(0,nCases-1):
+                MeridionalVelocityL2ErrorNormDifference[iCase] = (
+                MeridionalVelocityL2ErrorNorm[iCase] - MeridionalVelocityL2ErrorNorm[iCase+1])
+            MeridionalVelocityL2ErrorNorm = MeridionalVelocityL2ErrorNormDifference
+        if useMeanCurve:
+            A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+            m, c = np.linalg.lstsq(A,np.log10(MeridionalVelocityL2ErrorNorm))[0]
+            MeridionalVelocityL2ErrorNorm = m*(np.log10(1.0/dc)) + c
+            MeridionalVelocityL2ErrorNorm = 10.0**MeridionalVelocityL2ErrorNorm  
+            myTitle = Title + ': Slope is %.3g' %m
+            FigureTitle += '_MeanCurve'
         if not(plotAgainstCellWidthInverse):
             dc = 1.0/dc 
         if not(usePlotly):
             CR.PythonPlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MeridionalVelocityL2ErrorNorm,2.0,'-','k',
-                                     's',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
-                                     FigureTitle,False,fig_size=[9.25,9.25],
-                                     useDefaultMethodToSpecifyTickFontSize=False,drawGrid=True) 
+                                     's',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],myTitle,20.0,
+                                     True,FigureTitle,False,fig_size=[9.25,9.25],
+                                     useDefaultMethodToSpecifyTickFontSize=False,drawMajorGrid=True,
+                                     drawMinorGrid=True) 
         else:
             CR.PythonPlotly1DSaveAsPNG(output_directory,'log-log',1.0/dc,MeridionalVelocityL2ErrorNorm,'black',
-                                       2.0,'square',10.0,[xLabel,yLabel],[20.0,20.0],[17.5,17.5],Title,25.0,True,
-                                       FigureTitle,False,fig_size=[700.0,700.0])  
-    plot_normal_velocity_convergence_data = plot_these_variables[3]
-    if plot_normal_velocity_convergence_data:          
-        yLabel = 'L2 Error Norm of Numerical Normal Velocity'
-        Title = 'Convergence Plot w.r.t. L2 Error Norm' 
-        FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                       + '_NumericalNormalVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')        
-        dc, NormalVelocityL2ErrorNorm = CR.ReadCurve1D(output_directory,FigureTitle+'.curve')
-        if not(plotAgainstCellWidthInverse):
-            dc = 1.0/dc 
-        if not(usePlotly):
-            CR.PythonPlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,NormalVelocityL2ErrorNorm,2.0,'-','k','s',
-                                     7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
-                                     FigureTitle,False,fig_size=[9.25,9.25],
-                                     useDefaultMethodToSpecifyTickFontSize=False,drawGrid=True) 
-        else:
-            CR.PythonPlotly1DSaveAsPNG(output_directory,'log-log',1.0/dc,NormalVelocityL2ErrorNorm,'black',2.0,
-                                       'square',10.0,[xLabel,yLabel],[20.0,20.0],[17.5,17.5],Title,25.0,True,
-                                       FigureTitle,False,fig_size=[700.0,700.0])  
-    plot_tangential_velocity_convergence_data = plot_these_variables[4]
-    if plot_tangential_velocity_convergence_data:     
-        yLabel = 'L2 Error Norm of Numerical Tangential Velocity'
-        Title = 'Convergence Plot w.r.t. L2 Error Norm'
-        FigureTitle = (wave_type_figure_title + '_' + wave_nature + '_' + time_integrator_short_form
-                       + '_NumericalTangentialVelocityConvergencePlot_SpaceAndTime_L2ErrorNorm')      
-        dc, TangentialVelocityL2ErrorNorm = CR.ReadCurve1D(output_directory,FigureTitle+'.curve')
-        if not(plotAgainstCellWidthInverse):
-            dc = 1.0/dc 
-        if not(usePlotly):
-            CR.PythonPlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,TangentialVelocityL2ErrorNorm,2.0,'-','k',
-                                     's',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
-                                     FigureTitle,False,fig_size=[9.25,9.25],
-                                     useDefaultMethodToSpecifyTickFontSize=False,drawGrid=True)
-        else:
-            CR.PythonPlotly1DSaveAsPNG(output_directory,'log-log',1.0/dc,TangentialVelocityL2ErrorNorm,'black',
                                        2.0,'square',10.0,[xLabel,yLabel],[20.0,20.0],[17.5,17.5],Title,25.0,True,
                                        FigureTitle,False,fig_size=[700.0,700.0])
 
 
-# In[25]:
+# In[30]:
 
-do_PlotConvergenceData_LinearCoastalKelvinWave = False
-if do_PlotConvergenceData_LinearCoastalKelvinWave:
+def do_PlotConvergenceData_LinearCoastalKelvinWave(convergence_type):
     problem_type = 'Coastal_Kelvin_Wave'
     problem_is_linear = True
+    CourantNumber = 0.75
     time_integrator = 'forward_backward_predictor'
-    plot_these_variables = np.zeros(8,dtype=bool)
-    plot_these_variables[0] = True # plot_these_variables[0] = plot_surface_elevation_convergence_data
-    plot_these_variables[3] = True # plot_these_variables[3] = plot_normal_velocity_convergence_data
+    plot_these_variables = np.zeros(3,dtype=bool)
+    plot_these_variables[0] = True
+    # plot_these_variables[0] = plot_surface_elevation_convergence_data
+    # plot_these_variables[1] = plot_zonal_velocity_convergence_data
+    # plot_these_variables[2] = plot_meridional_velocity_convergence_data
     plotAgainstCellWidthInverse = True
     usePlotly = False
-    PlotConvergenceData(problem_type,problem_is_linear,time_integrator,plot_these_variables,
-                        plotAgainstCellWidthInverse,usePlotly)
+    useMeanCurve = True
+    PlotConvergenceData(convergence_type,problem_type,problem_is_linear,CourantNumber,time_integrator,
+                        plot_these_variables,plotAgainstCellWidthInverse,usePlotly,useMeanCurve)
+
+
+# In[31]:
+
+do_PlotConvergenceData_Space_LinearCoastalKelvinWave = False
+if do_PlotConvergenceData_Space_LinearCoastalKelvinWave:
+    do_PlotConvergenceData_LinearCoastalKelvinWave('Space')
+
+
+# In[32]:
+
+do_PlotConvergenceData_Time_LinearCoastalKelvinWave = False
+if do_PlotConvergenceData_Time_LinearCoastalKelvinWave:
+    do_PlotConvergenceData_LinearCoastalKelvinWave('Time')
+
+
+# In[33]:
+
+do_PlotConvergenceData_SpaceAndTime_LinearCoastalKelvinWave = False
+if do_PlotConvergenceData_SpaceAndTime_LinearCoastalKelvinWave:
+    do_PlotConvergenceData_LinearCoastalKelvinWave('SpaceAndTime')

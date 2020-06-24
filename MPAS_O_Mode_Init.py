@@ -13,7 +13,9 @@ import os
 from IPython.utils import io
 import netCDF4 as nc
 from netCDF4 import Dataset
-with io.capture_output() as captured: 
+import matplotlib.pyplot as plt
+with io.capture_output() as captured:
+    import Common_Routines as CR
     import fixAngleEdge
 
 
@@ -21,8 +23,9 @@ with io.capture_output() as captured:
 
 class Namelist:
     
-    def __init__(myNamelist,problem_type='default',problem_is_linear=True,periodicity='Periodic',
-                 time_integrator='forward_backward_predictor'):
+    def __init__(myNamelist,mesh_type='uniform',problem_type='default',problem_is_linear=True,
+                 periodicity='Periodic',time_integrator='forward_backward_predictor'):
+        myNamelist.config_mesh_type = mesh_type
         myNamelist.config_problem_type = problem_type
         myNamelist.config_problem_is_linear = problem_is_linear
         myNamelist.config_periodicity = periodicity
@@ -84,12 +87,12 @@ def DetermineCoriolisParameterAndBottomDepth(myMPAS_O):
 class MPAS_O:
     
     def __init__(myMPAS_O,print_basic_geometry,mesh_directory='Mesh+Initial_Condition+Registry_Files/Periodic',
-                 base_mesh_file_name='base_mesh.nc',mesh_file_name='mesh.nc',problem_type='default',
-                 problem_is_linear=True,periodicity='Periodic',do_fixAngleEdge=True,print_Output=False,
-                 CourantNumber=0.5,useCourantNumberToDetermineTimeStep=False,
+                 base_mesh_file_name='base_mesh.nc',mesh_file_name='mesh.nc',mesh_type='uniform',
+                 problem_type='default',problem_is_linear=True,periodicity='Periodic',do_fixAngleEdge=True,
+                 print_Output=False,CourantNumber=0.5,useCourantNumberToDetermineTimeStep=False,
                  time_integrator='forward_backward_predictor',
                  specifyExactSurfaceElevationAtNonPeriodicBoundaryCells=False):
-        myMPAS_O.myNamelist = Namelist(problem_type,problem_is_linear,periodicity,time_integrator)
+        myMPAS_O.myNamelist = Namelist(mesh_type,problem_type,problem_is_linear,periodicity,time_integrator)
         cwd = os.getcwd()
         path = cwd + '/' + mesh_directory + '/'
         if not os.path.exists(path):
@@ -266,11 +269,12 @@ if test_MPAS_O_2:
     # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
 
 
 # In[9]:
@@ -281,11 +285,12 @@ if test_MPAS_O_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
 
 
 # In[10]:
@@ -298,8 +303,129 @@ if test_MPAS_O_4:
     # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
-                      problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=True)
+
+
+# In[11]:
+
+def Plot_MPAS_O_Mesh(myMPAS_O,output_directory,linewidth,linestyle,color,labels,labelfontsizes,labelpads,
+                     tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,fig_size=[9.25,9.25],
+                     useDefaultMethodToSpecifyTickFontSize=True):
+    cwd = CR.CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)    
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    dvEdge = max(myMPAS_O.dvEdge[:])
+    for iEdge in range(0,myMPAS_O.nEdges):
+        vertexID1 = myMPAS_O.verticesOnEdge[iEdge,0] - 1
+        vertexID2 = myMPAS_O.verticesOnEdge[iEdge,1] - 1
+        x1 = myMPAS_O.xVertex[vertexID1]
+        x2 = myMPAS_O.xVertex[vertexID2]
+        y1 = myMPAS_O.yVertex[vertexID1]
+        y2 = myMPAS_O.yVertex[vertexID2]
+        edgeLength = np.sqrt((x2 - x1)**2.0 + (y2 - y1)**2.0)
+        if edgeLength <= dvEdge:
+            plt.plot([x1,x2],[y1,y2],linewidth=linewidth,linestyle=linestyle,color=color)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if useDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    ax.set_title(title,fontsize=titlefontsize,y=1.035)
+    if SaveAsPNG:
+        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+
+
+# In[12]:
+
+test_PlotMesh_1 = False
+if test_PlotMesh_1:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/Periodic'
+    base_mesh_file_name = 'base_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'Periodic'
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
+    Plot_MPAS_O_Mesh(myMPAS_O,mesh_directory,2.0,'-','k',['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
+                     [15.0,15.0],'MPAS-O Mesh',20.0,True,'MPAS_O_Mesh',False,fig_size=[9.25,9.25],
+                     useDefaultMethodToSpecifyTickFontSize=True)
+
+
+# In[13]:
+
+test_PlotMesh_2 = False
+if test_PlotMesh_2:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
+    Plot_MPAS_O_Mesh(myMPAS_O,mesh_directory,2.0,'-','k',['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
+                     [15.0,15.0],'MPAS-O Mesh',20.0,True,'MPAS_O_Mesh',False,fig_size=[9.25,9.25],
+                     useDefaultMethodToSpecifyTickFontSize=True)
+
+
+# In[14]:
+
+test_PlotMesh_3 = False
+if test_PlotMesh_3:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'base_mesh_P.nc'
+    mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'Periodic'
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
+    Plot_MPAS_O_Mesh(myMPAS_O,mesh_directory,2.0,'-','k',['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
+                     [15.0,15.0],'MPAS-O Mesh',20.0,True,'MPAS_O_Mesh_P',False,fig_size=[9.25,9.25],
+                     useDefaultMethodToSpecifyTickFontSize=True)
+
+
+# In[15]:
+
+test_PlotMesh_4 = False
+if test_PlotMesh_4:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_x'
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,mesh_type,
+                      problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,print_Output=False)
+    Plot_MPAS_O_Mesh(myMPAS_O,mesh_directory,2.0,'-','k',['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
+                     [15.0,15.0],'MPAS-O Mesh',20.0,True,'MPAS_O_Mesh_NP',False,fig_size=[9.25,9.25],
+                     useDefaultMethodToSpecifyTickFontSize=True)

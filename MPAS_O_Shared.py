@@ -191,11 +191,12 @@ if test_ocn_init_routines_compute_max_level_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O)
 
 
@@ -207,11 +208,12 @@ if test_ocn_init_routines_compute_max_level_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -223,11 +225,12 @@ if test_ocn_init_routines_compute_max_level_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -283,11 +286,12 @@ if test_ocn_init_routines_setup_sign_and_index_fields_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -299,11 +303,12 @@ if test_ocn_init_routines_setup_sign_and_index_fields_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -315,11 +320,12 @@ if test_ocn_init_routines_setup_sign_and_index_fields_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -357,11 +363,12 @@ if test_ocn_relativeVorticity_circulation_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -373,11 +380,12 @@ if test_ocn_relativeVorticity_circulation_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -389,11 +397,12 @@ if test_ocn_relativeVorticity_circulation_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -544,8 +553,7 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
 test_ocn_diagnostic_solve_1 = False
 if test_ocn_diagnostic_solve_1:
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False)
-    compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = True
+    compute_these_variables = np.ones(8,dtype=bool)
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
 
 
@@ -557,13 +565,13 @@ if test_ocn_diagnostic_solve_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
-    compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = True
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
+    compute_these_variables = np.ones(8,dtype=bool)
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
 
 
@@ -575,13 +583,13 @@ if test_ocn_diagnostic_solve_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
-    compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = True
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
+    compute_these_variables = np.ones(8,dtype=bool)
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
 
 
@@ -593,11 +601,11 @@ if test_ocn_diagnostic_solve_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
-    compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = True
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
+    compute_these_variables = np.ones(8,dtype=bool)
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)

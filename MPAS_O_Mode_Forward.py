@@ -24,7 +24,6 @@ def ComputeNormalVelocityTendency(myMPAS_O,normalVelocity,ssh):
     CoriolisTerm = np.zeros(myMPAS_O.nVertLevels)
     normalVelocityTendency = np.zeros((myMPAS_O.nEdges,myMPAS_O.nVertLevels))
     compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = False
     if not(myMPAS_O.myNamelist.config_problem_is_linear):
         compute_these_variables[0] = True # compute_layerThickness = True
         compute_these_variables[1] = True # compute_layerThicknessEdge = True
@@ -83,11 +82,12 @@ if test_ComputeNormalVelocityTendency_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     normalVelocityTendency = ComputeNormalVelocityTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,
                                                            myMPAS_O.sshCurrent)
 
@@ -100,11 +100,12 @@ if test_ComputeNormalVelocityTendency_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     normalVelocityTendency = ComputeNormalVelocityTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,
                                                            myMPAS_O.sshCurrent)
 
@@ -117,11 +118,12 @@ if test_ComputeNormalVelocityTendency_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     normalVelocityTendency = ComputeNormalVelocityTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,
                                                            myMPAS_O.sshCurrent)
 
@@ -131,7 +133,6 @@ if test_ComputeNormalVelocityTendency_4:
 def ComputeSSHTendency(myMPAS_O,normalVelocity,ssh):
     sshTendency = np.zeros(myMPAS_O.nCells)
     compute_these_variables = np.zeros(8,dtype=bool)
-    compute_these_variables[:] = False
     if not(myMPAS_O.myNamelist.config_problem_is_linear):
         compute_these_variables[0:2] = True
         MPAS_O_Shared.ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables)
@@ -164,11 +165,12 @@ if test_ComputeSSHTendency_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     sshTendency = ComputeSSHTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent)
 
 
@@ -180,11 +182,12 @@ if test_ComputeSSHTendency_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     sshTendency = ComputeSSHTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent)
 
 
@@ -196,11 +199,12 @@ if test_ComputeSSHTendency_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     sshTendency = ComputeSSHTendency(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent)
 
 
@@ -250,11 +254,12 @@ if test_ocn_time_integration_forward_backward_predictor_periodic_boundary_condit
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     nTimeSteps = 1
     for iTimeStep in range(0,nTimeSteps):
         ocn_time_integration_forward_backward_predictor_periodic_boundary_conditions(myMPAS_O)
@@ -269,11 +274,12 @@ if test_ocn_time_integration_forward_backward_predictor_periodic_boundary_condit
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'Periodic'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     nTimeSteps = 1
     for iTimeStep in range(0,nTimeSteps):
         ocn_time_integration_forward_backward_predictor_periodic_boundary_conditions(myMPAS_O)
@@ -288,11 +294,12 @@ if test_ocn_time_integration_forward_backward_predictor_periodic_boundary_condit
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
+    mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
     periodicity = 'NonPeriodic_x'    
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       problem_type,problem_is_linear,periodicity)
+                                       mesh_type,problem_type,problem_is_linear,periodicity)
     nTimeSteps = 1
     for iTimeStep in range(0,nTimeSteps):
         ocn_time_integration_forward_backward_predictor_periodic_boundary_conditions(myMPAS_O)

@@ -32,6 +32,30 @@ cwd = CurrentWorkingDirectory()
 
 # In[3]:
 
+def machine_epsilon():
+    epsilon = np.finfo(float).eps
+    return epsilon
+
+
+# In[4]:
+
+def AlmostEqual(x,y):
+    epsilon = machine_epsilon()
+    if x == 0.0 or y == 0.0:
+        if abs(x-y) <= 2.0*epsilon:
+            almost_equal = True
+        else:
+            almost_equal = False
+    else:
+        if abs(x-y) <= epsilon*abs(x) and abs(x-y) <= epsilon*abs(y):
+            almost_equal = True
+        else:
+            almost_equal = False
+    return almost_equal
+
+
+# In[5]:
+
 def InitializeCharacterArrays():
     nStrings = 5
     strings = ['John Doe' for x in range(nStrings)]
@@ -43,11 +67,41 @@ def InitializeCharacterArrays():
 InitializeCharacterArrays()
 
 
-# In[4]:
+# In[6]:
+
+def RemoveElementFrom1DArray(x,index):
+    nX = np.size(x)
+    xNew = np.zeros(nX-1)
+    for iX in range(0,nX):
+        if iX < index:
+            xNew[iX] = x[iX]
+        if iX > index:
+            xNew[iX-1] = x[iX]
+    return xNew
+
+
+# In[7]:
+
+def TestRemoveElementFrom1DArray():
+    x = np.linspace(1.0,5.0,5)
+    index = 1
+    xNew = RemoveElementFrom1DArray(x,index)
+    print('The array x is')
+    print(x)
+    print('After removing element with index %d, the array x becomes')
+    print(xNew)
+
+do_TestRemoveElementFrom1DArray = False
+if do_TestRemoveElementFrom1DArray:
+    TestRemoveElementFrom1DArray()
+
+
+# In[8]:
 
 def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,color,marker,markersize,labels,
                           labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
-                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawGrid=False):
+                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=False,
+                          drawMinorGrid=False):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -85,8 +139,12 @@ def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,col
         ax.tick_params(axis='x',labelsize=tickfontsizes[0])
         ax.tick_params(axis='y',labelsize=tickfontsizes[1])
     ax.set_title(title,fontsize=titlefontsize,y=1.035)
-    if drawGrid:
-        plt.grid()
+    if drawMajorGrid and not(drawMinorGrid):
+        plt.grid(which='major')
+    elif not(drawMajorGrid) and drawMinorGrid:
+        plt.grid(which='minor')       
+    elif drawMajorGrid and drawMinorGrid:
+        plt.grid(which='both') 
     if SaveAsPNG:
         plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
     if Show:
@@ -95,21 +153,21 @@ def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,col
     os.chdir(cwd)
 
 
-# In[5]:
+# In[9]:
 
 def TestPythonPlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
     y = np.arange(0.0,20.0,2)
     PythonPlot1DSaveAsPNG('MPAS_O_Shallow_Water_Output','regular',x,y,2.0,'-','k','s',7.5,['x','y'],[17.5,17.5],
                           [10.0,10.0],[15.0,15.0],'Python Plot 1D',20.0,True,'PythonPlot1D',True,
-                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawGrid=True)
+                          fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=True)
 
 do_TestPythonPlot1DSaveAsPNG = False
 if do_TestPythonPlot1DSaveAsPNG:
     TestPythonPlot1DSaveAsPNG()
 
 
-# In[6]:
+# In[10]:
 
 def PythonPlotly1DSaveAsPNG(output_directory,plot_type,x,y,line_color,line_width,marker_symbol,marker_size,labels,
                             labelfontsizes,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
@@ -149,7 +207,7 @@ def PythonPlotly1DSaveAsPNG(output_directory,plot_type,x,y,line_color,line_width
     os.chdir(cwd)
 
 
-# In[7]:
+# In[11]:
 
 def TestPythonPlotly1DSaveAsPNG():
     x = np.arange(1.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -162,7 +220,7 @@ if do_TestPythonPlotly1DSaveAsPNG:
     TestPythonPlotly1DSaveAsPNG()
 
 
-# In[8]:
+# In[12]:
 
 def PythonPlots1DSaveAsPNG(output_directory,x,y1,y2,line_width,y1stem,y2stem,xlabel,xlabelpad,ylabel,ylabelpad,
                            y1legend,y2legend,legend_position,title,marker,marker_size,SaveAsPNG,FigureTitle,Show):
@@ -208,7 +266,7 @@ if do_TestPythonPlots1DSaveAsPNG:
     TestPythonPlots1DSaveAsPNG()
 
 
-# In[9]:
+# In[13]:
 
 def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,line_width,y1stem,y2stem,xlabel,
                                      xlabelpad,ylabel,ylabelpad,y1legend,y2legend,legend_position,title,marker,
@@ -251,12 +309,12 @@ def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,li
     os.chdir(cwd)
 
 
-# In[10]:
+# In[14]:
 
 def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidths,linestyles,colors,useMarkers,
                                      markers,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
                                      legendfontsize,legendposition,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
-                                     drawGrid=False,legendWithinBox=False):
+                                     drawMajorGrid=False,drawMinorGrid=False,legendWithinBox=False):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -317,8 +375,12 @@ def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidt
     else:
         ax.legend(fontsize=legendfontsize,loc=legendposition,bbox_to_anchor=(1,0.5),shadow=True) 
     ax.set_title(title,fontsize=titlefontsize,y=1.035)
-    if drawGrid:
-        plt.grid()
+    if drawMajorGrid and not(drawMinorGrid):
+        plt.grid(which='major')
+    elif not(drawMajorGrid) and drawMinorGrid:
+        plt.grid(which='minor')       
+    elif drawMajorGrid and drawMinorGrid:
+        plt.grid(which='both') 
     if SaveAsPNG:
         plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
     if Show:
@@ -327,7 +389,7 @@ def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidt
     os.chdir(cwd)
 
 
-# In[11]:
+# In[15]:
 
 def TestPythonConvergencePlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -336,40 +398,157 @@ def TestPythonConvergencePlot1DSaveAsPNG():
     PythonConvergencePlot1DSaveAsPNG('MPAS_O_Shallow_Water_Output','regular',x,y1,y2,[2.0,2.0],['-',' '],['k','k'],
                                      [False,True],['s','s'],[10.0,10.0],['x','y'],[17.5,17.5],[10.0,10.0],
                                      [15.0,15.0],['y1','y2'],17.5,'upper left','Convergence Plot 1D',20.0,True,
-                                     'ConvergencePlot1D',True,drawGrid=True,legendWithinBox=True)
+                                     'ConvergencePlot1D',True,drawMajorGrid=True,legendWithinBox=True)
 
 do_TestPythonConvergencePlot1DSaveAsPNG = False
 if do_TestPythonConvergencePlot1DSaveAsPNG:
     TestPythonConvergencePlot1DSaveAsPNG()
 
 
-# In[12]:
+# In[16]:
+
+def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsizes,labelpads,tickfontsizes,title,
+                titlefontsize,SaveAsPNG,FigureTitle,Show,fig_size=[9.25,9.25],
+                useDefaultMethodToSpecifyTickFontSize=True):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)    
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    nPoints = np.size(x)
+    for iPoint in range(0,nPoints):
+        plt.plot([x[iPoint]],[y[iPoint]],color=color,marker=marker,markersize=markersize)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if useDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    ax.set_title(title,fontsize=titlefontsize,y=1.035)
+    if SaveAsPNG:
+        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+
+
+# In[17]:
+
+def TestScatterPlot():
+    xLeft = 0.0
+    xRight = 6.0
+    nX = 6
+    x = np.linspace(xLeft,xRight,nX+1) 
+    yBottom = 0.0
+    yTop = 5.0
+    nY = 5
+    y = np.linspace(yBottom,yTop,nY+1)
+    xUnstructured = np.zeros((nX+1)*(nY+1))
+    yUnstructured = np.zeros((nX+1)*(nY+1))
+    for iY in range(0,nY+1):
+        for iX in range(0,nX+1):
+            i = iY*(nX+1) + iX
+            xUnstructured[i] = x[iX]
+            yUnstructured[i] = y[iY]
+    ScatterPlot('MPAS_O_Shallow_Water_Output',xUnstructured,yUnstructured,'k','s',7.5,['x','y'],[17.5,17.5],
+                [10.0,10.0],[15.0,15.0],'Scatter Plot',20.0,True,'ScatterPlot',False,fig_size=[9.25,9.25],
+                useDefaultMethodToSpecifyTickFontSize=True)
+    
+do_TestScatterPlot = False
+if do_TestScatterPlot:
+    TestScatterPlot()
+
+
+# In[18]:
 
 def LagrangeInterpolation1D(xData,fData,x):
-    N = len(xData) - 1
-    LagInterp1D = 0.0
-    for i in range(0,N+1):
-        LagrangeProduct = fData[i]
-        for j in range(0,N+1):
-            if i != j:
-                LagrangeProduct = LagrangeProduct*(x - xData[j])/(xData[i] - xData[j])
-        LagInterp1D = LagInterp1D + LagrangeProduct
-    return LagInterp1D
+    nData = len(xData) - 1
+    LagrangeInterpolant1D = 0.0
+    for iData in range(0,nData+1):
+        LagrangeProduct = fData[iData]
+        for jData in range(0,nData+1):
+            if iData != jData:
+                LagrangeProduct = LagrangeProduct*(x - xData[jData])/(xData[iData] - xData[jData])
+        LagrangeInterpolant1D += LagrangeProduct
+    return LagrangeInterpolant1D
 
 def TestLagrangeInterpolation1D():
     xData = np.linspace(0.0,2.0*np.pi,15)
     fData = np.sin(xData)
-    xInterp = np.pi/6.0
-    fInterp = LagrangeInterpolation1D(xData,fData,xInterp)
-    print('The exact solution of sin(x) at x = pi/6 is %.10f.' %(np.sin(xInterp)))
-    print('The solution of sin(x) at x = pi/6 obtained using Lagrange interpolation is %.10f.' %(fInterp))
+    xInterpolatingPoint = np.pi/6.0
+    fInterpolatingPoint = LagrangeInterpolation1D(xData,fData,xInterpolatingPoint)
+    print('The exact solution of sin(x) at x = pi/6 is %.10f.' %(np.sin(xInterpolatingPoint)))
+    print('The solution of sin(x) at x = pi/6 obtained using Lagrange interpolation is %.10f.' 
+          %fInterpolatingPoint)
     
 do_TestLagrangeInterpolation1D = False
 if do_TestLagrangeInterpolation1D:
     TestLagrangeInterpolation1D()
 
 
-# In[13]:
+# In[19]:
+
+def LinearInterpolation(xData,fData,x):
+    m = (fData[1] - fData[0])/(xData[1] - xData[0])
+    f = fData[0] + m*(x - xData[0])
+    return f
+
+def TestLinearInterpolation():
+    xData = np.linspace(0.0,2.0,2)
+    fData = 3.0*xData
+    xInterpolatingPoint = 1.0
+    fInterpolatingPoint = LinearInterpolation(xData,fData,xInterpolatingPoint)
+    print('The exact solution of f(x) = 3x at x = 1.0 is %.10f.' %(3.0*xInterpolatingPoint))
+    print('The solution of f(x) = 3x at x = 1.0 obtained using linear interpolation is %.10f.' 
+          %fInterpolatingPoint)
+    
+do_TestLinearInterpolation = False
+if do_TestLinearInterpolation:
+    TestLinearInterpolation()
+
+
+# In[20]:
+
+def BilinearInterpolation(xData,yData,fData,x,y):
+    x1 = xData[0]
+    x2 = xData[1]
+    y1 = yData[0]
+    y2 = yData[1]
+    f11 = fData[0,0]
+    f12 = fData[0,1]
+    f21 = fData[1,0]
+    f22 = fData[1,1]
+    f = ((f11*(x2 - x)*(y2 - y) + f21*(x - x1)*(y2 - y) + f12*(x2 - x)*(y - y1) + f22*(x - x1)*(y - y1))
+         /((x2 - x1)*(y2 - y1)))
+    return f
+
+def TestBilinearInterpolation():
+    xData = np.linspace(0.0,2.0,2)
+    yData = np.linspace(0.0,3.0,2)
+    fData = np.zeros((2,2))
+    for iX in range(0,2):
+        for iY in range(0,2):
+            fData[iX,iY] = (xData[iX] + 3.0)*(yData[iY] + 2.0)
+    xInterpolatingPoint = 1.0
+    yInterpolatingPoint = 1.5
+    fInterpolatingPoint = BilinearInterpolation(xData,yData,fData,xInterpolatingPoint,yInterpolatingPoint)
+    print('The exact solution of f(x,y) = (x+3)*(y+2) at (x,y) = (1.0,1.5) is %.10f.' 
+          %((xInterpolatingPoint + 3.0)*(yInterpolatingPoint + 2.0)))
+    print(
+    'The solution of f(x,y) = (x+3)*(y+2) at (x,y) = (1.0,1.5) obtained using bilinear interpolation is %.10f.' 
+    %fInterpolatingPoint)
+    
+do_TestBilinearInterpolation = False
+if do_TestBilinearInterpolation:
+    TestBilinearInterpolation()
+
+
+# In[21]:
 
 def WriteCurve1D(output_directory,x,y,filename):
     cwd = CurrentWorkingDirectory()
@@ -396,7 +575,7 @@ if do_TestWriteCurve1D:
     TestWriteCurve1D()
 
 
-# In[14]:
+# In[22]:
 
 def ReadCurve1D(output_directory,filename):
     cwd = CurrentWorkingDirectory()
@@ -439,7 +618,7 @@ if do_TestReadCurve1D:
     TestReadCurve1D()
 
 
-# In[15]:
+# In[23]:
 
 def WriteTecPlot2DStructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -481,7 +660,7 @@ if do_TestWriteTecPlot2DStructured:
     TestWriteTecPlot2DStructured()
 
 
-# In[16]:
+# In[24]:
 
 def WriteTecPlot2DUnstructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -527,7 +706,7 @@ if do_TestWriteTecPlot2DUnstructured:
     TestWriteTecPlot2DUnstructured()
 
 
-# In[17]:
+# In[25]:
 
 def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
                                                  ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,
@@ -613,7 +792,7 @@ if do_PythonReadFileAndFilledStructuredContourPlot2D:
                                                    'TestWriteTecPlot2DStructured',True)
 
 
-# In[18]:
+# In[26]:
 
 def line_contains_text(line):
     return line[0] == 'V' or line[0] == 'Z'
