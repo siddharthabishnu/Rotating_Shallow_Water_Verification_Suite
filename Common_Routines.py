@@ -41,8 +41,9 @@ InitializeCharacterArrays()
 
 # In[4]:
 
-def PythonPlot1DSaveAsPNG(output_directory,x,y,line_width,xlabel,xlabelpad,ylabel,ylabelpad,title,marker,
-                          marker_size,SaveAsPNG,FigureTitle,Show):
+def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,color,marker,markersize,labels,
+                          labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
+                          drawGrid=False):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -51,14 +52,33 @@ def PythonPlot1DSaveAsPNG(output_directory,x,y,line_width,xlabel,xlabelpad,ylabe
     fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     if marker:
-        plt.plot(x,y,linewidth=line_width,linestyle='-',color='k',marker='s',markersize=marker_size)
+        if plot_type == 'regular':
+            plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=marker,markersize=markersize)
+        elif plot_type == 'semi-log_x':
+            plt.semilogx(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=marker,
+                         markersize=markersize)
+        elif plot_type == 'semi-log_y':
+            plt.semilogy(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=marker,
+                         markersize=markersize)
+        elif plot_type == 'log-log':
+            plt.loglog(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=marker,
+                       markersize=markersize)
     else:
-        plt.plot(x,y,linewidth=line_width,linestyle='-',color='k')
-    plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
-    plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    ax.set_title(title,fontsize=20,y=1.035)
+        if plot_type == 'regular':
+            plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color)
+        elif plot_type == 'semi-log_x':
+            plt.semilogx(x,y,linewidth=linewidth,linestyle=linestyle,color=color)
+        elif plot_type == 'semi-log_y':
+            plt.semilogy(x,y,linewidth=linewidth,linestyle=linestyle,color=color)
+        elif plot_type == 'log-log':
+            plt.loglog(x,y,linewidth=linewidth,linestyle=linestyle,color=color)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    plt.xticks(fontsize=tickfontsizes[0])
+    plt.yticks(fontsize=tickfontsizes[1])
+    ax.set_title(title,fontsize=titlefontsize,y=1.035)
+    if drawGrid:
+        plt.grid()
     if SaveAsPNG:
         plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
     if Show:
@@ -68,6 +88,19 @@ def PythonPlot1DSaveAsPNG(output_directory,x,y,line_width,xlabel,xlabelpad,ylabe
 
 
 # In[5]:
+
+def TestPythonPlot1DSaveAsPNG():
+    x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
+    y = np.arange(0.0,20.0,2)
+    PythonPlot1DSaveAsPNG('MPAS_O_Shallow_Water_Output','regular',x,y,2.0,'-','k','s',7.5,['x','y'],[17.5,17.5],
+                          [10.0,10.0],[15.0,15.0],'Python Plot 1D',20.0,True,'PythonPlot1D',True,drawGrid=True)
+
+do_TestPythonPlot1DSaveAsPNG = False
+if do_TestPythonPlot1DSaveAsPNG:
+    TestPythonPlot1DSaveAsPNG()
+
+
+# In[6]:
 
 def PythonPlots1DSaveAsPNG(output_directory,x,y1,y2,line_width,y1stem,y2stem,xlabel,xlabelpad,ylabel,ylabelpad,
                            y1legend,y2legend,legend_position,title,marker,marker_size,SaveAsPNG,FigureTitle,Show):
@@ -113,7 +146,7 @@ if do_TestPythonPlots1DSaveAsPNG:
     TestPythonPlots1DSaveAsPNG()
 
 
-# In[6]:
+# In[7]:
 
 def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,line_width,y1stem,y2stem,xlabel,
                                      xlabelpad,ylabel,ylabelpad,y1legend,y2legend,legend_position,title,marker,
@@ -156,7 +189,99 @@ def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,li
     os.chdir(cwd)
 
 
-# In[7]:
+# In[8]:
+
+def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidths,linestyles,colors,useMarkers,
+                                     markers,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
+                                     legendfontsize,legendposition,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
+                                     drawGrid=False,legendWithinBox=False):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)   
+    fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    if useMarkers[0]:
+        if plot_type == 'regular':
+            ax.plot(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],marker=markers[0],
+                    markersize=markersizes[0],label=legends[0])
+        elif plot_type == 'semi-log_x':
+            ax.semilogx(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],marker=markers[0],
+                        markersize=markersizes[0],label=legends[0])
+        elif plot_type == 'semi-log_y':
+            ax.semilogy(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],marker=markers[0],
+                        markersize=markersizes[0],label=legends[0])
+        elif plot_type == 'log-log':
+            ax.loglog(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],marker=markers[0],
+                      markersize=markersizes[0],label=legends[0])      
+    else:
+        if plot_type == 'regular':
+            ax.plot(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],label=legends[0])
+        elif plot_type == 'semi-log_x':
+            ax.semilogx(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],label=legends[0])
+        elif plot_type == 'semi-log_y':
+            ax.semilogy(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],label=legends[0])
+        elif plot_type == 'log-log':
+            ax.loglog(x,y1,linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],label=legends[0])
+    if useMarkers[1]:
+        if plot_type == 'regular':
+            ax.plot(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],marker=markers[1],
+                    markersize=markersizes[1],label=legends[1])
+        elif plot_type == 'semi-log_x':
+            ax.semilogx(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],marker=markers[1],
+                        markersize=markersizes[1],label=legends[1])
+        elif plot_type == 'semi-log_y':
+            ax.semilogy(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],marker=markers[1],
+                        markersize=markersizes[1],label=legends[1])
+        elif plot_type == 'log-log':
+            ax.loglog(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],marker=markers[1],
+                      markersize=markersizes[1],label=legends[1])      
+    else:
+        if plot_type == 'regular':
+            ax.plot(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],label=legends[1])
+        elif plot_type == 'semi-log_x':
+            ax.semilogx(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],label=legends[1])
+        elif plot_type == 'semi-log_y':
+            ax.semilogy(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],label=legends[1])
+        elif plot_type == 'log-log':
+            ax.loglog(x,y2,linewidth=linewidths[1],linestyle=linestyles[1],color=colors[1],label=legends[1])  
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    plt.xticks(fontsize=tickfontsizes[0])
+    plt.yticks(fontsize=tickfontsizes[1])
+    if legendWithinBox:
+        ax.legend(fontsize=legendfontsize,loc=legendposition,shadow=True) 
+    else:
+        ax.legend(fontsize=legendfontsize,loc=legendposition,bbox_to_anchor=(1,0.5),shadow=True) 
+    ax.set_title(title,fontsize=titlefontsize,y=1.035)
+    if drawGrid:
+        plt.grid()
+    if SaveAsPNG:
+        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+
+
+# In[9]:
+
+def TestPythonConvergencePlot1DSaveAsPNG():
+    x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
+    y1 = np.arange(0.0,20.0,2)
+    y2 = np.arange(0.0,20.0,2)
+    PythonConvergencePlot1DSaveAsPNG('MPAS_O_Shallow_Water_Output','regular',x,y1,y2,[2.0,2.0],['-',' '],['k','k'],
+                                     [False,True],['s','s'],[10.0,10.0],['x','y'],[17.5,17.5],[10.0,10.0],
+                                     [15.0,15.0],['y1','y2'],17.5,'upper left','Convergence Plot 1D',20.0,True,
+                                     'ConvergencePlot1D',True,drawGrid=True,legendWithinBox=True)
+
+do_TestPythonConvergencePlot1DSaveAsPNG = False
+if do_TestPythonConvergencePlot1DSaveAsPNG:
+    TestPythonConvergencePlot1DSaveAsPNG()
+
+
+# In[10]:
 
 def LagrangeInterpolation1D(xData,fData,x):
     N = len(xData) - 1
@@ -182,7 +307,7 @@ if do_TestLagrangeInterpolation1D:
     TestLagrangeInterpolation1D()
 
 
-# In[8]:
+# In[11]:
 
 def WriteTecPlot2DStructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -224,7 +349,7 @@ if do_TestWriteTecPlot2DStructured:
     TestWriteTecPlot2DStructured()
 
 
-# In[9]:
+# In[12]:
 
 def WriteTecPlot2DUnstructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -270,7 +395,7 @@ if do_TestWriteTecPlot2DUnstructured:
     TestWriteTecPlot2DUnstructured()
 
 
-# In[10]:
+# In[13]:
 
 def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
                                                  ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,
@@ -356,7 +481,7 @@ if do_PythonReadFileAndFilledStructuredContourPlot2D:
                                                    'TestWriteTecPlot2DStructured',True)
 
 
-# In[11]:
+# In[14]:
 
 def line_contains_text(line):
     return line[0] == 'V' or line[0] == 'Z'

@@ -375,21 +375,31 @@ def convergence_test_numerical_gradient_operator(problem_type,mesh_directory,out
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_numerical_gradient_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,
                                          init_file_name,output_directory))
-    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(Maximum Error Norm of Numerical Gradient Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'Maximum Error Norm of Numerical Gradient Operator'
+    legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalGradientOperatorConvergencePlot_MaxErrorNorm'
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(MaxErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(L2 Error Norm of Numerical Gradient Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    legends = ['L2 Error Norm','Best Fit Straight Line']
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'L2 Error Norm of Numerical Gradient Operator'
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalGradientOperatorConvergencePlot_L2ErrorNorm'    
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(L2ErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
+    FigureTitle = prefix + 'NumericalGradientOperatorConvergencePlot_L2ErrorNorm'   
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
 # In[28]:
@@ -549,21 +559,31 @@ def convergence_test_numerical_divergence_operator(problem_type,mesh_directory,o
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_numerical_divergence_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,
                                            init_file_name,output_directory))
-    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(Maximum Error Norm of Numerical Divergence Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'Maximum Error Norm of Numerical Divergence Operator'
+    legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalDivergenceOperatorConvergencePlot_MaxErrorNorm'
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(MaxErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
-    m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(L2 Error Norm of Numerical Divergence Operator)'
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)    
+    m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]                     
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y                                                               
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'L2 Error Norm of Numerical Divergence Operator'
+    legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalDivergenceOperatorConvergencePlot_L2ErrorNorm'    
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(L2ErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)    
 
 
 # In[37]:
@@ -775,35 +795,55 @@ def convergence_test_numerical_curl_operator(problem_type,mesh_directory,output_
                                                                        base_mesh_file_name,mesh_file_name,
                                                                        init_file_name,output_directory,
                                                                        problem_type)
-    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm_Vertex))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(Maximum Error Norm of Numerical Curl Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'Maximum Error Norm of Numerical Curl Operator'
+    legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalCurlOperator_Vertex_ConvergencePlot_MaxErrorNorm'
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(MaxErrorNorm_Vertex),2.0,xLabel,10,yLabel,10,
-                             Title,True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm_Vertex,y,[2.0,2.0],
+                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
+                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
+                                        True,FigureTitle,False,drawGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm_Vertex))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(L2 Error Norm of Numerical Curl Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'L2 Error Norm of Numerical Curl Operator'
+    legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalCurlOperator_Vertex_ConvergencePlot_L2ErrorNorm'    
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(L2ErrorNorm_Vertex),2.0,xLabel,10,yLabel,10,
-                             Title,True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm_Vertex,y,[2.0,2.0],
+                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
+                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
+                                        True,FigureTitle,False,drawGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm_CellCenter))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(Maximum Error Norm of Numerical Curl Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'Maximum Error Norm of Numerical Curl Operator'
+    legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalCurlOperator_CellCenter_ConvergencePlot_MaxErrorNorm'
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(MaxErrorNorm_CellCenter),2.0,xLabel,10,yLabel,
-                             10,Title,True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm_CellCenter,y,[2.0,2.0],
+                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
+                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
+                                        True,FigureTitle,False,drawGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm_CellCenter))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(L2 Error Norm of Numerical Curl Operator)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'L2 Error Norm of Numerical Curl Operator'
+    legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalCurlOperator_CellCenter_ConvergencePlot_L2ErrorNorm'    
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(L2ErrorNorm_CellCenter),2.0,xLabel,10,yLabel,
-                             10,Title,True,7.5,True,FigureTitle,False)    
+    FigureTitle = prefix + 'NumericalCurlOperator_CellCenter_ConvergencePlot_L2ErrorNorm'  
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm_CellCenter,y,[2.0,2.0],
+                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
+                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
+                                        True,FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
 # In[46]:
@@ -967,21 +1007,31 @@ def convergence_test_tangential_velocity(problem_type,mesh_directory,output_dire
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_tangential_velocity(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,init_file_name,
                                  output_directory,problem_type))
-    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(Maximum Error Norm of Numerical Tangential Velocity)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'Maximum Error Norm of Numerical Tangential Velocity'
+    legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalTangentialVelocityConvergencePlot_MaxErrorNorm'
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(MaxErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]
-    xLabel = 'log10(Grid Spacing)'
-    yLabel = 'log10(L2 Error Norm of Numerical Tangential Velocity)'
+    y = m*(np.log10(1.0/dc)) + c
+    y = 10.0**y
+    xLabel = 'Grid Spacing Inverse'
+    yLabel = 'L2 Error Norm of Numerical Tangential Velocity'
+    legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
     FigureTitle = prefix + 'NumericalTangentialVelocityConvergencePlot_L2ErrorNorm'    
-    CR.PythonPlot1DSaveAsPNG(output_directory,np.log10(dc),np.log10(L2ErrorNorm),2.0,xLabel,10,yLabel,10,Title,
-                             True,7.5,True,FigureTitle,False)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
+                                        FigureTitle,False,drawGrid=True,legendWithinBox=True)
 
 
 # In[55]:
