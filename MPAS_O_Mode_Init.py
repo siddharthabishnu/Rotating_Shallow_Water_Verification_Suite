@@ -14,7 +14,6 @@ from IPython.utils import io
 import netCDF4 as nc
 from netCDF4 import Dataset
 with io.capture_output() as captured: 
-    import Initialization
     import fixAngleEdge
 
 
@@ -49,8 +48,8 @@ def CheckDimensions(myVariableName):
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path) 
-    init_file = Dataset("init.nc", "r", format='NETCDF4_CLASSIC')
-    myVariable = init_file.variables[myVariableName][:]
+    mesh_file = Dataset("mesh.nc", "r", format='NETCDF4_CLASSIC')
+    myVariable = mesh_file.variables[myVariableName][:]
     print('The shape of the given variable is ')
     print(np.shape(myVariable))
     os.chdir(cwd)
@@ -58,20 +57,30 @@ def CheckDimensions(myVariableName):
 
 # In[4]:
 
-do_CheckDimensions_edgeMask = False
-if do_CheckDimensions_edgeMask:
-    CheckDimensions('edgeMask')
+do_CheckDimensions_kiteAreasOnVertex = False
+if do_CheckDimensions_kiteAreasOnVertex:
+    CheckDimensions('kiteAreasOnVertex')
 
 
 # In[5]:
 
+def DetermineCoriolisParameterAndBottomDepth(myMPAS_O,problem_type='default'):
+    CoriolisParameter = 10.0**(-4.0)
+    BottomDepthParameter = 1000.0
+    if problem_type == 'default' or problem_type == 'Coastal_Kelvin_Wave':
+        myMPAS_O.fCell[:] = CoriolisParameter        
+        myMPAS_O.fEdge[:] = CoriolisParameter
+        myMPAS_O.fVertex[:] = CoriolisParameter
+        myMPAS_O.bottomDepth[:] = BottomDepthParameter
+
+
+# In[6]:
+
 class MPAS_O:
     
     def __init__(myMPAS_O,print_basic_geometry,mesh_directory='Mesh+Initial_Condition+Registry_Files/Periodic',
-                 base_mesh_file_name='base_mesh.nc',mesh_file_name='mesh.nc',init_file_name='init.nc',
-                 problem_type='default',problem_is_linear=True,do_fixAngleEdge=True,print_Output=False):
-        Initialization.SpecifyInitialConditions(mesh_directory=mesh_directory,mesh_file_name=mesh_file_name,
-                                                init_file_name=init_file_name)
+                 base_mesh_file_name='base_mesh.nc',mesh_file_name='mesh.nc',problem_type='default',
+                 problem_is_linear=True,do_fixAngleEdge=True,print_Output=False):
         myMPAS_O.myNamelist = Namelist(problem_type,problem_is_linear)
         cwd = os.getcwd()
         path = cwd + '/' + mesh_directory + '/'
@@ -82,16 +91,14 @@ class MPAS_O:
         base_mesh_file = Dataset(base_mesh_file_name, "r", format='NETCDF4_CLASSIC')
         # mesh file
         mesh_file = Dataset(mesh_file_name, "r", format='NETCDF4_CLASSIC')
-        # init file
-        init_file = Dataset(init_file_name, "r", format='NETCDF4_CLASSIC')
         # Get values of the dimensions
-        myMPAS_O.nCells = len(init_file.dimensions['nCells'])
-        myMPAS_O.nEdges = len(init_file.dimensions['nEdges'])
-        myMPAS_O.nVertices = len(init_file.dimensions['nVertices'])
-        myMPAS_O.maxEdges = len(init_file.dimensions['maxEdges'])
-        myMPAS_O.maxEdges2 = len(init_file.dimensions['maxEdges2'])
-        myMPAS_O.vertexDegree = len(init_file.dimensions['vertexDegree'])
-        myMPAS_O.nVertLevels = len(init_file.dimensions['nVertLevels'])
+        myMPAS_O.nCells = len(mesh_file.dimensions['nCells'])
+        myMPAS_O.nEdges = len(mesh_file.dimensions['nEdges'])
+        myMPAS_O.nVertices = len(mesh_file.dimensions['nVertices'])
+        myMPAS_O.maxEdges = len(mesh_file.dimensions['maxEdges'])
+        myMPAS_O.maxEdges2 = len(mesh_file.dimensions['maxEdges2'])
+        myMPAS_O.vertexDegree = len(mesh_file.dimensions['vertexDegree'])
+        myMPAS_O.nVertLevels = 1
         nCells = myMPAS_O.nCells
         nEdges = myMPAS_O.nEdges
         nVertices = myMPAS_O.nVertices
@@ -160,17 +167,13 @@ class MPAS_O:
         # The following two arrays are contained only within the mesh file.
         myMPAS_O.boundaryVertex = mesh_file.variables['boundaryVertex'][:]
         myMPAS_O.gridSpacing = mesh_file.variables['gridSpacing'][:]
-        # The following arrays are contained only within the init file.
-        myMPAS_O.fEdge = init_file.variables['fEdge'][:]
-        myMPAS_O.fVertex = init_file.variables['fVertex'][:]
-        myMPAS_O.fCell = init_file.variables['fCell'][:] 
-        normalVelocity = init_file.variables['normalVelocity'][:]
-        myMPAS_O.normalVelocityCurrent = normalVelocity[0,:,:]       
-        layerThickness = init_file.variables['layerThickness'][:]
-        myMPAS_O.layerThickness = layerThickness[0,:,:]        
-        myMPAS_O.bottomDepth = init_file.variables['bottomDepth'][:]
-        myMPAS_O.maxLevelCell = init_file.variables['maxLevelCell'][:]
-        myMPAS_O.edgeMask = init_file.variables['edgeMask'][:]
+        # Define and initialize the following arrays not contained within either the base mesh file or the mesh 
+        # file.
+        myMPAS_O.fVertex = np.zeros(nVertices)
+        myMPAS_O.fCell = np.zeros(nCells)
+        myMPAS_O.fEdge = np.zeros(nEdges)
+        myMPAS_O.bottomDepth = np.zeros(nCells)
+        DetermineCoriolisParameterAndBottomDepth(myMPAS_O,problem_type='default')
         myMPAS_O.lX = max(myMPAS_O.xCell)
         myMPAS_O.lY = max(myMPAS_O.yVertex)
         myMPAS_O.gridSpacingMagnitude = myMPAS_O.xCell[1] - myMPAS_O.xCell[0]
@@ -180,11 +183,14 @@ class MPAS_O:
         myMPAS_O.cellMask = np.zeros((nCells,nVertLevels))
         myMPAS_O.circulation = np.zeros((nVertices,nVertLevels))
         myMPAS_O.divergence = np.zeros((nCells,nVertLevels))
+        myMPAS_O.edgeMask = np.zeros((nEdges,nVertLevels),dtype=int)
         myMPAS_O.edgeSignOnCell = np.zeros((nCells,maxEdges))
         myMPAS_O.edgeSignOnVertex = np.zeros((nVertices,maxEdges))
         myMPAS_O.kineticEnergyCell = np.zeros((nCells,nVertLevels))
         myMPAS_O.kiteIndexOnCell = np.zeros((nCells,maxEdges),dtype=int)
+        myMPAS_O.layerThicknessCurrent = np.zeros((nCells,nVertLevels))
         myMPAS_O.layerThicknessEdge = np.zeros((nEdges,nVertLevels))
+        myMPAS_O.maxLevelCell = np.zeros(nCells,dtype=int)
         myMPAS_O.maxLevelEdgeBot = np.zeros(nEdges,dtype=int)
         myMPAS_O.maxLevelEdgeTop = np.zeros(nEdges,dtype=int)
         myMPAS_O.maxLevelVertexBot = np.zeros(nVertices,dtype=int)
@@ -194,6 +200,7 @@ class MPAS_O:
         myMPAS_O.normalizedRelativeVorticityCell = np.zeros((nCells,nVertLevels))
         myMPAS_O.normalizedRelativeVorticityEdge = np.zeros((nEdges,nVertLevels))
         myMPAS_O.normalizedRelativeVorticityVertex = np.zeros((nVertices,nVertLevels))
+        myMPAS_O.normalVelocityCurrent = np.zeros((nEdges,nVertLevels))
         myMPAS_O.normalVelocityExact = np.zeros((nEdges,nVertLevels))
         myMPAS_O.normalVelocityNew = np.zeros((nEdges,nVertLevels))
         myMPAS_O.relativeVorticity = np.zeros((nVertices,nVertLevels))
@@ -214,14 +221,14 @@ class MPAS_O:
                                        printOutput=print_Output,printRelevantMeshData=False))
 
 
-# In[6]:
+# In[7]:
 
 test_MPAS_O_1 = False
 if test_MPAS_O_1:
     myMPAS_O = MPAS_O(True,print_Output=False)
 
 
-# In[7]:
+# In[8]:
 
 test_MPAS_O_2 = False
 if test_MPAS_O_2:
@@ -231,14 +238,13 @@ if test_MPAS_O_2:
     # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
     mesh_file_name = 'mesh.nc'
-    init_file_name = 'init.nc'
     problem_type = 'default'
     problem_is_linear = True
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,init_file_name,
-                      problem_type,problem_is_linear,do_fixAngleEdge=True,print_Output=False)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
+                      problem_is_linear,do_fixAngleEdge=True,print_Output=False)
 
 
-# In[8]:
+# In[9]:
 
 test_MPAS_O_3 = False
 if test_MPAS_O_3:
@@ -246,14 +252,13 @@ if test_MPAS_O_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
-    init_file_name = 'init_P.nc'
     problem_type = 'default'
     problem_is_linear = True
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,init_file_name,
-                      problem_type,problem_is_linear,do_fixAngleEdge=True,print_Output=True)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
+                      problem_is_linear,do_fixAngleEdge=True,print_Output=True)
 
 
-# In[9]:
+# In[10]:
 
 test_MPAS_O_4 = False
 if test_MPAS_O_4:
@@ -263,8 +268,7 @@ if test_MPAS_O_4:
     # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
     mesh_file_name = 'mesh_NP.nc'
-    init_file_name = 'init_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
-    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,init_file_name,
-                      problem_type,problem_is_linear,do_fixAngleEdge=True,print_Output=True)
+    myMPAS_O = MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,problem_type,
+                      problem_is_linear,do_fixAngleEdge=True,print_Output=True)

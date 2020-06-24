@@ -183,11 +183,10 @@ if test_ocn_init_routines_compute_max_level_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
-    init_file_name = 'init.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_compute_max_level(myMPAS_O)
 
 
@@ -199,11 +198,10 @@ if test_ocn_init_routines_compute_max_level_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
-    init_file_name = 'init_P.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -215,11 +213,10 @@ if test_ocn_init_routines_compute_max_level_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
-    init_file_name = 'init_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_compute_max_level(myMPAS_O,printValues=True)
 
 
@@ -275,11 +272,10 @@ if test_ocn_init_routines_setup_sign_and_index_fields_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
-    init_file_name = 'init.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -291,11 +287,10 @@ if test_ocn_init_routines_setup_sign_and_index_fields_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
-    init_file_name = 'init_P.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -307,11 +302,10 @@ if test_ocn_init_routines_setup_sign_and_index_fields_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
-    init_file_name = 'init_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
 
 
@@ -349,11 +343,10 @@ if test_ocn_relativeVorticity_circulation_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
-    init_file_name = 'init.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -365,11 +358,10 @@ if test_ocn_relativeVorticity_circulation_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
-    init_file_name = 'init_P.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -381,11 +373,10 @@ if test_ocn_relativeVorticity_circulation_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
-    init_file_name = 'init_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     ocn_relativeVorticity_circulation(myMPAS_O,myMPAS_O.normalVelocityCurrent)
 
 
@@ -405,7 +396,7 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
     if (compute_layerThickness or compute_layerThicknessEdge or 
         compute_normalizedRelativeVorticityVertex_normalizedPlanetaryVorticityVertex):
         for iCell in range(0,myMPAS_O.nCells):
-            myMPAS_O.layerThickness[iCell] = ssh[iCell] + myMPAS_O.bottomDepth[iCell]    
+            myMPAS_O.layerThicknessCurrent[iCell] = ssh[iCell] + myMPAS_O.bottomDepth[iCell]    
     if compute_layerThicknessEdge:
         if (not(myMPAS_O.myNamelist.config_use_wetting_drying) 
             or (myMPAS_O.myNamelist.config_use_wetting_drying 
@@ -417,8 +408,8 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
                 cell2 = cellID2 - 1
                 for k in range(0,myMPAS_O.maxLevelEdgeTop[iEdge]+1):
                     # Central-differenced
-                    myMPAS_O.layerThicknessEdge[iEdge,k] = 0.5*(myMPAS_O.layerThickness[cell1,k] 
-                                                                + myMPAS_O.layerThickness[cell2,k])
+                    myMPAS_O.layerThicknessEdge[iEdge,k] = 0.5*(myMPAS_O.layerThicknessCurrent[cell1,k] 
+                                                                + myMPAS_O.layerThicknessCurrent[cell2,k])
         else:
             if (myMPAS_O.myNamelist.config_use_wetting_drying
                 and myMPAS_O.myNamelist.config_thickness_flux_type != 'centered'):
@@ -431,12 +422,13 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
                         for k in range(0,myMPAS_O.maxLevelEdgeTop[iEdge]+1):
                             # Upwind
                             if normalVelocity[iEdge,k] > 0.0:
-                                myMPAS_O.layerThicknessEdge[iEdge,k] = myMPAS_O.layerThickness[cell1,k]
+                                myMPAS_O.layerThicknessEdge[iEdge,k] = myMPAS_O.layerThicknessCurrent[cell1,k]
                             elif normalVelocity[iEdge,k] < 0.0:
-                                myMPAS_O.layerThicknessEdge[iEdge,k] = myMPAS_O.layerThickness[cell2,k]
+                                myMPAS_O.layerThicknessEdge[iEdge,k] = myMPAS_O.layerThicknessCurrent[cell2,k]
                             else:
-                                myMPAS_O.layerThicknessEdge[iEdge,k] = max(myMPAS_O.layerThickness[cell1,k], 
-                                                                           myMPAS_O.layerThickness[cell2,k])
+                                myMPAS_O.layerThicknessEdge[iEdge,k] = (
+                                max(myMPAS_O.layerThicknessCurrent[cell1,k],
+                                    myMPAS_O.layerThicknessCurrent[cell2,k]))
             else:
                 print('Thickness flux option %s is not known!' %(myMPAS_O.myNamelist.config_thickness_flux_type))
                 sys.exit()
@@ -492,7 +484,8 @@ def ocn_diagnostic_solve(myMPAS_O,normalVelocity,ssh,compute_these_variables):
                 for i in range(0,myMPAS_O.vertexDegree):
                     iCellID = myMPAS_O.cellsOnVertex[iVertex,i]
                     iCell = iCellID - 1
-                    layerThicknessVertex += myMPAS_O.layerThickness[iCell,k]*myMPAS_O.kiteAreasOnVertex[iVertex,i]
+                    layerThicknessVertex += (myMPAS_O.layerThicknessCurrent[iCell,k]
+                                             *myMPAS_O.kiteAreasOnVertex[iVertex,i])
                 layerThicknessVertex *= invAreaTri1   
                 myMPAS_O.normalizedRelativeVorticityVertex[iVertex,k] = (myMPAS_O.relativeVorticity[iVertex,k]
                                                                          /layerThicknessVertex)
@@ -546,11 +539,10 @@ if test_ocn_diagnostic_solve_2:
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
     mesh_file_name = 'mesh.nc'
-    init_file_name = 'init.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
@@ -564,11 +556,10 @@ if test_ocn_diagnostic_solve_3:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
     mesh_file_name = 'mesh_P.nc'
-    init_file_name = 'init_P.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
@@ -582,11 +573,10 @@ if test_ocn_diagnostic_solve_4:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'culled_mesh_NP.nc'
     mesh_file_name = 'mesh_NP.nc'
-    init_file_name = 'init_NP.nc'
     problem_type = 'default'
     problem_is_linear = True
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       init_file_name,problem_type,problem_is_linear)
+                                       problem_type,problem_is_linear)
     compute_these_variables = np.zeros(8,dtype=bool)
     compute_these_variables[:] = True
     ocn_diagnostic_solve(myMPAS_O,myMPAS_O.normalVelocityCurrent,myMPAS_O.sshCurrent,compute_these_variables)
