@@ -1,6 +1,7 @@
 run:
 	python Common_Routines.py
 	python Filter_Routines.py
+	python GeophysicalWaves_ExactSolutions_SourceTerms.py
 	python fixAngleEdge.py
 	python MPAS_O_Mode_Init.py
 	python MPAS_O_Shared.py

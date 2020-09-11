@@ -8,6 +8,7 @@
 # In[1]:
 
 import numpy as np
+import matplotlib.pyplot as plt
 import io as inputoutput
 import sys
 from IPython.utils import io
@@ -19,8 +20,8 @@ with io.capture_output() as captured:
 
 # In[2]:
 
-Plot_MPAS_O_CellCenters_1 = False
-if Plot_MPAS_O_CellCenters_1:
+Plot_MPAS_O_CellCenters_11 = False
+if Plot_MPAS_O_CellCenters_11:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/Periodic'
     base_mesh_file_name = 'base_mesh.nc'
@@ -32,15 +33,19 @@ if Plot_MPAS_O_CellCenters_1:
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
-    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,['Latitude','Longitude'],[17.5,17.5],
-                   [10.0,10.0],[15.0,15.0],'MPAS-O Mesh Cell Centers',20.0,True,'MPAS_O_Mesh_CellCenters',False,
-                   fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
 
 
 # In[3]:
 
-Plot_MPAS_O_CellCenters_2 = False
-if Plot_MPAS_O_CellCenters_2:
+Plot_MPAS_O_CellCenters_12 = False
+if Plot_MPAS_O_CellCenters_12:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
@@ -54,15 +59,71 @@ if Plot_MPAS_O_CellCenters_2:
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
-    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,['Latitude','Longitude'],[17.5,17.5],
-                   [10.0,10.0],[15.0,15.0],'MPAS-O Mesh Cell Centers',20.0,True,'MPAS_O_Mesh_CellCenters',False,
-                   fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
 
 
 # In[4]:
 
-Plot_MPAS_O_CellCenters_3 = False
-if Plot_MPAS_O_CellCenters_3:
+Plot_MPAS_O_CellCenters_13 = False
+if Plot_MPAS_O_CellCenters_13:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
+
+
+# In[5]:
+
+Plot_MPAS_O_CellCenters_14 = False
+if Plot_MPAS_O_CellCenters_14:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
+
+
+# In[6]:
+
+Plot_MPAS_O_CellCenters_21 = False
+if Plot_MPAS_O_CellCenters_21:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
@@ -74,21 +135,25 @@ if Plot_MPAS_O_CellCenters_3:
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
-    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,['Latitude','Longitude'],[17.5,17.5],
-                   [10.0,10.0],[15.0,15.0],'MPAS-O Mesh Cell Centers',20.0,True,'MPAS_O_Mesh_CellCenters_P',False,
-                   fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters_P'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
 
 
-# In[5]:
+# In[7]:
 
-Plot_MPAS_O_CellCenters_4 = False
-if Plot_MPAS_O_CellCenters_4:
+Plot_MPAS_O_CellCenters_22 = False
+if Plot_MPAS_O_CellCenters_22:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
+    base_mesh_file_name = 'culled_mesh_NP_x.nc'
     # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
-    mesh_file_name = 'mesh_NP.nc'
+    mesh_file_name = 'mesh_NP_x.nc'
     mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
@@ -96,12 +161,68 @@ if Plot_MPAS_O_CellCenters_4:
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
-    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,['Latitude','Longitude'],[17.5,17.5],
-                   [10.0,10.0],[15.0,15.0],'MPAS-O Mesh Cell Centers',20.0,True,'MPAS_O_Mesh_CellCenters_NP',False,
-                   fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters_NP_x'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
 
 
-# In[6]:
+# In[8]:
+
+Plot_MPAS_O_CellCenters_23 = False
+if Plot_MPAS_O_CellCenters_23:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_y.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_y.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters_NP_y'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
+
+
+# In[9]:
+
+Plot_MPAS_O_CellCenters_24 = False
+if Plot_MPAS_O_CellCenters_24:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_xy.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_xy.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_CellCenters_NP_xy'
+    CR.ScatterPlot(mesh_directory,myMPAS_O.xCell,myMPAS_O.yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],
+                   [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],
+                   tick_units_in_km=True,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
+
+
+# In[10]:
 
 def Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O):
     nCellsX = int(np.sqrt(float(myMPAS_O.nCells)))
@@ -121,15 +242,21 @@ def Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O):
     dx = myMPAS_O.gridSpacingMagnitude
     for iCell in range(0,myMPAS_O.nCells):
         iCellY = int(float(iCell)/float(nCellsX))
-        if np.mod(float(iCellY),2.0) == 1.0:
-            xCell[iCell] = myMPAS_O.xCell[iCell] - 0.5*dx
+        if (myMPAS_O.myNamelist.config_periodicity == 'Periodic' 
+            or myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_x'):
+            if np.mod(float(iCellY),2.0) == 1.0:
+                xCell[iCell] = myMPAS_O.xCell[iCell] - 0.5*dx
+        elif (myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_y' 
+              or myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_xy'):
+            if np.mod(float(iCellY),2.0) == 0.0:
+                xCell[iCell] = myMPAS_O.xCell[iCell] - 0.5*dx            
     return xCell, yCell
 
 
-# In[7]:
+# In[11]:
 
-Generate_Rectilinear_MPAS_O_Mesh_1 = False
-if Generate_Rectilinear_MPAS_O_Mesh_1:
+Generate_Rectilinear_MPAS_O_Mesh_11 = False
+if Generate_Rectilinear_MPAS_O_Mesh_11:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/Periodic'
     base_mesh_file_name = 'base_mesh.nc'
@@ -142,16 +269,19 @@ if Generate_Rectilinear_MPAS_O_Mesh_1:
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
     xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
-    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
-                   [15.0,15.0],'MPAS-O Mesh Shifted Cell Centers',20.0,True,
-                   'MPAS_O_Mesh_Shifted_CellCenters_P',False,fig_size=[9.25,9.25],
-                   useDefaultMethodToSpecifyTickFontSize=True)    
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
 
 
-# In[8]:
+# In[12]:
 
-Generate_Rectilinear_MPAS_O_Mesh_2 = False
-if Generate_Rectilinear_MPAS_O_Mesh_2:
+Generate_Rectilinear_MPAS_O_Mesh_12 = False
+if Generate_Rectilinear_MPAS_O_Mesh_12:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
@@ -166,16 +296,73 @@ if Generate_Rectilinear_MPAS_O_Mesh_2:
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)    
     xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
-    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
-                   [15.0,15.0],'MPAS-O Mesh Shifted Cell Centers',20.0,True,
-                   'MPAS_O_Mesh_Shifted_CellCenters_P',False,fig_size=[9.25,9.25],
-                   useDefaultMethodToSpecifyTickFontSize=True)    
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
 
 
-# In[9]:
+# In[13]:
 
-Generate_Rectilinear_MPAS_O_Mesh_3 = False
-if Generate_Rectilinear_MPAS_O_Mesh_3:
+Generate_Rectilinear_MPAS_O_Mesh_13 = False
+if Generate_Rectilinear_MPAS_O_Mesh_13:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)    
+    xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
+
+
+# In[14]:
+
+Generate_Rectilinear_MPAS_O_Mesh_14 = False
+if Generate_Rectilinear_MPAS_O_Mesh_14:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)    
+    xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',2.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
+
+
+# In[15]:
+
+Generate_Rectilinear_MPAS_O_Mesh_21 = False
+if Generate_Rectilinear_MPAS_O_Mesh_21:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
@@ -188,22 +375,25 @@ if Generate_Rectilinear_MPAS_O_Mesh_3:
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
     xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
-    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
-                   [15.0,15.0],'MPAS-O Mesh Shifted Cell Centers',20.0,True,
-                   'MPAS_O_Mesh_Shifted_CellCenters_P',False,fig_size=[9.25,9.25],
-                   useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters_P'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
 
 
-# In[10]:
+# In[16]:
 
-Generate_Rectilinear_MPAS_O_Mesh_4 = False
-if Generate_Rectilinear_MPAS_O_Mesh_4:
+Generate_Rectilinear_MPAS_O_Mesh_22 = False
+if Generate_Rectilinear_MPAS_O_Mesh_22:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
+    base_mesh_file_name = 'culled_mesh_NP_x.nc'
     # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
-    mesh_file_name = 'mesh_NP.nc'
+    mesh_file_name = 'mesh_NP_x.nc'
     mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
@@ -212,35 +402,111 @@ if Generate_Rectilinear_MPAS_O_Mesh_4:
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
     xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
-    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,['Latitude','Longitude'],[17.5,17.5],[10.0,10.0],
-                   [15.0,15.0],'MPAS-O Mesh Shifted Cell Centers',20.0,True,
-                   'MPAS_O_Mesh_Shifted_CellCenters_NP',False,fig_size=[9.25,9.25],
-                   useDefaultMethodToSpecifyTickFontSize=True)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters_NP_x'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
 
 
-# In[11]:
+# In[17]:
+
+Generate_Rectilinear_MPAS_O_Mesh_23 = False
+if Generate_Rectilinear_MPAS_O_Mesh_23:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_y.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_y.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters_NP_y'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
+
+
+# In[18]:
+
+Generate_Rectilinear_MPAS_O_Mesh_24 = False
+if Generate_Rectilinear_MPAS_O_Mesh_24:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_xy.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_xy.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCell, yCell = Generate_Rectilinear_MPAS_O_Mesh(myMPAS_O)
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    Title = 'MPAS-O Mesh Shifted Cell Centers'
+    FigureTitle = 'MPAS_O_Mesh_ShiftedCellCenters_NP_xy'
+    CR.ScatterPlot(mesh_directory,xCell,yCell,'k','s',7.5,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],
+                   Title,20.0,True,FigureTitle,False,fig_size=[9.25,9.25],tick_units_in_km=True,
+                   useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)  
+
+
+# In[19]:
 
 def Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(myMPAS_O,Solution):
     nCellsX = int(np.sqrt(float(myMPAS_O.nCells)))
     dx = myMPAS_O.gridSpacingMagnitude
     InterpolatedSolution = np.zeros(myMPAS_O.nCells)
+    if (myMPAS_O.myNamelist.config_periodicity == 'Periodic'
+        or myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_x'):
+        shifted_row_index_mod_2 = 1.0
+    elif (myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_y'
+          or myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_xy'):
+        shifted_row_index_mod_2 = 0.0
     for iCell in range(0,myMPAS_O.nCells):
         iCellY = int(float(iCell)/float(nCellsX))
-        if np.mod(float(iCellY),2.0) == 1.0:
+        if np.mod(float(iCellY),2.0) == shifted_row_index_mod_2:
             if np.mod(float(iCell),float(nCellsX)) == 0.0:
-                if myMPAS_O.myNamelist.config_periodicity == 'Periodic':
-                    iCell1 = iCell-1+nCellsX
+                if (myMPAS_O.myNamelist.config_periodicity == 'Periodic'
+                    or myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_y'):
+                    iCell1 = iCell - 1 + nCellsX
                     iCell2 = iCell                    
                     f1 = Solution[iCell1]
                     f2 = Solution[iCell2]                         
                     InterpolatedSolution[iCell] = 0.5*(f1 + f2)                    
-                else:
-                    if myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_x':
+                elif myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_x':
+                    iCell1 = iCell - nCellsX
+                    iCell2 = int(np.mod(float(iCell+nCellsX),float(myMPAS_O.nCells)))
+                    f1 = Solution[iCell1]
+                    f2 = Solution[iCell2] 
+                    InterpolatedSolution[iCell] = 0.5*(f1 + f2)                     
+                elif myMPAS_O.myNamelist.config_periodicity == 'NonPeriodic_xy':                    
+                    if iCell == 0:
+                        iCell1 = iCell
+                        iCell2 = iCell + 1
+                        f1 = Solution[iCell1]
+                        f2 = Solution[iCell2]
+                        InterpolatedSolution[iCell] = 0.5*(3.0*f1 - f2)
+                    else:
                         iCell1 = iCell - nCellsX
-                        iCell2 = int(np.mod(float(iCell+nCellsX),float(myMPAS_O.nCells)))
+                        iCell2 = iCell + nCellsX
                         f1 = Solution[iCell1]
                         f2 = Solution[iCell2] 
-                        InterpolatedSolution[iCell] = 0.5*(f1 + f2)                     
+                        InterpolatedSolution[iCell] = 0.5*(f1 + f2)            
             else:
                 iCell1 = iCell-1
                 iCell2 = iCell                    
@@ -248,11 +514,11 @@ def Interpolate_Solution_From_MPAS_O_Mesh_To_Rectilinear_MPAS_O_Mesh(myMPAS_O,So
                 f2 = Solution[iCell2]     
                 InterpolatedSolution[iCell] = 0.5*(f1 + f2)  
         else:
-            InterpolatedSolution[iCell] = Solution[iCell]
+            InterpolatedSolution[iCell] = Solution[iCell]                        
     return InterpolatedSolution
 
 
-# In[12]:
+# In[20]:
 
 def GenerateStructuredRectinilearMeshCoordinateArrays1D(xCellUnstructured,yCellUnstructured,
                                                         printMeshCoordinateArrays1D=False):
@@ -277,10 +543,10 @@ def GenerateStructuredRectinilearMeshCoordinateArrays1D(xCellUnstructured,yCellU
     return xCellStructured, yCellStructured
 
 
-# In[13]:
+# In[21]:
 
-test_GenerateStructuredRectinilearMeshCoordinateArrays1D_1 = False
-if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_1:
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_11 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_11:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/Periodic'
     base_mesh_file_name = 'base_mesh.nc'
@@ -297,10 +563,10 @@ if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_1:
                                                         printMeshCoordinateArrays1D=True))
 
 
-# In[14]:
+# In[22]:
 
-test_GenerateStructuredRectinilearMeshCoordinateArrays1D_2 = False
-if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_2:
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_12 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_12:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
@@ -319,10 +585,54 @@ if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_2:
                                                         printMeshCoordinateArrays1D=True))
 
 
-# In[15]:
+# In[23]:
 
-test_GenerateStructuredRectinilearMeshCoordinateArrays1D_3 = False
-if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_3:
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_13 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_13:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCellStructured, yCellStructured = (
+    GenerateStructuredRectinilearMeshCoordinateArrays1D(myMPAS_O.xCell,myMPAS_O.yCell,
+                                                        printMeshCoordinateArrays1D=True))
+
+
+# In[24]:
+
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_14 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_14:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCellStructured, yCellStructured = (
+    GenerateStructuredRectinilearMeshCoordinateArrays1D(myMPAS_O.xCell,myMPAS_O.yCell,
+                                                        printMeshCoordinateArrays1D=True))
+
+
+# In[25]:
+
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_21 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_21:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
     base_mesh_file_name = 'base_mesh_P.nc'
@@ -339,16 +649,16 @@ if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_3:
                                                         printMeshCoordinateArrays1D=True))
 
 
-# In[16]:
+# In[26]:
 
-test_GenerateStructuredRectinilearMeshCoordinateArrays1D_4 = False
-if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_4:
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_22 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_22:
     print_basic_geometry = True
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
+    base_mesh_file_name = 'culled_mesh_NP_x.nc'
     # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
-    mesh_file_name = 'mesh_NP.nc'
+    mesh_file_name = 'mesh_NP_x.nc'
     mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
@@ -361,7 +671,51 @@ if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_4:
                                                         printMeshCoordinateArrays1D=True))
 
 
-# In[17]:
+# In[27]:
+
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_23 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_23:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_y.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_y.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_y'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCellStructured, yCellStructured = (
+    GenerateStructuredRectinilearMeshCoordinateArrays1D(myMPAS_O.xCell,myMPAS_O.yCell,
+                                                        printMeshCoordinateArrays1D=True))
+
+
+# In[28]:
+
+test_GenerateStructuredRectinilearMeshCoordinateArrays1D_24 = False
+if test_GenerateStructuredRectinilearMeshCoordinateArrays1D_24:
+    print_basic_geometry = True
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
+    base_mesh_file_name = 'culled_mesh_NP_xy.nc'
+    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh_NP_xy.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    xCellStructured, yCellStructured = (
+    GenerateStructuredRectinilearMeshCoordinateArrays1D(myMPAS_O.xCell,myMPAS_O.yCell,
+                                                        printMeshCoordinateArrays1D=True))
+
+
+# In[29]:
 
 def Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(
 dx,xCell_FineRectilinearMesh,yCell_FineRectilinearMesh,Solution_FineRectilinearMesh,xCell_CoarsestRectilinearMesh,
@@ -405,7 +759,7 @@ yCell_CoarsestRectilinearMesh):
     return SolutionInterpolatedToCoarsestRectilinearMesh
 
 
-# In[18]:
+# In[30]:
 
 def surface_elevation(lX,lY,x,y):
     eta0 = 0.1
@@ -413,7 +767,7 @@ def surface_elevation(lX,lY,x,y):
     return eta
 
 
-# In[19]:
+# In[31]:
 
 def test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory,periodicity,output_directory,
                                                                   plotFigures=True):
@@ -425,8 +779,8 @@ def test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory
     for iCase in range(0,nCases):
         if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+4)
-        elif periodicity == 'NonPeriodic_x':
-            base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+4)
+        elif periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
+            base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+4)            
         mesh_file_name = 'mesh_%s.nc' %(iCase+4)
         if iCase == 0:
             myMPAS_O_CoarseMesh = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,
@@ -487,66 +841,102 @@ def test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory
     'The L2 interpolation error norm from the fine rectilinear mesh to the coarse rectilinear mesh is %.15f.'
     %L2InterpolationErrorNorm_FineRectilinearMeshToCoarseRectilinearMesh)    
     if plotFigures:
-        Title = 'SSH on Coarse Mesh'
-        FigureTitle = 'SSHOnCoarseMesh_' + periodicity
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Surface Elevation on Coarse Mesh'
+        FigureTitle = 'SurfaceElevationOnCoarseMesh_' + periodicity
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O_CoarseMesh.xCell,
                                                           myMPAS_O_CoarseMesh.yCell,
-                                                          myMPAS_O_CoarseMesh.sshCurrent,300,False,[0.0,0.0],'x',
-                                                          10,'y',10,Title,True,FigureTitle,False)         
-        Title = 'Exact SSH on Coarse Rectilinear Mesh'
-        FigureTitle = 'ExactSSHOnCoarseRectilinearMesh_' + periodicity
+                                                          myMPAS_O_CoarseMesh.sshCurrent,300,False,[0.0,0.0],6,
+                                                          plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+        Title = 'Exact Surface Elevation on Coarse Rectilinear Mesh'
+        FigureTitle = 'ExactSurfaceElevationOnCoarseRectilinearMesh_' + periodicity
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,xCell_CoarseRectilinearMesh,
                                                           yCell_CoarseRectilinearMesh,
-                                                          exactSSH_CoarseRectilinearMesh,
-                                                          300,False,[0.0,0.0],'x',10,'y',10,Title,True,
-                                                          FigureTitle,False)           
-        Title = 'Interpolated SSH on Coarse Rectilinear Mesh'
-        FigureTitle = 'InterpolatedSSHOnCoarseRectilinearMesh_' + periodicity
+                                                          exactSSH_CoarseRectilinearMesh,300,False,[0.0,0.0],6,
+                                                          plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+        Title = 'Interpolated Surface Elevation on Coarse Rectilinear Mesh'
+        FigureTitle = 'InterpolatedSurfaceElevationOnCoarseRectilinearMesh_' + periodicity
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,xCell_CoarseRectilinearMesh,
                                                           yCell_CoarseRectilinearMesh,
                                                           InterpolatedSSH_CoarseRectilinearMesh,300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False) 
-        Title = 'SSH on Fine Mesh'
-        FigureTitle = 'SSHOnFineMesh'
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],
+                                                          [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
+                                                          FigureTitle,False,fig_size=[10.0,10.0],
+                                                          tick_units_in_km=True,cbarlabelformat='%.2f')        
+        Title = 'Surface Elevation on Fine Mesh'
+        FigureTitle = 'SurfaceElevationOnFineMesh'
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O_FineMesh.xCell,
                                                           myMPAS_O_FineMesh.yCell,myMPAS_O_FineMesh.sshCurrent,
-                                                          300,False,[0.0,0.0],'x',10,'y',10,Title,True,
-                                                          FigureTitle,False)   
-        Title = 'Interpolated SSH on Fine Rectilinear Mesh'
-        FigureTitle = 'InterpolatedSSHOnFineRectilinearMesh_' + periodicity
+                                                          300,False,[0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],
+                                                          [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,
+                                                          FigureTitle,False,fig_size=[10.0,10.0],
+                                                          tick_units_in_km=True,cbarlabelformat='%.2f')   
+        Title = 'Interpolated Surface Elevation on Fine Rectilinear Mesh'
+        FigureTitle = 'InterpolatedSurfaceElevationOnFineRectilinearMesh_' + periodicity
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,xCell_FineRectilinearMesh,
                                                           yCell_FineRectilinearMesh,
                                                           InterpolatedSSH_FineRectilinearMesh,300,False,[0.0,0.0],
-                                                          'x',10,'y',10,Title,True,FigureTitle,False) 
-        Title = 'Fine Rectilinear Mesh SSH\nInterpolated to Coarse Rectilinear Mesh'
-        FigureTitle = 'FineRectilinearMeshSSHInterpolatedToCoarseRectilinearMesh_' + periodicity
+                                                          6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+        Title = 'Fine Rectilinear Mesh Surface Elevation\nInterpolated to Coarse Rectilinear Mesh'
+        FigureTitle = 'FineRectilinearMeshSurfaceElevationInterpolatedToCoarseRectilinearMesh_' + periodicity
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
         output_directory,xCell_CoarseRectilinearMesh,yCell_CoarseRectilinearMesh,
-        FineRectilinearMeshSSHInterpolatedToCoarseRectilinearMesh,300,False,[0.0,0.0],'x',10,'y',10,Title,True,
-        FigureTitle,False) 
+        FineRectilinearMeshSSHInterpolatedToCoarseRectilinearMesh,300,False,[0.0,0.0],6,plt.cm.jet,13.75,
+        [xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2f')
 
 
-# In[20]:
+# In[32]:
 
-test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_1 = False
-if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_1:
+test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_11 = False
+if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_11:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     periodicity = 'Periodic'
     output_directory = mesh_directory
     test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory,periodicity,output_directory)
 
 
-# In[21]:
+# In[33]:
 
-test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_2 = False
-if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_2:
+test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_12 = False
+if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_12:
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     periodicity = 'NonPeriodic_x'
     output_directory = mesh_directory
     test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory,periodicity,output_directory)
 
 
-# In[22]:
+# In[34]:
+
+test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_13 = False
+if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_13:
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_y'
+    periodicity = 'NonPeriodic_y'
+    output_directory = mesh_directory
+    test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory,periodicity,output_directory)
+
+
+# In[35]:
+
+test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_14 = False
+if test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh_14:
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_xy'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = mesh_directory
+    test_Interpolate_Solution_To_Coarsest_Rectilinear_MPAS_O_Mesh(mesh_directory,periodicity,output_directory)
+
+
+# In[36]:
 
 def Interpolate_Solution_From_Vertices_To_Cell_Centers(myMPAS_O,SolutionAtVertices):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
@@ -566,7 +956,7 @@ def Interpolate_Solution_From_Vertices_To_Cell_Centers(myMPAS_O,SolutionAtVertic
     return SolutionAtCellCenters
 
 
-# In[23]:
+# In[37]:
 
 def Interpolate_Solution_From_Edges_To_Cell_Centers(myMPAS_O,SolutionAtEdges):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
@@ -580,7 +970,7 @@ def Interpolate_Solution_From_Edges_To_Cell_Centers(myMPAS_O,SolutionAtEdges):
     return SolutionAtCellCenters
 
 
-# In[24]:
+# In[38]:
 
 def test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory,plotFigures=True,
                                                                       FigureTitleSuffix=''):
@@ -609,47 +999,70 @@ def test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,o
     SSHInterpolationErrorFromEdgesToCellCenters = (
     InterpolatedSSHFromEdgesToCellCenters - ExactSSHAtCellCenters)
     if plotFigures:
-        Title = 'Exact SSH At Vertices'
-        FigureTitle = 'ExactSSHAtVertices' + FigureTitleSuffix
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Exact Surface Elevation At Vertices'
+        FigureTitle = 'ExactSurfaceElevationAtVertices' + FigureTitleSuffix
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,
-                                                          ExactSSHAtVertices,300,False,[0.0,0.0],'x',10,'y',10,
-                                                          Title,True,FigureTitle,False)
-        Title = 'Exact SSH At Edges'
-        FigureTitle = 'ExactSSHAtEdges' + FigureTitleSuffix
+                                                          ExactSSHAtVertices,300,False,[0.0,0.0],6,plt.cm.jet,
+                                                          13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                                          [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                          fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+        Title = 'Exact Surface Elevation At Edges'
+        FigureTitle = 'ExactSurfaceElevationAtEdges' + FigureTitleSuffix
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge,myMPAS_O.yEdge,
-                                                          ExactSSHAtEdges,300,False,[0.0,0.0],'x',10,'y',10,Title,
-                                                          True,FigureTitle,False) 
-        Title = 'Exact SSH At Cell Centers'
-        FigureTitle = 'ExactSSHAtCellCenters' + FigureTitleSuffix 
+                                                          ExactSSHAtEdges,300,False,[0.0,0.0],6,plt.cm.jet,
+                                                          13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                                          [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                          fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')                
+        Title = 'Exact Surface Elevation At Cell Centers'
+        FigureTitle = 'ExactSurfaceElevationAtCellCenters' + FigureTitleSuffix 
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          ExactSSHAtCellCenters,300,False,[0.0,0.0],'x',10,'y',10,
-                                                          Title,True,FigureTitle,False) 
-        Title = 'Interpolated SSH from Vertices to Cell Centers'
-        FigureTitle = 'InterpolatedSSHFromVerticesToCellCenters' + FigureTitleSuffix 
+                                                          ExactSSHAtCellCenters,300,False,[0.0,0.0],6,plt.cm.jet,
+                                                          13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                                          [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                          fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')        
+        Title = 'Interpolated Surface Elevation from Vertices to Cell Centers'
+        FigureTitle = 'InterpolatedSurfaceElevationFromVerticesToCellCenters' + FigureTitleSuffix 
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                           InterpolatedSSHFromVerticesToCellCenters,300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False)   
-        Title = 'SSH Interpolation Error from Vertices to Cell Centers'
-        FigureTitle = 'SSHInterpolationErrorFromVerticesToCellCenters' + FigureTitleSuffix 
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')        
+        Title = 'Surface Elevation Interpolation Error from Vertices to Cell Centers'
+        FigureTitle = 'SurfaceElevationInterpolationErrorFromVerticesToCellCenters' + FigureTitleSuffix 
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                           SSHInterpolationErrorFromVerticesToCellCenters,300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False)
-        Title = 'Interpolated SSH from Edges to Cell Centers'
-        FigureTitle = 'InterpolatedSSHFromEdgesToCellCenters' + FigureTitleSuffix 
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2g')                 
+        Title = 'Interpolated Surface Elevation from Edges to Cell Centers'
+        FigureTitle = 'InterpolatedSurfaceElevationFromEdgesToCellCenters' + FigureTitleSuffix 
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                           InterpolatedSSHFromEdgesToCellCenters,300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False)
-        Title = 'SSH Interpolation Error from Edges to Cell Centers'
-        FigureTitle = 'SSHInterpolationErrorFromEdgesToCellCenters' + FigureTitleSuffix 
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')                
+        Title = 'Surface Elevation Interpolation Error from Edges to Cell Centers'
+        FigureTitle = 'SurfaceElevationInterpolationErrorFromEdgesToCellCenters' + FigureTitleSuffix 
         CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
                                                           SSHInterpolationErrorFromEdgesToCellCenters,300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False)
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2g') 
 
 
-# In[25]:
+# In[39]:
 
-test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_1 = False
-if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_1:
+test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_11 = False
+if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_11:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/Periodic'
     base_mesh_file_name = 'base_mesh.nc'
@@ -665,10 +1078,10 @@ if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_1:
     test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory)
 
 
-# In[26]:
+# In[40]:
 
-test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_2 = False
-if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_2:
+test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_12 = False
+if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_12:
     print_basic_geometry = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
     base_mesh_file_name = 'culled_mesh.nc'
@@ -686,43 +1099,43 @@ if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_2:
     test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory)
 
 
-# In[27]:
+# In[41]:
 
-test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_3 = False
-if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_3:
+test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_13 = False
+if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_13:
     print_basic_geometry = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    mesh_type = 'uniform'
-    problem_type = 'default'
-    problem_is_linear = True
-    periodicity = 'Periodic'
-    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
-                                       print_Output=False)
-    output_directory = mesh_directory
-    test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory,
-                                                                      FigureTitleSuffix='_P')
-
-
-# In[28]:
-
-test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_4 = False
-if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_4:
-    print_basic_geometry = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
-    # If you specify the base_mesh_file_name to be base_mesh_NP.nc and my_mesh_file_name to be base_mesh_file_name,
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
     # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
-    mesh_file_name = 'mesh_NP.nc'
+    mesh_file_name = 'mesh.nc'
     mesh_type = 'uniform'
     problem_type = 'default'
     problem_is_linear = True
-    periodicity = 'NonPeriodic_x'
+    periodicity = 'NonPeriodic_y'
     myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
                                        mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
                                        print_Output=False)
     output_directory = mesh_directory
-    test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory,
-                                                                      FigureTitleSuffix='_NP')
+    test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory)
+
+
+# In[42]:
+
+test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_14 = False
+if test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers_14:
+    print_basic_geometry = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    # If you specify the base_mesh_file_name to be base_mesh.nc and my_mesh_file_name to be base_mesh_file_name,
+    # the fixAngle routine will not work unless you also specify determineYCellAlongLatitude to be False.
+    mesh_file_name = 'mesh.nc'
+    mesh_type = 'uniform'
+    problem_type = 'default'
+    problem_is_linear = True
+    periodicity = 'NonPeriodic_xy'
+    myMPAS_O = MPAS_O_Mode_Init.MPAS_O(print_basic_geometry,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                       mesh_type,problem_type,problem_is_linear,periodicity,do_fixAngleEdge=True,
+                                       print_Output=False)
+    output_directory = mesh_directory
+    test_Interpolate_Solution_From_Vertices_And_Edges_To_Cell_Centers(myMPAS_O,output_directory)

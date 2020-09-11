@@ -10,6 +10,7 @@
 import numpy as np
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
+import matplotlib.pyplot as plt
 import io as inputoutput
 import os
 import sys
@@ -81,6 +82,7 @@ def surface_elevation_gradient_2_functional_form():
     eta_y = sp.diff(eta,y)
     eta_x_np = lambdify((lX,lY,x,y), eta_x, modules=["numpy","sympy"])
     eta_y_np = lambdify((lX,lY,x,y), eta_y, modules=["numpy","sympy"])
+    # Note that np in eta_x_np and eta_y_np stands for numpy.
     return eta_x_np, eta_y_np
 
 
@@ -110,6 +112,7 @@ def surface_elevation_laplacian_2_functional_form():
     eta_yy = sp.diff(eta,y,y)
     laplacian = eta_xx + eta_yy
     laplacian_np = lambdify((lX,lY,x,y), laplacian, modules=["numpy","sympy"])
+    # Note that np in laplacian_np stands for numpy.
     return laplacian_np
 
 
@@ -167,6 +170,138 @@ def velocity_curl(lX,lY,x,y):
 
 # In[19]:
 
+def plot_SurfaceElevation_NormalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                         mesh_file_name,periodicity,output_directory):
+    if useDefaultMesh:
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
+    else:
+        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
+                                           periodicity=periodicity)
+    if periodicity == 'NonPeriodic_x':
+        iEdgeStartingIndex = 1
+    else:
+        iEdgeStartingIndex = 0
+    prefix = problem_specific_prefix()
+    
+    mySurfaceElevation = np.zeros(myMPAS_O.nCells)
+    for iCell in range(0,myMPAS_O.nCells):
+        mySurfaceElevation[iCell] = (
+        surface_elevation(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],myMPAS_O.yCell[iCell]))
+    myZonalVelocity = np.zeros(myMPAS_O.nEdges) 
+    myMeridionalVelocity = np.zeros(myMPAS_O.nEdges) 
+    myResultantVelocity = np.zeros(myMPAS_O.nEdges)   
+    myNormalVelocity = np.zeros(myMPAS_O.nEdges)
+    for iEdge in range(0,myMPAS_O.nEdges):
+        u, v = velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge])
+        myZonalVelocity[iEdge] = u
+        myMeridionalVelocity[iEdge] = v
+        myResultantVelocity[iEdge] = np.sqrt(u**2.0 + v**2.0)
+        myNormalVelocity[iEdge] = u*np.cos(myMPAS_O.angleEdge[iEdge]) + v*np.sin(myMPAS_O.angleEdge[iEdge])
+    if plotFigures:
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Surface Elevation'
+        FigureTitle = prefix + 'SurfaceElevation'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
+                                                          mySurfaceElevation,300,False,[0.0,0.0],6,plt.cm.jet,
+                                                          13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                                          [15.0,15.0],Title,20.0,True,FigureTitle,False,
+                                                          fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+        Title = 'Zonal Velocity'
+        FigureTitle = prefix + 'ZonalVelocity'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
+                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
+                                                          myZonalVelocity[iEdgeStartingIndex:],300,False,[0.0,0.0],
+                                                          6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')          
+        Title = 'Meridional Velocity'
+        FigureTitle = prefix + 'MeridionalVelocity'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
+                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
+                                                          myMeridionalVelocity[iEdgeStartingIndex:],300,False,
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')    
+        Title = 'Resultant Velocity'
+        FigureTitle = prefix + 'ResultantVelocity'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
+                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
+                                                          myResultantVelocity[iEdgeStartingIndex:],300,False,
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')   
+        Title = 'Normal Velocity'
+        FigureTitle = prefix + 'NormalVelocity'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
+                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
+                                                          myNormalVelocity[iEdgeStartingIndex:],300,False,
+                                                          [0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],
+                                                          [10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,
+                                                          False,fig_size=[10.0,10.0],tick_units_in_km=True,
+                                                          cbarlabelformat='%.2f')
+
+
+# In[20]:
+
+do_plot_SurfaceElevation_NormalVelocity_11 = False
+if do_plot_SurfaceElevation_NormalVelocity_11:
+    periodicity = 'Periodic'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
+    plot_SurfaceElevation_NormalVelocity(True,True,' ',' ',' ',periodicity,output_directory)
+
+
+# In[21]:
+
+do_plot_SurfaceElevation_NormalVelocity_12 = False
+if do_plot_SurfaceElevation_NormalVelocity_12:
+    useDefaultMesh = False
+    plotFigures = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_x'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
+    plot_SurfaceElevation_NormalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                         mesh_file_name,periodicity,output_directory)
+
+
+# In[22]:
+
+do_plot_SurfaceElevation_NormalVelocity_13 = False
+if do_plot_SurfaceElevation_NormalVelocity_13:
+    useDefaultMesh = False
+    plotFigures = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    plot_SurfaceElevation_NormalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                         mesh_file_name,periodicity,output_directory)
+
+
+# In[23]:
+
+do_plot_SurfaceElevation_NormalVelocity_14 = False
+if do_plot_SurfaceElevation_NormalVelocity_14:
+    useDefaultMesh = False
+    plotFigures = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    plot_SurfaceElevation_NormalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                         mesh_file_name,periodicity,output_directory)
+
+
+# In[24]:
+
 def ComputeNormalAndTangentialComponentsAtEdge(myVectorQuantityAtEdge,angleEdge,returningComponent):
     nEdges = len(angleEdge)
     if returningComponent == 'normal' or returningComponent == 'both':
@@ -190,7 +325,7 @@ def ComputeNormalAndTangentialComponentsAtEdge(myVectorQuantityAtEdge,angleEdge,
         return myVectorQuantityAtEdgeNormalComponent, myVectorQuantityAtEdgeTangentialComponent
 
 
-# In[20]:
+# In[25]:
 
 def analytical_gradient_operator(nEdges,myScalarQuantityGradientComponentsAtEdge,angleEdge):
     myScalarQuantityGradientNormalToEdge = (
@@ -198,110 +333,23 @@ def analytical_gradient_operator(nEdges,myScalarQuantityGradientComponentsAtEdge
     return myScalarQuantityGradientNormalToEdge
 
 
-# In[21]:
-
-def numerical_gradient_operator(myMPAS_O,myScalarQuantity):
-    myScalarQuantityGradientNormalToEdge = np.zeros(myMPAS_O.nEdges)
-    for iEdge in range(0,myMPAS_O.nEdges):
-        cellID1 = myMPAS_O.cellsOnEdge[iEdge,0]
-        cell1 = cellID1 - 1
-        cellID2 = myMPAS_O.cellsOnEdge[iEdge,1]
-        cell2 = cellID2 - 1
-        invLength = 1.0/myMPAS_O.dcEdge[iEdge]    
-        myScalarQuantityGradientNormalToEdge[iEdge] = (myScalarQuantity[cell2] - myScalarQuantity[cell1])*invLength
-    return myScalarQuantityGradientNormalToEdge
-
-
-# In[22]:
-
-def plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     periodicity,output_directory):
-    if useDefaultMesh:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,periodicity=periodicity)
-    else:
-        myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                           periodicity=periodicity)
-    if periodicity == 'NonPeriodic_x':
-        iEdgeStartingIndex = 1
-    else:
-        iEdgeStartingIndex = 0
-    prefix = problem_specific_prefix()
-    mySSH = np.zeros(myMPAS_O.nCells)
-    for iCell in range(0,myMPAS_O.nCells):
-        mySSH[iCell] = surface_elevation(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],myMPAS_O.yCell[iCell])
-    myVelocity = np.zeros(myMPAS_O.nEdges)   
-    myNormalVelocity = np.zeros(myMPAS_O.nEdges)
-    for iEdge in range(0,myMPAS_O.nEdges):
-        u, v = velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge])
-        myVelocity[iEdge] = np.sqrt(u**2.0 + v**2.0)
-        myNormalVelocity[iEdge] = u*np.cos(myMPAS_O.angleEdge[iEdge]) + v*np.sin(myMPAS_O.angleEdge[iEdge])
-    if plotFigures:
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,mySSH,300,
-                                                          False,[0.0,0.0],'x',10,'y',10,'SSH',True,prefix+'SSH',
-                                                          False)        
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          myVelocity[iEdgeStartingIndex:],300,False,[0.0,0.0],'x',
-                                                          10,'y',10,'velocity',True,prefix+'velocity',False)
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          myNormalVelocity[iEdgeStartingIndex:],300,False,
-                                                          [0.0,0.0],'x',10,'y',10,'normalVelocity',True,
-                                                          prefix+'normalVelocity',False)
-
-
-# In[23]:
-
-do_plot_ssh_velocity_normalVelocity_1 = False
-if do_plot_ssh_velocity_normalVelocity_1:
-    periodicity = 'Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    plot_ssh_velocity_normalVelocity(True,True,' ',' ',' ',periodicity,output_directory)
-
-
-# In[24]:
-
-do_plot_ssh_velocity_normalVelocity_2 = False
-if do_plot_ssh_velocity_normalVelocity_2:
-    useDefaultMesh = False
-    plotFigures = True
-    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
-    base_mesh_file_name = 'culled_mesh.nc'
-    mesh_file_name = 'mesh.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     periodicity,output_directory)
-
-
-# In[25]:
-
-do_plot_ssh_velocity_normalVelocity_3 = False
-if do_plot_ssh_velocity_normalVelocity_3:
-    useDefaultMesh = False
-    plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    periodicity = 'Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     periodicity,output_directory)
-
-
 # In[26]:
 
-do_plot_ssh_velocity_normalVelocity_4 = False
-if do_plot_ssh_velocity_normalVelocity_4:
-    useDefaultMesh = False
-    plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'mesh_NP.nc'
-    mesh_file_name = 'mesh_NP.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    plot_ssh_velocity_normalVelocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
-                                     periodicity,output_directory)
+def numerical_gradient_operator(myMPAS_O,myScalarQuantity,periodicity='Periodic'):
+    if periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
+        MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
+    myScalarQuantityGradientNormalToEdge = np.zeros(myMPAS_O.nEdges)
+    for iEdge in range(0,myMPAS_O.nEdges):
+        if not((periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' 
+                or periodicity == 'NonPeriodic_xy') and myMPAS_O.boundaryEdge[iEdge] == 1.0):
+            cellID1 = myMPAS_O.cellsOnEdge[iEdge,0]
+            cell1 = cellID1 - 1
+            cellID2 = myMPAS_O.cellsOnEdge[iEdge,1]
+            cell2 = cellID2 - 1
+            invLength = 1.0/myMPAS_O.dcEdge[iEdge]    
+            myScalarQuantityGradientNormalToEdge[iEdge] = (
+            (myScalarQuantity[cell2] - myScalarQuantity[cell1])*invLength)
+    return myScalarQuantityGradientNormalToEdge
 
 
 # In[27]:
@@ -318,65 +366,68 @@ def test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,b
     else:
         iEdgeStartingIndex = 0
     prefix = problem_specific_prefix()
-    ssh = np.zeros(myMPAS_O.nCells)
+    mySurfaceElevation = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
-        ssh[iCell] = surface_elevation(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],myMPAS_O.yCell[iCell])
-    sshGradientEdge = np.zeros((myMPAS_O.nEdges,2))
+        mySurfaceElevation[iCell] = surface_elevation(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],
+                                                      myMPAS_O.yCell[iCell])
+    mySurfaceElevationGradientAtEdge = np.zeros((myMPAS_O.nEdges,2))
     for iEdge in range(0,myMPAS_O.nEdges):
-        sshGradientEdge[iEdge,0], sshGradientEdge[iEdge,1] = (
+        mySurfaceElevationGradientAtEdge[iEdge,0], mySurfaceElevationGradientAtEdge[iEdge,1] = (
         surface_elevation_gradient(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge]))
-    analyticalSSHGradientNormalToEdge = analytical_gradient_operator(myMPAS_O.nEdges,sshGradientEdge,
-                                                                     myMPAS_O.angleEdge)
-    # Reduce the normal gradient at the midpoint of the non-periodic boundary edges to be zero. Due to the 
-    # staggered nature of the MPAS-O grid, we do not need to compute the gradient of any variable at the midpoint 
-    # of a non-periodic boundary edge anyway.
+    myAnalyticalSurfaceElevationGradientNormalToEdge = (
+    analytical_gradient_operator(myMPAS_O.nEdges,mySurfaceElevationGradientAtEdge,myMPAS_O.angleEdge))
+    myNumericalSurfaceElevationGradientNormalToEdge = (
+    numerical_gradient_operator(myMPAS_O,mySurfaceElevation,periodicity))
+    # Reduce the numerical normal gradient at the midpoint of every non-periodic boundary edge to be equal to its
+    # exact analytical counterpart. Note that due to the staggered nature of the MPAS-O grid, we do not even need 
+    # to compute the gradient of any variable at the midpoint of a non-periodic boundary edge. For instance, in 
+    # order to update the normal velocity defined at the midpoint of an edge, we need to determine the gradient of 
+    # the surface elevation there. However, if the edge is aligned along a non-periodic boundary, the normal 
+    # velocity at its midpoint is specified to be zero at all times and the entire exercise of updating it every
+    # time step is not carried out.
     for iEdge in range(0,myMPAS_O.nEdges):
-        cellID2 = myMPAS_O.cellsOnEdge[iEdge,1]
-        if cellID2 == 0:
-            analyticalSSHGradientNormalToEdge[iEdge] = 0.0
+        if ((periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy') 
+            and myMPAS_O.boundaryEdge[iEdge] == 1.0):
+            myNumericalSurfaceElevationGradientNormalToEdge[iEdge] = (
+            myAnalyticalSurfaceElevationGradientNormalToEdge[iEdge])  
+    mySurfaceElevationGradientNormalToEdgeError = (
+    myNumericalSurfaceElevationGradientNormalToEdge - myAnalyticalSurfaceElevationGradientNormalToEdge)
+    MaxErrorNorm = np.linalg.norm(mySurfaceElevationGradientNormalToEdgeError,np.inf)
+    L2ErrorNorm = (np.linalg.norm(mySurfaceElevationGradientNormalToEdgeError)
+                   /np.sqrt(float(myMPAS_O.nEdges - myMPAS_O.nNonPeriodicBoundaryEdges)))
+    print('The maximum error norm of the surface elevation gradient normal to edges is %.3g.' %MaxErrorNorm)
+    print('The L2 error norm of the surface elevation gradient normal to edges is %.3g.' %L2ErrorNorm)
     if plotFigures:
-        Title = 'Analytical SSH Gradient normal to Edge'
-        FigureTitle = prefix + 'SSHGradientNormalToEdge_Analytical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          analyticalSSHGradientNormalToEdge[iEdgeStartingIndex:],
-                                                          300,False,[0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,
-                                                          False)
-    numericalSSHGradientNormalToEdge = numerical_gradient_operator(myMPAS_O,ssh)
-    # Reduce the normal gradient at the midpoint of the non-periodic boundary edges to be zero. Due to the 
-    # staggered nature of the MPAS-O grid, we do not need to compute the gradient of any variable at the midpoint 
-    # of a non-periodic boundary edge anyway.
-    for iEdge in range(0,myMPAS_O.nEdges):
-        cellID2 = myMPAS_O.cellsOnEdge[iEdge,1]
-        if cellID2 == 0:
-            numericalSSHGradientNormalToEdge[iEdge] = 0.0
-    if plotFigures:
-        Title = 'Numerical SSH Gradient normal to Edge'
-        FigureTitle = prefix + 'SSHGradientNormalToEdge_Numerical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          numericalSSHGradientNormalToEdge[iEdgeStartingIndex:],
-                                                          300,False,[0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,
-                                                          False)  
-    normalSSHGradientError = numericalSSHGradientNormalToEdge - analyticalSSHGradientNormalToEdge
-    MaxErrorNorm = np.linalg.norm(normalSSHGradientError,np.inf)
-    L2ErrorNorm = np.linalg.norm(normalSSHGradientError)/np.sqrt(float(myMPAS_O.nEdges))
-    print('The maximum error norm of the normal ssh gradient is %.3g.' %MaxErrorNorm)
-    print('The L2 error norm of the normal ssh gradient is %.3g.' %L2ErrorNorm)
-    if plotFigures:
-        Title = 'normal SSH Gradient Error'
-        FigureTitle = prefix + 'SSHGradientNormalToEdge_Error'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          normalSSHGradientError[iEdgeStartingIndex:],300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False)    
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Analytical Surface Elevation Gradient Normal to Edge'
+        FigureTitle = prefix + 'SurfaceElevationGradientNormalToEdge_Analytical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        myAnalyticalSurfaceElevationGradientNormalToEdge[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,
+        13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')              
+        Title = 'Numerical Surface Elevation Gradient Normal to Edge'
+        FigureTitle = prefix + 'SurfaceElevationGradientNormalToEdge_Numerical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        myNumericalSurfaceElevationGradientNormalToEdge[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,
+        13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')
+        Title = 'Error of the Surface Elevation Gradient Normal to Edge'
+        FigureTitle = prefix + 'SurfaceElevationGradientNormalToEdge_Error'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(            
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        mySurfaceElevationGradientNormalToEdgeError[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,
+        13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')   
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
 # In[28]:
 
-do_test_numerical_gradient_operator_1 = False
-if do_test_numerical_gradient_operator_1:
+do_test_numerical_gradient_operator_11 = False
+if do_test_numerical_gradient_operator_11:
     periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = test_numerical_gradient_operator(True,True,' ',' ',' ',periodicity,
@@ -385,8 +436,8 @@ if do_test_numerical_gradient_operator_1:
 
 # In[29]:
 
-do_test_numerical_gradient_operator_2 = False
-if do_test_numerical_gradient_operator_2:
+do_test_numerical_gradient_operator_12 = False
+if do_test_numerical_gradient_operator_12:
     useDefaultMesh = False
     plotFigures = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
@@ -401,15 +452,15 @@ if do_test_numerical_gradient_operator_2:
 
 # In[30]:
 
-do_test_numerical_gradient_operator_3 = False
-if do_test_numerical_gradient_operator_3:
+do_test_numerical_gradient_operator_13 = False
+if do_test_numerical_gradient_operator_13:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    periodicity = 'Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                                      periodicity,output_directory))
@@ -417,15 +468,15 @@ if do_test_numerical_gradient_operator_3:
 
 # In[31]:
 
-do_test_numerical_gradient_operator_4 = False
-if do_test_numerical_gradient_operator_4:
+do_test_numerical_gradient_operator_14 = False
+if do_test_numerical_gradient_operator_14:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
-    mesh_file_name = 'mesh_NP.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_numerical_gradient_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                                      periodicity,output_directory))
@@ -442,45 +493,47 @@ def convergence_test_numerical_gradient_operator(periodicity,mesh_directory,outp
     for iCase in range(0,nCases):
         if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif periodicity == 'NonPeriodic_x':
+        elif periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_numerical_gradient_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,periodicity,
                                          output_directory))
-    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'Maximum Error Norm of Numerical Gradient Operator'
     legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalGradientOperatorConvergencePlot_MaxErrorNorm'
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)
+    FigureTitle = prefix + 'ConvergencePlot_NumericalGradientOperator_MaxErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,MaxErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
     legends = ['L2 Error Norm','Best Fit Straight Line']
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'L2 Error Norm of Numerical Gradient Operator'
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalGradientOperatorConvergencePlot_L2ErrorNorm'   
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)
+    FigureTitle = prefix + 'ConvergencePlot_NumericalGradientOperator_L2ErrorNorm'   
+    CR.WriteCurve1D(output_directory,dc,L2ErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)
 
 
 # In[33]:
 
-do_convergence_test_numerical_gradient_operator_1 = False
-if do_convergence_test_numerical_gradient_operator_1:
+do_convergence_test_numerical_gradient_operator_11 = False
+if do_convergence_test_numerical_gradient_operator_11:
     periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
@@ -489,8 +542,8 @@ if do_convergence_test_numerical_gradient_operator_1:
 
 # In[34]:
 
-do_convergence_test_numerical_gradient_operator_2 = False
-if do_convergence_test_numerical_gradient_operator_2:
+do_convergence_test_numerical_gradient_operator_12 = False
+if do_convergence_test_numerical_gradient_operator_12:
     periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
@@ -498,6 +551,26 @@ if do_convergence_test_numerical_gradient_operator_2:
 
 
 # In[35]:
+
+do_convergence_test_numerical_gradient_operator_13 = False
+if do_convergence_test_numerical_gradient_operator_13:
+    periodicity = 'NonPeriodic_y'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    convergence_test_numerical_gradient_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[36]:
+
+do_convergence_test_numerical_gradient_operator_14 = False
+if do_convergence_test_numerical_gradient_operator_14:
+    periodicity = 'NonPeriodic_xy'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    convergence_test_numerical_gradient_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[37]:
 
 def numerical_divergence_operator(myMPAS_O,myVectorQuantityNormalToEdge):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
@@ -514,7 +587,7 @@ def numerical_divergence_operator(myMPAS_O,myVectorQuantityNormalToEdge):
     return myVectorQuantityDivergence
 
 
-# In[36]:
+# In[38]:
 
 def test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
                                        mesh_file_name,periodicity,output_directory):
@@ -524,57 +597,61 @@ def test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory
         myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
                                            periodicity=periodicity)
     prefix = problem_specific_prefix()
-    analyticalSSHLaplacian = np.zeros(myMPAS_O.nCells)
+    myAnalyticalSurfaceElevationLaplacian = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
-        analyticalSSHLaplacian[iCell] = surface_elevation_laplacian(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],
-                                                                    myMPAS_O.yCell[iCell])
-    if plotFigures:
-        Title = 'Analytical SSH Laplacian'
-        FigureTitle = prefix + 'SSHLaplacian_Analytical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          analyticalSSHLaplacian,300,False,[0.0,0.0],'x',10,'y',10,
-                                                          Title,True,FigureTitle,False)        
-    sshGradientEdge = np.zeros((myMPAS_O.nEdges,2))
+        myAnalyticalSurfaceElevationLaplacian[iCell] = (
+        surface_elevation_laplacian(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],myMPAS_O.yCell[iCell]))
+    mySurfaceElevationGradientAtEdge = np.zeros((myMPAS_O.nEdges,2))
     for iEdge in range(0,myMPAS_O.nEdges):
-        sshGradientEdge[iEdge,0], sshGradientEdge[iEdge,1] = (
+        mySurfaceElevationGradientAtEdge[iEdge,0], mySurfaceElevationGradientAtEdge[iEdge,1] = (
         surface_elevation_gradient(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge]))
-    analyticalSSHGradientNormalToEdge = analytical_gradient_operator(myMPAS_O.nEdges,sshGradientEdge,
-                                                                     myMPAS_O.angleEdge)
-    numericalSSHLaplacian = numerical_divergence_operator(myMPAS_O,analyticalSSHGradientNormalToEdge)
+    myAnalyticalSurfaceElevationGradientNormalToEdge = (
+    analytical_gradient_operator(myMPAS_O.nEdges,mySurfaceElevationGradientAtEdge,myMPAS_O.angleEdge))
+    myNumericalSurfaceElevationLaplacian = (
+    numerical_divergence_operator(myMPAS_O,myAnalyticalSurfaceElevationGradientNormalToEdge))
+    mySurfaceElevationLaplacianError = myNumericalSurfaceElevationLaplacian - myAnalyticalSurfaceElevationLaplacian
+    MaxErrorNorm = np.linalg.norm(mySurfaceElevationLaplacianError,np.inf)
+    L2ErrorNorm = np.linalg.norm(mySurfaceElevationLaplacianError)/np.sqrt(float(myMPAS_O.nCells))    
+    print('The maximum error norm of the SurfaceElevation laplacian is %.3g.' %MaxErrorNorm)
+    print('The L2 error norm of the SurfaceElevation laplacian is %.3g.' %L2ErrorNorm)  
     if plotFigures:
-        Title = 'Numerical SSH Laplacian'
-        FigureTitle = prefix + 'SSHLaplacian_Numerical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          numericalSSHLaplacian,300,False,[0.0,0.0],'x',10,'y',10,
-                                                          Title,True,FigureTitle,False)  
-    SSHLaplacianError = numericalSSHLaplacian - analyticalSSHLaplacian
-    if plotFigures:
-        Title = 'SSH Laplacian Error'
-        FigureTitle = prefix + 'SSHLaplacian_Error'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          SSHLaplacianError,300,False,[0.0,0.0],'x',10,'y',10,
-                                                          Title,True,FigureTitle,False) 
-    MaxErrorNorm = np.linalg.norm(SSHLaplacianError,np.inf)
-    L2ErrorNorm = np.linalg.norm(SSHLaplacianError)/np.sqrt(float(myMPAS_O.nCells))    
-    print('The maximum error norm of the ssh laplacian is %.3g.' %MaxErrorNorm)
-    print('The L2 error norm of the ssh laplacian is %.3g.' %L2ErrorNorm)  
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Analytical Laplacian of the Surface Elevation'
+        FigureTitle = prefix + 'SurfaceElevationLaplacian_Analytical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myAnalyticalSurfaceElevationLaplacian,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')          
+        Title = 'Numerical Laplacian of the Surface Elevation'
+        FigureTitle = prefix + 'SurfaceElevationLaplacian_Numerical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myNumericalSurfaceElevationLaplacian,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')
+        Title = 'Error of the Surface Elevation Laplacian'
+        FigureTitle = prefix + 'SurfaceElevationLaplacian_Error'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,mySurfaceElevationLaplacianError,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')      
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
-# In[37]:
+# In[39]:
 
-do_test_numerical_divergence_operator_1 = False
-if do_test_numerical_divergence_operator_1:
+do_test_numerical_divergence_operator_11 = False
+if do_test_numerical_divergence_operator_11:
     periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = test_numerical_divergence_operator(True,True,' ',' ',' ',periodicity,
                                                                        output_directory)
 
 
-# In[38]:
+# In[40]:
 
-do_test_numerical_divergence_operator_2 = False
-if do_test_numerical_divergence_operator_2:
+do_test_numerical_divergence_operator_12 = False
+if do_test_numerical_divergence_operator_12:
     useDefaultMesh = False
     plotFigures = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
@@ -587,39 +664,39 @@ if do_test_numerical_divergence_operator_2:
                                        mesh_file_name,periodicity,output_directory))
 
 
-# In[39]:
-
-do_test_numerical_divergence_operator_3 = False
-if do_test_numerical_divergence_operator_3:
-    useDefaultMesh = False
-    plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    periodicity = 'Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
-    dc, MaxErrorNorm, L2ErrorNorm = (
-    test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,periodicity,output_directory))
-
-
-# In[40]:
-
-do_test_numerical_divergence_operator_4 = False
-if do_test_numerical_divergence_operator_4:
-    useDefaultMesh = False
-    plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
-    mesh_file_name = 'mesh_NP.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
-    dc, MaxErrorNorm, L2ErrorNorm = (
-    test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
-                                       mesh_file_name,periodicity,output_directory))
-
-
 # In[41]:
+
+do_test_numerical_divergence_operator_13 = False
+if do_test_numerical_divergence_operator_13:
+    useDefaultMesh = False
+    plotFigures = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    dc, MaxErrorNorm, L2ErrorNorm = (
+    test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                       mesh_file_name,periodicity,output_directory))
+
+
+# In[42]:
+
+do_test_numerical_divergence_operator_14 = False
+if do_test_numerical_divergence_operator_14:
+    useDefaultMesh = False
+    plotFigures = True
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    dc, MaxErrorNorm, L2ErrorNorm = (
+    test_numerical_divergence_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,
+                                       mesh_file_name,periodicity,output_directory))
+
+
+# In[43]:
 
 def convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory):
     nCases = 5
@@ -630,72 +707,95 @@ def convergence_test_numerical_divergence_operator(periodicity,mesh_directory,ou
     for iCase in range(0,nCases):
         if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif periodicity == 'NonPeriodic_x':
+        elif periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_numerical_divergence_operator(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,
                                            periodicity,output_directory))
-    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'Maximum Error Norm of Numerical Divergence Operator'
     legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalDivergenceOperatorConvergencePlot_MaxErrorNorm'
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)    
+    FigureTitle = prefix + 'ConvergencePlot_NumericalDivergenceOperator_MaxErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,MaxErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)    
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]                     
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y                                                               
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'L2 Error Norm of Numerical Divergence Operator'
     legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalDivergenceOperatorConvergencePlot_L2ErrorNorm'    
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)    
+    FigureTitle = prefix + 'ConvergencePlot_NumericalDivergenceOperator_L2ErrorNorm' 
+    CR.WriteCurve1D(output_directory,dc,L2ErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)    
 
 
-# In[42]:
+# In[44]:
 
-do_convergence_test_numerical_divergence_operator_1 = False
-if do_convergence_test_numerical_divergence_operator_1:
+do_convergence_test_numerical_divergence_operator_11 = False
+if do_convergence_test_numerical_divergence_operator_11:
     periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[43]:
+# In[45]:
 
-do_convergence_test_numerical_divergence_operator_2 = False
-if do_convergence_test_numerical_divergence_operator_2:
+do_convergence_test_numerical_divergence_operator_12 = False
+if do_convergence_test_numerical_divergence_operator_12:
     periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[44]:
+# In[46]:
+
+do_convergence_test_numerical_divergence_operator_13 = False
+if do_convergence_test_numerical_divergence_operator_13:
+    periodicity = 'NonPeriodic_y'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[47]:
+
+do_convergence_test_numerical_divergence_operator_14 = False
+if do_convergence_test_numerical_divergence_operator_14:
+    periodicity = 'NonPeriodic_xy'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    convergence_test_numerical_divergence_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[48]:
 
 def numerical_curl_operator(myMPAS_O,myVectorQuantityNormalToEdge,periodicity='Periodic'):
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
-    if periodicity == 'NonPeriodic_x':
+    if periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
         MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
     MPAS_O_Shared.ocn_init_routines_setup_sign_and_index_fields(myMPAS_O)
     myVectorQuantityCurlAtVertex = np.zeros(myMPAS_O.nVertices)
     myVectorQuantityCurlAtCellCenter = np.zeros(myMPAS_O.nCells)
     for iVertex in range(0,myMPAS_O.nVertices):
-        if periodicity == 'NonPeriodic_x' and myMPAS_O.boundaryVertex[iVertex] == 1.0:
+        if ((periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy') 
+            and myMPAS_O.boundaryVertex[iVertex] == 1.0):
             myVectorQuantityCurlAtVertex[iVertex] = (
             velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xVertex[iVertex],myMPAS_O.yVertex[iVertex]))
         else:
@@ -717,7 +817,7 @@ def numerical_curl_operator(myMPAS_O,myVectorQuantityNormalToEdge,periodicity='P
     return myVectorQuantityCurlAtVertex, myVectorQuantityCurlAtCellCenter
 
 
-# In[45]:
+# In[49]:
 
 def test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                                  periodicity,output_directory):
@@ -727,87 +827,92 @@ def test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_
         myMPAS_O = MPAS_O_Mode_Init.MPAS_O(False,mesh_directory,base_mesh_file_name,mesh_file_name,
                                            periodicity=periodicity)
     prefix = problem_specific_prefix()
-    analyticalVelocityCurlAtVertex = np.zeros(myMPAS_O.nVertices)
+    myAnalyticalVelocityCurlAtVertex = np.zeros(myMPAS_O.nVertices)
     for iVertex in range(0,myMPAS_O.nVertices):
-        analyticalVelocityCurlAtVertex[iVertex] = velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xVertex[iVertex],
-                                                                myMPAS_O.yVertex[iVertex])
-    if plotFigures:
-        Title = 'Analytical Velocity Curl At Vertex'
-        FigureTitle = prefix + 'VelocityCurlAtVertex_Analytical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,
-                                                          analyticalVelocityCurlAtVertex,300,False,[0.0,0.0],'x',
-                                                          10,'y',10,Title,True,FigureTitle,False) 
-    analyticalVelocityCurlAtCellCenter = np.zeros(myMPAS_O.nCells)
+        myAnalyticalVelocityCurlAtVertex[iVertex] = (
+        velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xVertex[iVertex],myMPAS_O.yVertex[iVertex]))
+    myAnalyticalVelocityCurlAtCellCenter = np.zeros(myMPAS_O.nCells)
     for iCell in range(0,myMPAS_O.nCells):
-        analyticalVelocityCurlAtCellCenter[iCell] = velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],
-                                                                  myMPAS_O.yCell[iCell])    
-    if plotFigures:
-        Title = 'Analytical Velocity Curl At Cell Center'
-        FigureTitle = prefix + 'VelocityCurlAtCellCenter_Analytical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          analyticalVelocityCurlAtCellCenter,300,False,[0.0,0.0],
-                                                          'x',10,'y',10,Title,True,FigureTitle,False)        
-    analyticalVelocityComponentsAtEdge = np.zeros((myMPAS_O.nEdges,2))
-    analyticalVelocityNormalToEdge = np.zeros(myMPAS_O.nEdges)
+        myAnalyticalVelocityCurlAtCellCenter[iCell] = (
+        velocity_curl(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xCell[iCell],myMPAS_O.yCell[iCell]))  
+    myAnalyticalVelocityComponentsAtEdge = np.zeros((myMPAS_O.nEdges,2))
+    myAnalyticalVelocityNormalToEdge = np.zeros(myMPAS_O.nEdges)
     for iEdge in range(0,myMPAS_O.nEdges):
-        analyticalVelocityComponentsAtEdge[iEdge,0], analyticalVelocityComponentsAtEdge[iEdge,1] = (
+        myAnalyticalVelocityComponentsAtEdge[iEdge,0], myAnalyticalVelocityComponentsAtEdge[iEdge,1] = (
         velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge]))
-    analyticalVelocityNormalToEdge = (
-    ComputeNormalAndTangentialComponentsAtEdge(analyticalVelocityComponentsAtEdge,myMPAS_O.angleEdge,'normal'))
-    numericalVelocityCurlAtVertex, numericalVelocityCurlAtCellCenter = (
-    numerical_curl_operator(myMPAS_O,analyticalVelocityNormalToEdge,periodicity))
-    if plotFigures:
-        Title = 'Numerical Velocity Curl At Vertex'
-        FigureTitle = prefix + 'VelocityCurlAtVertex_Numerical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,
-                                                          numericalVelocityCurlAtVertex,300,False,[0.0,0.0],'x',10,
-                                                          'y',10,Title,True,FigureTitle,False) 
-        Title = 'Numerical Velocity Curl At Cell Center'
-        FigureTitle = prefix + 'VelocityCurlAtCellCenter_Numerical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          numericalVelocityCurlAtCellCenter,300,False,[0.0,0.0],
-                                                          'x',10,'y',10,Title,True,FigureTitle,False)
-    VelocityCurlAtVertexError = numericalVelocityCurlAtVertex - analyticalVelocityCurlAtVertex
-    if plotFigures:
-        Title = 'Velocity Curl Error at Vertices'
-        FigureTitle = prefix + 'VelocityCurlAtVertex_Error'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,
-                                                          VelocityCurlAtVertexError,300,False,[0.0,0.0],'x',10,'y',
-                                                          10,Title,True,FigureTitle,False) 
-    MaxErrorNorm_Vertex = np.linalg.norm(VelocityCurlAtVertexError,np.inf)
-    L2ErrorNorm_Vertex = np.linalg.norm(VelocityCurlAtVertexError)/np.sqrt(float(myMPAS_O.nVertices))
+    myAnalyticalVelocityNormalToEdge = (
+    ComputeNormalAndTangentialComponentsAtEdge(myAnalyticalVelocityComponentsAtEdge,myMPAS_O.angleEdge,'normal'))
+    myNumericalVelocityCurlAtVertex, myNumericalVelocityCurlAtCellCenter = (
+    numerical_curl_operator(myMPAS_O,myAnalyticalVelocityNormalToEdge,periodicity))
+    myVelocityCurlAtVertexError = myNumericalVelocityCurlAtVertex - myAnalyticalVelocityCurlAtVertex
+    MaxErrorNorm_Vertex = np.linalg.norm(myVelocityCurlAtVertexError,np.inf)
+    L2ErrorNorm_Vertex = (np.linalg.norm(myVelocityCurlAtVertexError)
+                          /np.sqrt(float(myMPAS_O.nVertices - myMPAS_O.nNonPeriodicBoundaryVertices)))
     print('The maximum error norm of the velocity curl at vertices is %.3g.' %MaxErrorNorm_Vertex)
     print('The L2 error norm of the velocity curl at vertices is %.3g.' %L2ErrorNorm_Vertex)   
-    VelocityCurlAtCellCenterError = numericalVelocityCurlAtCellCenter - analyticalVelocityCurlAtCellCenter
+    myVelocityCurlAtCellCenterError = myNumericalVelocityCurlAtCellCenter - myAnalyticalVelocityCurlAtCellCenter
+    MaxErrorNorm_CellCenter = np.linalg.norm(myVelocityCurlAtCellCenterError,np.inf)
+    L2ErrorNorm_CellCenter = np.linalg.norm(myVelocityCurlAtCellCenterError)/np.sqrt(float(myMPAS_O.nCells))
+    print('The maximum error norm of the velocity curl at cell centers is %.3g.' %MaxErrorNorm_CellCenter)
+    print('The L2 error norm of the velocity curl at cell centers is %.3g.' %L2ErrorNorm_CellCenter) 
     if plotFigures:
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
+        Title = 'Analytical Velocity Curl At Vertex'
+        FigureTitle = prefix + 'VelocityCurlAtVertex_Analytical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,myAnalyticalVelocityCurlAtVertex,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g') 
+        Title = 'Analytical Velocity Curl At Cell Center'
+        FigureTitle = prefix + 'VelocityCurlAtCellCenter_Analytical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myAnalyticalVelocityCurlAtCellCenter,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')        
+        Title = 'Numerical Velocity Curl At Vertex'
+        FigureTitle = prefix + 'VelocityCurlAtVertex_Numerical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,myNumericalVelocityCurlAtVertex,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g') 
+        Title = 'Numerical Velocity Curl At Cell Center'
+        FigureTitle = prefix + 'VelocityCurlAtCellCenter_Numerical'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myNumericalVelocityCurlAtCellCenter,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')               
+        Title = 'Velocity Curl Error at Vertices'
+        FigureTitle = prefix + 'VelocityCurlAtVertex_Error'
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xVertex,myMPAS_O.yVertex,myVelocityCurlAtVertexError,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')             
         Title = 'Velocity Curl Error at Cell Centers'
         FigureTitle = prefix + 'VelocityCurlAtCellCenter_Error'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xCell,myMPAS_O.yCell,
-                                                          VelocityCurlAtCellCenterError,300,False,[0.0,0.0],'x',10,
-                                                          'y',10,Title,True,FigureTitle,False) 
-    MaxErrorNorm_CellCenter = np.linalg.norm(VelocityCurlAtCellCenterError,np.inf)
-    L2ErrorNorm_CellCenter = np.linalg.norm(VelocityCurlAtCellCenterError)/np.sqrt(float(myMPAS_O.nCells))
-    print('The maximum error norm of the velocity curl at cell centers is %.3g.' %MaxErrorNorm_CellCenter)
-    print('The L2 error norm of the velocity curl at cell centers is %.3g.' %L2ErrorNorm_CellCenter)  
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xCell,myMPAS_O.yCell,myVelocityCurlAtCellCenterError,300,False,[0.0,0.0],6,
+        plt.cm.jet,13.75,[xLabel,yLabel],[17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,
+        fig_size=[10.0,10.0],tick_units_in_km=True,cbarlabelformat='%.2g')          
     returningArguments = [myMPAS_O.gridSpacingMagnitude, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, 
                           MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter]
     return returningArguments
 
 
-# In[46]:
+# In[50]:
 
-do_test_numerical_curl_operator_1 = False
-if do_test_numerical_curl_operator_1:
+do_test_numerical_curl_operator_11 = False
+if do_test_numerical_curl_operator_11:
     periodicity='Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(True,True,' ',' ',' ',periodicity,output_directory))
 
 
-# In[47]:
+# In[51]:
 
-do_test_numerical_curl_operator_2 = False
-if do_test_numerical_curl_operator_2:
+do_test_numerical_curl_operator_12 = False
+if do_test_numerical_curl_operator_12:
     useDefaultMesh = False
     plotFigures = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
@@ -820,39 +925,39 @@ if do_test_numerical_curl_operator_2:
                                  periodicity,output_directory))
 
 
-# In[48]:
+# In[52]:
 
-do_test_numerical_curl_operator_3 = False
-if do_test_numerical_curl_operator_3:
+do_test_numerical_curl_operator_13 = False
+if do_test_numerical_curl_operator_13:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    periodicity='Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                                  periodicity,output_directory))
 
 
-# In[49]:
+# In[53]:
 
-do_test_numerical_curl_operator_4 = False
-if do_test_numerical_curl_operator_4:
+do_test_numerical_curl_operator_14 = False
+if do_test_numerical_curl_operator_14:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
-    mesh_file_name = 'mesh_NP.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
     [dc, MaxErrorNorm_Vertex, L2ErrorNorm_Vertex, MaxErrorNorm_CellCenter, L2ErrorNorm_CellCenter] = (
     test_numerical_curl_operator(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                                  periodicity,output_directory))
 
 
-# In[50]:
+# In[54]:
 
 def convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory):
     nCases = 5
@@ -865,96 +970,125 @@ def convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_d
     for iCase in range(0,nCases):
         if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif periodicity == 'NonPeriodic_x':
+        elif periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         [dc[iCase], MaxErrorNorm_Vertex[iCase], L2ErrorNorm_Vertex[iCase], MaxErrorNorm_CellCenter[iCase], 
          L2ErrorNorm_CellCenter[iCase]] = test_numerical_curl_operator(False,False,mesh_directory,
                                                                        base_mesh_file_name,mesh_file_name,
                                                                        periodicity,output_directory)
-    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm_Vertex))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'Maximum Error Norm of Numerical Curl Operator'
     legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalCurlOperator_Vertex_ConvergencePlot_MaxErrorNorm'
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm_Vertex,y,[2.0,2.0],
-                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
-                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
-                                        True,FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
+    FigureTitle = prefix + 'ConvergencePlot_NumericalCurlOperator_Vertex_MaxErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,MaxErrorNorm_Vertex,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,MaxErrorNorm_Vertex,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper left',Title,20.0,True,
+                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
                                         legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm_Vertex))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'L2 Error Norm of Numerical Curl Operator'
     legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalCurlOperator_Vertex_ConvergencePlot_L2ErrorNorm'    
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm_Vertex,y,[2.0,2.0],
-                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
-                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
-                                        True,FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
+    FigureTitle = prefix + 'ConvergencePlot_NumericalCurlOperator_Vertex_L2ErrorNorm'    
+    CR.WriteCurve1D(output_directory,dc,L2ErrorNorm_Vertex,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,L2ErrorNorm_Vertex,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper left',Title,20.0,True,
+                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
                                         legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm_CellCenter))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'Maximum Error Norm of Numerical Curl Operator'
     legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalCurlOperator_CellCenter_ConvergencePlot_MaxErrorNorm'
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm_CellCenter,y,[2.0,2.0],
+    FigureTitle = prefix + 'ConvergencePlot_NumericalCurlOperator_CellCenter_MaxErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,MaxErrorNorm_CellCenter,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,MaxErrorNorm_CellCenter,y,[2.0,2.0],
                                         [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
-                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
+                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper left',Title,20.0,
                                         True,FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
                                         legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm_CellCenter))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'L2 Error Norm of Numerical Curl Operator'
     legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalCurlOperator_CellCenter_ConvergencePlot_L2ErrorNorm'  
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm_CellCenter,y,[2.0,2.0],
-                                        [' ','-'],['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],
-                                        [17.5,17.5],[10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,
-                                        True,FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
+    FigureTitle = prefix + 'ConvergencePlot_NumericalCurlOperator_CellCenter_L2ErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,L2ErrorNorm_CellCenter,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,L2ErrorNorm_CellCenter,y,[2.0,2.0],[' ','-'],
+                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
+                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper left',Title,20.0,True,
+                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
                                         legendWithinBox=True)
 
 
-# In[51]:
+# In[55]:
 
-do_convergence_test_numerical_curl_operator_1 = False
-if do_convergence_test_numerical_curl_operator_1:
+do_convergence_test_numerical_curl_operator_11 = False
+if do_convergence_test_numerical_curl_operator_11:
     periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[52]:
+# In[56]:
 
-do_convergence_test_numerical_curl_operator_2 = False
-if do_convergence_test_numerical_curl_operator_2:
+do_convergence_test_numerical_curl_operator_12 = False
+if do_convergence_test_numerical_curl_operator_12:
     periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
 
 
-# In[53]:
+# In[57]:
+
+do_convergence_test_numerical_curl_operator_13 = False
+if do_convergence_test_numerical_curl_operator_13:
+    periodicity = 'NonPeriodic_y'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[58]:
+
+do_convergence_test_numerical_curl_operator_14 = False
+if do_convergence_test_numerical_curl_operator_14:
+    periodicity = 'NonPeriodic_xy'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    convergence_test_numerical_curl_operator(periodicity,mesh_directory,output_directory)
+
+
+# In[59]:
 
 def numerical_tangential_velocity(myMPAS_O,myNormalVelocity,periodicity='Periodic'):
-    if periodicity == 'NonPeriodic_x':
+    if periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
         MPAS_O_Shared.ocn_init_routines_compute_max_level(myMPAS_O)
     myTangentialVelocity = np.zeros(myMPAS_O.nEdges)
     for iEdge in range(0,myMPAS_O.nEdges):
-        if periodicity == 'NonPeriodic_x' and myMPAS_O.boundaryEdge[iEdge] == 1.0:
+        if ((periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy') 
+            and myMPAS_O.boundaryEdge[iEdge] == 1.0):
             u, v = velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge])
             myTangentialVelocity[iEdge] = v*np.cos(myMPAS_O.angleEdge[iEdge]) - u*np.sin(myMPAS_O.angleEdge[iEdge])
         else:
@@ -968,7 +1102,7 @@ def numerical_tangential_velocity(myMPAS_O,myNormalVelocity,periodicity='Periodi
     return myTangentialVelocity
 
 
-# In[54]:
+# In[60]:
 
 def test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                              periodicity,output_directory):
@@ -982,59 +1116,62 @@ def test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh
     else:
         iEdgeStartingIndex = 0
     prefix = problem_specific_prefix()
-    analyticalVelocityComponentsAtEdge = np.zeros((myMPAS_O.nEdges,2))
-    analyticalNormalVelocity = np.zeros(myMPAS_O.nEdges)
-    analyticalTangentialVelocity = np.zeros(myMPAS_O.nEdges)
+    myAnalyticalVelocityComponentsAtEdge = np.zeros((myMPAS_O.nEdges,2))
+    myAnalyticalNormalVelocity = np.zeros(myMPAS_O.nEdges)
+    myAnalyticalTangentialVelocity = np.zeros(myMPAS_O.nEdges)
     for iEdge in range(0,myMPAS_O.nEdges):
-        analyticalVelocityComponentsAtEdge[iEdge,0], analyticalVelocityComponentsAtEdge[iEdge,1] = (
+        myAnalyticalVelocityComponentsAtEdge[iEdge,0], myAnalyticalVelocityComponentsAtEdge[iEdge,1] = (
         velocity(myMPAS_O.lX,myMPAS_O.lY,myMPAS_O.xEdge[iEdge],myMPAS_O.yEdge[iEdge]))
-    analyticalNormalVelocity, analyticalTangentialVelocity = (
-    ComputeNormalAndTangentialComponentsAtEdge(analyticalVelocityComponentsAtEdge,myMPAS_O.angleEdge,'both'))
+    myAnalyticalNormalVelocity, myAnalyticalTangentialVelocity = (
+    ComputeNormalAndTangentialComponentsAtEdge(myAnalyticalVelocityComponentsAtEdge,myMPAS_O.angleEdge,'both'))
+    myNumericalTangentialVelocity = (
+    numerical_tangential_velocity(myMPAS_O,myAnalyticalNormalVelocity,periodicity))
+    myTangentialVelocityError = myNumericalTangentialVelocity - myAnalyticalTangentialVelocity
+    MaxErrorNorm = np.linalg.norm(myTangentialVelocityError,np.inf)
+    L2ErrorNorm = (np.linalg.norm(myTangentialVelocityError)
+                   /np.sqrt(float(myMPAS_O.nEdges - myMPAS_O.nNonPeriodicBoundaryEdges)))
+    print('The maximum error norm of the tangential velocity is %.3g.' %MaxErrorNorm)
+    print('The L2 error norm of the tangential velocity is %.3g.' %L2ErrorNorm)    
     if plotFigures:
+        xLabel = 'Zonal Distance (km)'
+        yLabel = 'Meridional Distance (km)'
         Title = 'Analytical Tangential Velocity'
         FigureTitle = prefix + 'TangentialVelocity_Analytical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          analyticalTangentialVelocity[iEdgeStartingIndex:],300,
-                                                          False,[0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,
-                                                          False) 
-    numericalTangentialVelocity = numerical_tangential_velocity(myMPAS_O,analyticalNormalVelocity,periodicity)
-    if plotFigures:
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        myAnalyticalTangentialVelocity[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],
+        [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[10.0,10.0],
+        tick_units_in_km=True,cbarlabelformat='%.2f') 
         Title = 'Numerical Tangential Velocity'
         FigureTitle = prefix + 'TangentialVelocity_Numerical'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          numericalTangentialVelocity[iEdgeStartingIndex:],300,
-                                                          False,[0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,
-                                                          False)     
-    TangentialVelocityError = numericalTangentialVelocity - analyticalTangentialVelocity
-    if plotFigures:
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        myNumericalTangentialVelocity[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],
+        [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[10.0,10.0],
+        tick_units_in_km=True,cbarlabelformat='%.2f')         
         Title = 'Tangential Velocity Error'
-        FigureTitle = prefix + 'TangentialVelocity_Error'
-        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],
-                                                          myMPAS_O.yEdge[iEdgeStartingIndex:],
-                                                          TangentialVelocityError[iEdgeStartingIndex:],300,False,
-                                                          [0.0,0.0],'x',10,'y',10,Title,True,FigureTitle,False) 
-    MaxErrorNorm = np.linalg.norm(TangentialVelocityError,np.inf)
-    L2ErrorNorm = np.linalg.norm(TangentialVelocityError)/np.sqrt(float(myMPAS_O.nEdges))
-    print('The maximum error norm of the tangential velocity is %.3g.' %MaxErrorNorm)
-    print('The L2 error norm of the tangential velocity is %.3g.' %L2ErrorNorm)       
+        FigureTitle = prefix + 'TangentialVelocity_Error'        
+        CR.PythonFilledUnstructuredContourPlot2DSaveAsPNG(
+        output_directory,myMPAS_O.xEdge[iEdgeStartingIndex:],myMPAS_O.yEdge[iEdgeStartingIndex:],
+        myTangentialVelocityError[iEdgeStartingIndex:],300,False,[0.0,0.0],6,plt.cm.jet,13.75,[xLabel,yLabel],
+        [17.5,17.5],[10.0,10.0],[15.0,15.0],Title,20.0,True,FigureTitle,False,fig_size=[10.0,10.0],
+        tick_units_in_km=True,cbarlabelformat='%.2g') 
     return myMPAS_O.gridSpacingMagnitude, MaxErrorNorm, L2ErrorNorm
 
 
-# In[55]:
+# In[61]:
 
-do_test_tangential_velocity_1 = False
-if do_test_tangential_velocity_1:
+do_test_tangential_velocity_11 = False
+if do_test_tangential_velocity_11:
     periodicity = 'Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     dc, MaxErrorNorm, L2ErrorNorm = test_tangential_velocity(True,True,' ',' ',' ',periodicity,output_directory)
 
 
-# In[56]:
+# In[62]:
 
-do_test_tangential_velocity_2 = False
-if do_test_tangential_velocity_2:
+do_test_tangential_velocity_12 = False
+if do_test_tangential_velocity_12:
     useDefaultMesh = False
     plotFigures = True
     mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_x'
@@ -1047,39 +1184,39 @@ if do_test_tangential_velocity_2:
                              periodicity,output_directory))
 
 
-# In[57]:
+# In[63]:
 
-do_test_tangential_velocity_3 = False
-if do_test_tangential_velocity_3:
+do_test_tangential_velocity_13 = False
+if do_test_tangential_velocity_13:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'base_mesh_P.nc'
-    mesh_file_name = 'mesh_P.nc'
-    periodicity = 'Periodic'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_y'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                              periodicity,output_directory))
 
 
-# In[58]:
+# In[64]:
 
-do_test_tangential_velocity_4 = False
-if do_test_tangential_velocity_4:
+do_test_tangential_velocity_14 = False
+if do_test_tangential_velocity_14:
     useDefaultMesh = False
     plotFigures = True
-    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/CoastalKelvinWaveMesh/PlotMesh'
-    base_mesh_file_name = 'culled_mesh_NP.nc'
-    mesh_file_name = 'mesh_NP.nc'
-    periodicity = 'NonPeriodic_x'
-    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
+    mesh_directory = 'Mesh+Initial_Condition+Registry_Files/NonPeriodic_xy'
+    base_mesh_file_name = 'culled_mesh.nc'
+    mesh_file_name = 'mesh.nc'
+    periodicity = 'NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
     dc, MaxErrorNorm, L2ErrorNorm = (
     test_tangential_velocity(useDefaultMesh,plotFigures,mesh_directory,base_mesh_file_name,mesh_file_name,
                              periodicity,output_directory))
 
 
-# In[59]:
+# In[65]:
 
 def convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory):
     nCases = 5
@@ -1090,56 +1227,302 @@ def convergence_test_tangential_velocity(periodicity,mesh_directory,output_direc
     for iCase in range(0,nCases):
         if periodicity == 'Periodic':
             base_mesh_file_name = 'base_mesh_%s.nc' %(iCase+1)
-        elif periodicity == 'NonPeriodic_x':
+        elif periodicity == 'NonPeriodic_x' or periodicity == 'NonPeriodic_y' or periodicity == 'NonPeriodic_xy':
             base_mesh_file_name = 'culled_mesh_%s.nc' %(iCase+1)
         mesh_file_name = 'mesh_%s.nc' %(iCase+1)
         dc[iCase], MaxErrorNorm[iCase], L2ErrorNorm[iCase] = (
         test_tangential_velocity(False,False,mesh_directory,base_mesh_file_name,mesh_file_name,periodicity,
                                  output_directory))
-    A = np.vstack([np.log10(1.0/dc),np.ones(len(dc))]).T
+    A = np.vstack([np.log10(dc),np.ones(len(dc))]).T
     m, c = np.linalg.lstsq(A,np.log10(MaxErrorNorm))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'Maximum Error Norm of Numerical Tangential Velocity'
     legends = ['Maximum Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. Maximum Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalTangentialVelocityConvergencePlot_MaxErrorNorm'
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)
+    FigureTitle = prefix + 'ConvergencePlot_NumericalTangentialVelocity_MaxErrorNorm'
+    CR.WriteCurve1D(output_directory,dc,MaxErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,MaxErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)
     m, c = np.linalg.lstsq(A,np.log10(L2ErrorNorm))[0]
-    y = m*(np.log10(1.0/dc)) + c
+    y = m*(np.log10(dc)) + c
     y = 10.0**y
-    xLabel = 'Inverse of Cell Width'
+    xLabel = 'Cell Width'
     yLabel = 'L2 Error Norm of Numerical Tangential Velocity'
     legends = ['L2 Error Norm','Best Fit Straight Line']
     Title = 'Convergence Plot w.r.t. L2 Error Norm: Slope is %.3g' %m
-    FigureTitle = prefix + 'NumericalTangentialVelocityConvergencePlot_L2ErrorNorm'    
-    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',1.0/dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],
-                                        ['k','k'],[True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],
-                                        [10.0,10.0],[15.0,15.0],legends,17.5,'upper right',Title,20.0,True,
-                                        FigureTitle,False,drawMajorGrid=True,drawMinorGrid=True,
-                                        legendWithinBox=True)
+    FigureTitle = prefix + 'ConvergencePlot_NumericalTangentialVelocity_L2ErrorNorm' 
+    CR.WriteCurve1D(output_directory,dc,L2ErrorNorm,FigureTitle+'_'+periodicity)
+    CR.WriteCurve1D(output_directory,dc,y,FigureTitle+'_BestFitStraightLine_'+periodicity)
+    CR.PythonConvergencePlot1DSaveAsPNG(output_directory,'log-log',dc,L2ErrorNorm,y,[2.0,2.0],[' ','-'],['k','k'],
+                                        [True,False],['s','s'],[10.0,10.0],[xLabel,yLabel],[17.5,17.5],[10.0,10.0],
+                                        [15.0,15.0],legends,17.5,'upper left',Title,20.0,True,FigureTitle,False,
+                                        drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=True)
 
 
-# In[60]:
+# In[66]:
 
-do_convergence_test_tangential_velocity_1 = False
-if do_convergence_test_tangential_velocity_1:
+do_convergence_test_tangential_velocity_11 = False
+if do_convergence_test_tangential_velocity_11:
     periodicity = 'Periodic'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/Periodic'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/Periodic'
     convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)
 
 
-# In[61]:
+# In[67]:
 
-do_convergence_test_tangential_velocity_2 = False
-if do_convergence_test_tangential_velocity_2:
+do_convergence_test_tangential_velocity_12 = False
+if do_convergence_test_tangential_velocity_12:
     periodicity = 'NonPeriodic_x'
     mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_x'
     output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_x'
     convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)
+
+
+# In[68]:
+
+do_convergence_test_tangential_velocity_13 = False
+if do_convergence_test_tangential_velocity_13:
+    periodicity = 'NonPeriodic_y'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_y'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_y'
+    convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)
+
+
+# In[69]:
+
+do_convergence_test_tangential_velocity_14 = False
+if do_convergence_test_tangential_velocity_14:
+    periodicity = 'NonPeriodic_xy'
+    mesh_directory = 'MPAS_O_Shallow_Water_Mesh_Generation/ConvergenceStudyMeshes/NonPeriodic_xy'
+    output_directory = 'MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/NonPeriodic_xy'
+    convergence_test_tangential_velocity(periodicity,mesh_directory,output_directory)
+
+
+# In[70]:
+
+def MPAS_O_Operator_Testing_Convergence_Plots(output_directory,x,y,linewidths,linestyles,colors,markers,
+                                              markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
+                                              legendfontsize,legendposition,title,titlefontsize,SaveAsPNG,
+                                              FigureTitle,Show,fig_size=[9.25,9.25],
+                                              useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=False,
+                                              drawMinorGrid=False,legendWithinBox=False,legendpads=[1.0,0.5],
+                                              titlepad=1.035):
+    cwd = CR.CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)   
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    nPoints = len(x)
+    # Note that the shape of y is [nPlots,nSubplots,nPoints]
+    nPlots = y.shape[0]
+    nSubplots = 2
+    for iPlot in range(0,nPlots):
+        for iSubplot in range(0,nSubplots):
+            if iSubplot == 0:
+                mylinestyle = ""
+                mylabel = legends[iPlot]
+                mymarker = markers[iPlot]
+            else:
+                mylinestyle = linestyles[iPlot]
+                mylabel = ""
+                mymarker = ""
+            ax.loglog(x,y[iPlot,iSubplot,:],linewidth=linewidths[iPlot],linestyle=mylinestyle,
+                      color=colors[iPlot],marker=mymarker,markersize=markersizes[iPlot],label=mylabel)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if useDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    if legendWithinBox:
+        ax.legend(fontsize=legendfontsize,loc=legendposition,shadow=True) 
+    else:
+        ax.legend(fontsize=legendfontsize,loc=legendposition,bbox_to_anchor=(legendpads[0],legendpads[1]),
+                  shadow=True) 
+    ax.set_title(title,fontsize=titlefontsize,y=titlepad)
+    if drawMajorGrid and not(drawMinorGrid):
+        plt.grid(which='major')
+    elif not(drawMajorGrid) and drawMinorGrid:
+        plt.grid(which='minor')       
+    elif drawMajorGrid and drawMinorGrid:
+        plt.grid(which='both') 
+    if SaveAsPNG:
+        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+
+
+# In[71]:
+
+def Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle):
+    # Before running this routine, please move the output files containing the convergence data to
+    # <pwd>/MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/ConvergencePlots/<Expt#>/
+    # where <pwd> is the path to working directory, and <Expt#> can be Expt1 or Expt2.
+    periodicities = ['Periodic','NonPeriodic_x','NonPeriodic_y','NonPeriodic_xy']
+    nPlots = len(periodicities)
+    nSubplots = 2
+    nCases = 5
+    yAll = np.zeros((nPlots,nSubplots,nCases))
+    mAll = np.zeros(nPlots)
+    for iPlot in range(0,nPlots):
+        output_directory = ('MPAS_O_Shallow_Water_Output/MPAS_O_Operator_Testing_Figures/ConvergencePlots/Expt'
+                            + str(ExperimentNumber))
+        filename = ('Expt' + str(ExperimentNumber) + '_ConvergencePlot_' + NumericalOperator + '_L2ErrorNorm_' 
+                    + periodicities[iPlot] + '.curve')
+        dc, yAll[iPlot,0,:] = CR.ReadCurve1D(output_directory,filename)
+        filename = ('Expt' + str(ExperimentNumber) + '_ConvergencePlot_' + NumericalOperator 
+                    + '_L2ErrorNorm_BestFitStraightLine_' + periodicities[iPlot] + '.curve')
+        dc, yAll[iPlot,1,:] = CR.ReadCurve1D(output_directory,filename)
+        mAll[iPlot] = ((np.log10(yAll[iPlot,1,1]) - np.log10(yAll[iPlot,1,0]))
+                       /(np.log10(dc[1]) - np.log10(dc[0])))
+    linewidths = 2.0*np.ones(nPlots)
+    linestyles  = ['-','-','-','-']
+    colors = ['darkviolet','lawngreen','gold','red']
+    markers = ['o','v','^','P']
+    markersizes = 12.5*np.ones(nPlots)
+    labels = ['Cell Width','L2 Error Norm of '+NumericalOperatorTitle]
+    labelfontsizes = [17.5,17.5]
+    labelpads = [10.0,10.0]
+    tickfontsizes = [15.0,15.0]
+    legend1 = 'Periodic in x and y: Slope of Best Fit Straight Line is %.2f' %mAll[0]
+    legend2 = 'Non-Periodic in x and Periodic in y: Slope of Best Fit Straight Line is %.2f' %mAll[1]
+    legend3 = 'Periodic in x and Non-Periodic in y: Slope of Best Fit Straight Line is %.2f' %mAll[2]
+    legend4 = 'Non-Periodic in x and y: Slope of Best Fit Straight Line is %.2f' %mAll[3]
+    legends = [legend1,legend2,legend3,legend4]
+    legendfontsize = 15.0
+    legendposition = 'lower center'
+    title = 'Convergence Plot w.r.t. L2 Error Norm of ' + NumericalOperatorTitle
+    titlefontsize = 20.0
+    SaveAsPNG = True
+    FigureTitle = 'Expt' + str(ExperimentNumber) + '_ConvergencePlots_' + NumericalOperator + '_L2ErrorNorm'
+    Show = False
+    MPAS_O_Operator_Testing_Convergence_Plots(output_directory,dc,yAll,linewidths,linestyles,colors,markers,
+                                              markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
+                                              legendfontsize,legendposition,title,titlefontsize,SaveAsPNG,
+                                              FigureTitle,Show,fig_size=[9.25,9.25],
+                                              useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=True,
+                                              drawMinorGrid=True,legendWithinBox=False,legendpads=[0.5,-0.37],
+                                              titlepad=1.035)
+
+
+# In[72]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Gradient_Operator_Expt1 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Gradient_Operator_Expt1:
+    ExperimentNumber = 1
+    NumericalOperator = 'NumericalGradientOperator'
+    NumericalOperatorTitle = 'Numerical Gradient Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[73]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Gradient_Operator_Expt2 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Gradient_Operator_Expt2:
+    ExperimentNumber = 2
+    NumericalOperator = 'NumericalGradientOperator'
+    NumericalOperatorTitle = 'Numerical Gradient Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[74]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Divergence_Operator_Expt1 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Divergence_Operator_Expt1:
+    ExperimentNumber = 1
+    NumericalOperator = 'NumericalDivergenceOperator'
+    NumericalOperatorTitle = 'Numerical Divergence Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[75]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Divergence_Operator_Expt2 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Divergence_Operator_Expt2:
+    ExperimentNumber = 2
+    NumericalOperator = 'NumericalDivergenceOperator'
+    NumericalOperatorTitle = 'Numerical Divergence Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[76]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_Vertex_Expt1 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_Vertex_Expt1:
+    ExperimentNumber = 1
+    NumericalOperator = 'NumericalCurlOperator_Vertex'
+    NumericalOperatorTitle = 'Numerical Curl Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[77]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_Vertex_Expt2 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_Vertex_Expt2:
+    ExperimentNumber = 2
+    NumericalOperator = 'NumericalCurlOperator_Vertex'
+    NumericalOperatorTitle = 'Numerical Curl Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[78]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_CellCenter_Expt1 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_CellCenter_Expt1:
+    ExperimentNumber = 1
+    NumericalOperator = 'NumericalCurlOperator_CellCenter'
+    NumericalOperatorTitle = 'Numerical Curl Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[79]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_CellCenter_Expt2 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Curl_Operator_CellCenter_Expt2:
+    ExperimentNumber = 2
+    NumericalOperator = 'NumericalCurlOperator_CellCenter'
+    NumericalOperatorTitle = 'Numerical Curl Operator'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[80]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Tangential_Velocity_Expt1 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Tangential_Velocity_Expt1:
+    ExperimentNumber = 1
+    NumericalOperator = 'NumericalTangentialVelocity'
+    NumericalOperatorTitle = 'Numerical Tangential Velocity'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)
+
+
+# In[81]:
+
+do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Tangential_Velocity_Expt2 = False
+if do_Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots_Numerical_Tangential_Velocity_Expt2:
+    ExperimentNumber = 2
+    NumericalOperator = 'NumericalTangentialVelocity'
+    NumericalOperatorTitle = 'Numerical Tangential Velocity'
+    Read_Files_and_Make_MPAS_O_Operator_Testing_Convergence_Plots(ExperimentNumber,NumericalOperator,
+                                                                  NumericalOperatorTitle)

@@ -9,6 +9,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 usePlotly = True
 if usePlotly:
     import plotly.graph_objects as go
@@ -39,6 +40,19 @@ def machine_epsilon():
 
 # In[4]:
 
+def PrintDataType(x):
+    DataType = type(x)
+    print('The data type is')
+    print(DataType)
+    
+do_PrintDataType = False
+if do_PrintDataType:
+    x = 10.0
+    PrintDataType(x)
+
+
+# In[5]:
+
 def AlmostEqual(x,y):
     epsilon = machine_epsilon()
     if x == 0.0 or y == 0.0:
@@ -54,7 +68,7 @@ def AlmostEqual(x,y):
     return almost_equal
 
 
-# In[5]:
+# In[6]:
 
 def InitializeCharacterArrays():
     nStrings = 5
@@ -67,7 +81,7 @@ def InitializeCharacterArrays():
 InitializeCharacterArrays()
 
 
-# In[6]:
+# In[7]:
 
 def RemoveElementFrom1DArray(x,index):
     nX = np.size(x)
@@ -80,7 +94,7 @@ def RemoveElementFrom1DArray(x,index):
     return xNew
 
 
-# In[7]:
+# In[8]:
 
 def TestRemoveElementFrom1DArray():
     x = np.linspace(1.0,5.0,5)
@@ -96,12 +110,37 @@ if do_TestRemoveElementFrom1DArray:
     TestRemoveElementFrom1DArray()
 
 
-# In[8]:
+# In[9]:
+
+def RoundArray(x):
+    nX = len(x)
+    x_rounded = np.zeros(nX)
+    for iX in range(0,nX):
+        x_rounded[iX] = round(x[iX])
+    return x_rounded
+
+
+# In[10]:
+
+def TestRoundArray():
+    x = np.array([-1.75,1.75,-2.25,2.25])
+    x_rounded = RoundArray(x)
+    print('The array x is')
+    print(x)
+    print('After rounding, the array x becomes')
+    print(x_rounded)
+
+do_TestRoundArray = False
+if do_TestRoundArray:
+    TestRoundArray()
+
+
+# In[11]:
 
 def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,color,marker,markersize,labels,
                           labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
                           fig_size=[9.25,9.25],useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=False,
-                          drawMinorGrid=False):
+                          drawMinorGrid=False,FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -146,14 +185,14 @@ def PythonPlot1DSaveAsPNG(output_directory,plot_type,x,y,linewidth,linestyle,col
     elif drawMajorGrid and drawMinorGrid:
         plt.grid(which='both') 
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
     os.chdir(cwd)
 
 
-# In[9]:
+# In[12]:
 
 def TestPythonPlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -167,11 +206,11 @@ if do_TestPythonPlot1DSaveAsPNG:
     TestPythonPlot1DSaveAsPNG()
 
 
-# In[10]:
+# In[13]:
 
 def PythonPlotly1DSaveAsPNG(output_directory,plot_type,x,y,line_color,line_width,marker_symbol,marker_size,labels,
                             labelfontsizes,tickfontsizes,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
-                            fig_size=[700.0,700.0],dtickvalues=[0.0,0.0]):
+                            fig_size=[700.0,700.0],dtickvalues=[0.0,0.0],FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -201,13 +240,13 @@ def PythonPlotly1DSaveAsPNG(output_directory,plot_type,x,y,line_color,line_width
         fig.update_layout(xaxis_type='log',xaxis={'dtick':dtickvalues[0]},
                           yaxis_type='log',yaxis={'dtick':dtickvalues[1]})
     if SaveAsPNG:
-        fig.write_image(FigureTitle+'.png')
+        fig.write_image(FigureTitle+'.'+FigureFormat)
     if Show:
         fig.show()
     os.chdir(cwd)
 
 
-# In[11]:
+# In[14]:
 
 def TestPythonPlotly1DSaveAsPNG():
     x = np.arange(1.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -220,16 +259,17 @@ if do_TestPythonPlotly1DSaveAsPNG:
     TestPythonPlotly1DSaveAsPNG()
 
 
-# In[12]:
+# In[15]:
 
 def PythonPlots1DSaveAsPNG(output_directory,x,y1,y2,line_width,y1stem,y2stem,xlabel,xlabelpad,ylabel,ylabelpad,
-                           y1legend,y2legend,legend_position,title,marker,marker_size,SaveAsPNG,FigureTitle,Show):
+                           y1legend,y2legend,legend_position,title,marker,marker_size,SaveAsPNG,FigureTitle,Show,
+                           fig_size=[9.25,9.25],FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)   
-    fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     if marker:
         ax.plot(x,y1,linewidth=line_width,linestyle='-',color='r',marker='s',markersize=marker_size,label=y1legend)
@@ -248,7 +288,7 @@ def PythonPlots1DSaveAsPNG(output_directory,x,y1,y2,line_width,y1stem,y2stem,xla
     ax.legend(fontsize=17.5,loc=legend_position,bbox_to_anchor=(1,0.5),shadow=True) 
     ax.set_title(title,fontsize=20,y=1.035)
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
@@ -266,17 +306,18 @@ if do_TestPythonPlots1DSaveAsPNG:
     TestPythonPlots1DSaveAsPNG()
 
 
-# In[13]:
+# In[16]:
 
 def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,line_width,y1stem,y2stem,xlabel,
                                      xlabelpad,ylabel,ylabelpad,y1legend,y2legend,legend_position,title,marker,
-                                     marker_size,SaveAsPNG,FigureTitle,Show):
+                                     marker_size,SaveAsPNG,FigureTitle,Show,fig_size=[9.25,9.25],
+                                     FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)   
-    fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     if marker:
         ax.plot(x,y1,linewidth=line_width,linestyle='-',color='r',marker='s',markersize=marker_size,label=y1legend)
@@ -296,31 +337,32 @@ def PythonPlots1DWithLimitsSaveAsPNG(output_directory,x,y1,y2,xLimits,yLimits,li
         plt.ylim(yLimits)
     plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
     plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
-    plt.xticks(np.arange(xLimits[0], xLimits[1]+1.0, xLimits[1]/4.0),fontsize=15)
+    plt.xticks(np.arange(xLimits[0],xLimits[1]+1.0,xLimits[1]/4.0),fontsize=15)
     plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), ',')))
     plt.yticks(fontsize=15)
     ax.legend(fontsize=17.5,loc=legend_position,bbox_to_anchor=(1,0.5),shadow=True) 
     ax.set_title(title,fontsize=20,y=1.035)
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
     os.chdir(cwd)
 
 
-# In[14]:
+# In[17]:
 
 def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidths,linestyles,colors,useMarkers,
                                      markers,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
                                      legendfontsize,legendposition,title,titlefontsize,SaveAsPNG,FigureTitle,Show,
-                                     drawMajorGrid=False,drawMinorGrid=False,legendWithinBox=False):
+                                     fig_size=[9.25,9.25],drawMajorGrid=False,drawMinorGrid=False,
+                                     legendWithinBox=False,FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)   
-    fig = plt.figure(figsize=(9.25,9.25)) # Create a figure object
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     if useMarkers[0]:
         if plot_type == 'regular':
@@ -382,14 +424,14 @@ def PythonConvergencePlot1DSaveAsPNG(output_directory,plot_type,x,y1,y2,linewidt
     elif drawMajorGrid and drawMinorGrid:
         plt.grid(which='both') 
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
     os.chdir(cwd)
 
 
-# In[15]:
+# In[18]:
 
 def TestPythonConvergencePlot1DSaveAsPNG():
     x = np.arange(0.0,10.0,1) # Syntax is x = np.arange(First Point, Last Point, Interval)
@@ -405,11 +447,11 @@ if do_TestPythonConvergencePlot1DSaveAsPNG:
     TestPythonConvergencePlot1DSaveAsPNG()
 
 
-# In[16]:
+# In[19]:
 
 def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsizes,labelpads,tickfontsizes,title,
-                titlefontsize,SaveAsPNG,FigureTitle,Show,fig_size=[9.25,9.25],
-                useDefaultMethodToSpecifyTickFontSize=True):
+                titlefontsize,SaveAsPNG,FigureTitle,Show,fig_size=[9.25,9.25],tick_units_in_km=False,
+                useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035,FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -428,16 +470,19 @@ def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsiz
     else:
         ax.tick_params(axis='x',labelsize=tickfontsizes[0])
         ax.tick_params(axis='y',labelsize=tickfontsizes[1])
-    ax.set_title(title,fontsize=titlefontsize,y=1.035)
+    if tick_units_in_km:
+        plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+        plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+    ax.set_title(title,fontsize=titlefontsize,y=titlepad)
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png',bbox_inches='tight')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
     os.chdir(cwd)
 
 
-# In[17]:
+# In[20]:
 
 def TestScatterPlot():
     xLeft = 0.0
@@ -457,14 +502,14 @@ def TestScatterPlot():
             yUnstructured[i] = y[iY]
     ScatterPlot('MPAS_O_Shallow_Water_Output',xUnstructured,yUnstructured,'k','s',7.5,['x','y'],[17.5,17.5],
                 [10.0,10.0],[15.0,15.0],'Scatter Plot',20.0,True,'ScatterPlot',False,fig_size=[9.25,9.25],
-                useDefaultMethodToSpecifyTickFontSize=True)
+                tick_units_in_km=False,useDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035)
     
 do_TestScatterPlot = False
 if do_TestScatterPlot:
     TestScatterPlot()
 
 
-# In[18]:
+# In[21]:
 
 def LagrangeInterpolation1D(xData,fData,x):
     nData = len(xData) - 1
@@ -491,7 +536,7 @@ if do_TestLagrangeInterpolation1D:
     TestLagrangeInterpolation1D()
 
 
-# In[19]:
+# In[22]:
 
 def LinearInterpolation(xData,fData,x):
     m = (fData[1] - fData[0])/(xData[1] - xData[0])
@@ -512,7 +557,7 @@ if do_TestLinearInterpolation:
     TestLinearInterpolation()
 
 
-# In[20]:
+# In[23]:
 
 def BilinearInterpolation(xData,yData,fData,x,y):
     x1 = xData[0]
@@ -548,7 +593,7 @@ if do_TestBilinearInterpolation:
     TestBilinearInterpolation()
 
 
-# In[21]:
+# In[24]:
 
 def WriteCurve1D(output_directory,x,y,filename):
     cwd = CurrentWorkingDirectory()
@@ -558,7 +603,7 @@ def WriteCurve1D(output_directory,x,y,filename):
     os.chdir(path)
     N = len(y)
     filename = filename + '.curve'
-    outputfile = open(filename, 'w')
+    outputfile = open(filename,'w')
     outputfile.write('#phi\n')
     for i in range(0,N):
         outputfile.write('%.15g %.15g\n' %(x[i],y[i]))
@@ -575,7 +620,7 @@ if do_TestWriteCurve1D:
     TestWriteCurve1D()
 
 
-# In[22]:
+# In[25]:
 
 def ReadCurve1D(output_directory,filename):
     cwd = CurrentWorkingDirectory()
@@ -584,12 +629,12 @@ def ReadCurve1D(output_directory,filename):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)
     data = [];
-    cnt = 0;
-    with open(filename, 'r') as infile:
+    count = 0;
+    with open(filename,'r') as infile:
         for line in infile:
-            if cnt != 0:
+            if count != 0:
                 data.append(line)
-            cnt += 1
+            count += 1
     data = np.loadtxt(data)
     N = data.shape[0]
     x = np.zeros(N)
@@ -618,7 +663,7 @@ if do_TestReadCurve1D:
     TestReadCurve1D()
 
 
-# In[23]:
+# In[26]:
 
 def WriteTecPlot2DStructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -660,7 +705,7 @@ if do_TestWriteTecPlot2DStructured:
     TestWriteTecPlot2DStructured()
 
 
-# In[24]:
+# In[27]:
 
 def WriteTecPlot2DUnstructured(output_directory,x,y,phi,filename):
     cwd = CurrentWorkingDirectory()
@@ -706,17 +751,89 @@ if do_TestWriteTecPlot2DUnstructured:
     TestWriteTecPlot2DUnstructured()
 
 
-# In[25]:
+# In[28]:
 
-def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
-                                                 ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,
-                                                 FigureTitle,Show,cbarlabelformat='%.2g'):
+def ReadTecPlot2DUnstructured(output_directory,filename,returnIndependentVariables=True):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)
-    fig = plt.figure(figsize=(10,10)) # Create a figure object
+    data = [];
+    count = 0;
+    with open(filename,'r') as infile:
+        for line in infile:
+            if count != 0 and count % 2 == 0:
+                data.append(line)
+            count += 1
+    data = np.loadtxt(data)
+    nX = data.shape[0]
+    x = np.zeros(nX)
+    y = np.zeros(nX)
+    phi = np.zeros(nX)
+    for iX in range(0,nX):
+        x[iX] = data[iX,0]
+    for iX in range(0,nX):
+        y[iX] = data[iX,1]
+    for iX in range(0,nX):
+        phi[iX] = data[iX,2]
+    os.chdir(cwd)
+    if returnIndependentVariables:
+        return x, y, phi
+    else:
+        return phi
+
+def TestReadTecPlot2DUnstructured():
+    xLeft = 0.0
+    xRight = 60.0
+    nX = 60
+    x = np.linspace(xLeft,xRight,nX+1) 
+    xCenter = x[int(nX/2)]
+    yBottom = 0.0
+    yTop = 50.0
+    nY = 50
+    y = np.linspace(yBottom,yTop,nY+1)
+    yCenter = y[int(nY/2)]
+    xUnstructured = np.zeros((nX+1)*(nY+1))
+    yUnstructured = np.zeros((nX+1)*(nY+1))
+    phiUnstructured = np.zeros((nX+1)*(nY+1))
+    for iY in range(0,nY+1):
+        for iX in range(0,nX+1):
+            i = iY*(nX+1) + iX
+            xUnstructured[i] = x[iX]
+            yUnstructured[i] = y[iY]
+            phiUnstructured[i] = (xUnstructured[i]-xCenter)**2.0 + (yUnstructured[i]-yCenter)**2.0
+    WriteTecPlot2DUnstructured('MPAS_O_Shallow_Water_Output',xUnstructured,yUnstructured,phiUnstructured,
+                               'TestWriteTecPlot2DUnstructured')
+    xUnstructured_Read, yUnstructured_Read, phiUnstructured_Read = (
+    ReadTecPlot2DUnstructured('MPAS_O_Shallow_Water_Output','TestWriteTecPlot2DUnstructured.tec'))
+    xUnstructured_Error = xUnstructured_Read - xUnstructured
+    xUnstructured_Error_L2Norm = np.linalg.norm(xUnstructured_Error)/np.sqrt(nX+1)
+    yUnstructured_Error = yUnstructured_Read - yUnstructured
+    yUnstructured_Error_L2Norm = np.linalg.norm(yUnstructured_Error)/np.sqrt(nX+1)
+    phiUnstructured_Error = phiUnstructured_Read - phiUnstructured
+    phiUnstructured_Error_L2Norm = np.linalg.norm(phiUnstructured_Error)/np.sqrt(nX+1)
+    print('The L2 error norm of xUnstructured is %.6f.' %xUnstructured_Error_L2Norm)
+    print('The L2 error norm of yUnstructured is %.6f.' %yUnstructured_Error_L2Norm)
+    print('The L2 error norm of phiUnstructured is %.6f.' %phiUnstructured_Error_L2Norm)
+    
+do_TestReadTecPlot2DUnstructured = False
+if do_TestReadTecPlot2DUnstructured:
+    TestReadTecPlot2DUnstructured()
+
+
+# In[29]:
+
+def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
+                                                 ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,
+                                                 FigureTitle,Show,fig_size=[10.0,10.0],cbarlabelformat='%.2g',
+                                                 FigureFormat='png'):
+    cwd = CurrentWorkingDirectory()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     set_aspect_equal = False
     if set_aspect_equal:
@@ -743,13 +860,13 @@ def PythonFilledStructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nConto
     cbar = plt.colorbar(shrink=cbarShrinkRatio) # draw colorbar
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
-    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=13.75)
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels],fontsize=13.75)
     plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
     plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
@@ -792,21 +909,26 @@ if do_PythonReadFileAndFilledStructuredContourPlot2D:
                                                    'TestWriteTecPlot2DStructured',True)
 
 
-# In[26]:
+# In[30]:
 
 def line_contains_text(line):
     return line[0] == 'V' or line[0] == 'Z'
 
+
+# In[31]:
+
 def PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nContours,useGivenColorBarLimits,
-                                                   ColorBarLimits,xlabel,xlabelpad,ylabel,ylabelpad,title,
-                                                   SaveAsPNG,FigureTitle,Show,myXTicks=np.zeros(6),
-                                                   myYTicks=np.zeros(6),cbarlabelformat='%.2g'):
+                                                   ColorBarLimits,nColorBarTicks,colormap,colorbarfontsize,labels,
+                                                   labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,
+                                                   SaveAsPNG,FigureTitle,Show,fig_size=[10.0,10.0],
+                                                   tick_units_in_km=False,cbarlabelformat='%.2g',titlepad=1.035,
+                                                   FigureFormat='png'):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)
-    fig = plt.figure(figsize=(10,10)) # Create a figure object
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     set_aspect_equal = False
     if set_aspect_equal:
@@ -824,47 +946,50 @@ def PythonFilledUnstructuredContourPlot2DSaveAsPNG(output_directory,x,y,phi,nCon
     else:
         cbar_min = np.min(phi)
         cbar_max = np.max(phi)
-    n_cbar_ticks = 6
+    n_cbar_ticks = nColorBarTicks
     cbarlabels = np.linspace(cbar_min,cbar_max,num=n_cbar_ticks,endpoint=True)
-    FCP = plt.tricontourf(x,y,phi,nContours,vmin=cbar_min,vmax=cbar_max,cmap=plt.cm.jet) 
+    FCP = plt.tricontourf(x,y,phi,nContours,vmin=cbar_min,vmax=cbar_max,cmap=colormap) 
     # FCP stands for filled contour plot
-    plt.title(title,fontsize=20,y=1.035)
+    plt.title(title,fontsize=titlefontsize,y=titlepad)
     cbarShrinkRatio = 0.825
-    cbar = plt.colorbar(shrink=cbarShrinkRatio) # draw colorbar
+    m = plt.cm.ScalarMappable(cmap=colormap)
+    m.set_array(phi)
+    m.set_clim(cbar_min,cbar_max)
+    make_colorbar_boundaries_discrete = False
+    if make_colorbar_boundaries_discrete:
+        cbar = plt.colorbar(m,boundaries=cbarlabels,shrink=cbarShrinkRatio)
+    else:
+        cbar = plt.colorbar(m,shrink=cbarShrinkRatio)
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
-    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=13.75)
-    plt.xlabel(xlabel,fontsize=17.5,labelpad=xlabelpad)
-    plt.ylabel(ylabel,fontsize=17.5,labelpad=ylabelpad)
-    if max(abs(myXTicks)) == 0.0:
-        plt.xticks(fontsize=15)
-    else:
-        plt.xticks(myXTicks,fontsize=15)
-    if max(abs(myYTicks)) == 0.0:
-        plt.yticks(fontsize=15)
-    else:
-        plt.yticks(myYTicks,fontsize=15)
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels], fontsize=colorbarfontsize)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    plt.xticks(fontsize=tickfontsizes[0])
+    plt.yticks(fontsize=tickfontsizes[1])
+    if tick_units_in_km:
+        plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+        plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
     if SaveAsPNG:
-        plt.savefig(FigureTitle+'.png',format='png')
+        plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
         plt.show()
     plt.close()
     os.chdir(cwd)
-        
-def PythonReadFileAndFilledUnstructuredContourPlot2D(filename,nContours,xlabel,xlabelpad,ylabel,ylabelpad,title,
-                                                     SaveAsPNG,FigureTitle,Show):
+    
+def PythonReadFileAndFilledUnstructuredContourPlot2D(filename):
     cwd = CurrentWorkingDirectory()
     path = cwd + '/MPAS_O_Shallow_Water_Output/'
     if not os.path.exists(path):
         os.mkdir(path) # os.makedir(path)
     os.chdir(path)
     data = [];
-    cnt = 0;
-    with open(filename, 'r') as infile:
+    count = 0;
+    with open(filename,'r') as infile:
         for line in infile:
-            if cnt != 0 and cnt % 2 == 0:
+            if count != 0 and count % 2 == 0:
                 data.append(line)
-            cnt += 1
+            count += 1
     data = np.loadtxt(data)
     nX = data.shape[0]
     x = np.zeros(nX)
@@ -877,11 +1002,12 @@ def PythonReadFileAndFilledUnstructuredContourPlot2D(filename,nContours,xlabel,x
     for iX in range(0,nX):
         phi[iX] = data[iX,2]
     os.chdir(cwd)
-    PythonFilledUnstructuredContourPlot2DSaveAsPNG('MPAS_O_Shallow_Water_Output',x,y,phi,nContours,False,[0.0,0.0],
-                                                   xlabel,xlabelpad,ylabel,ylabelpad,title,SaveAsPNG,FigureTitle,
-                                                   Show)
+    PythonFilledUnstructuredContourPlot2DSaveAsPNG('MPAS_O_Shallow_Water_Output',x,y,phi,300,False,
+                                                   [0.0,0.0],6,plt.cm.jet,13.75,['x (m)','y (m)'],[17.5,17.5],
+                                                   [10.0,10.0],[15.0,15.0],' ',20.0,True,
+                                                   'TestWriteTecPlot2DUnstructured',True,fig_size=[10.0,10.0],
+                                                   tick_units_in_km=True,cbarlabelformat='%.2f')
     
 do_PythonReadFileAndFilledUnstructuredContourPlot2D = False
 if do_PythonReadFileAndFilledUnstructuredContourPlot2D:
-    PythonReadFileAndFilledUnstructuredContourPlot2D('TestWriteTecPlot2DUnstructured.tec',300,'x',10,'y',10,' ',
-                                                     True,'TestWriteTecPlot2DUnstructured',True)
+    PythonReadFileAndFilledUnstructuredContourPlot2D('TestWriteTecPlot2DUnstructured.tec')
