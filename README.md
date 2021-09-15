@@ -1,64 +1,35 @@
-# MPAS_O_Shallow_Water
+# Rotating_Shallow_Water_Verification_Suite
 
-The MPAS_O_Shallow_Water repository contains a bunch of Jupyter 
-Notebooks and the corresponding Python scripts for solving the full non-linear 
-barotropic shallow water equations on a MPAS-Ocean mesh, using the TRiSK scheme 
-based on a mimetic finite volume spatial discretization, and a variety 
-time-stepping algorithms. It also includes a suite of geophysically relevant 
-verification exercises for testing spatial and temporal convergence. It can be 
-used as a platform for developing and testing novel time-stepping algorithms to 
-advance the barotropic equations of unstructured ocean models like MPAS-Ocean.
+The Rotating_Shallow_Water_Verification_Suite (RSWVS) repository contains code in object-oriented Python for solving the rotating shallow water system of equations using
 
-Please download the contents of the directories <br/>
-(a) [Mesh+Initial_Condition+Registry_Files](https://www.dropbox.com/sh/txoitkq0mpk4wfx/AACBh6jrQx_1hRn-uWvwZXuja?dl=0) <br/>
-(b) [MPAS_O_Shallow_Water_Mesh_Generation](https://www.dropbox.com/sh/gxo9jlvcce8ogdm/AAD2WdMfZ0wFPt-nc7KgXSfaa?dl=0) <br/>
-and place these directories within your local MPAS_O_Shallow_Water repository.
+    a. two types of spatial discretizations:
+        i.  a TRiSK-based mimetic finite volume method used in MPAS-Ocean;
+        ii. a discontinuous Galerkin Spectral Element Method (DGSEM); and
+    b. a variety of time-stepping methods.
 
-If you would like to study the difference between any two commits on git or 
-Github, please look at the Python scripts and not the Jupyter notebooks. As
-explained [here](https://nextjournal.com/schmudde/how-to-version-control-jupyter),
-Jupyter notebooks, containing metadata, source code, formatted text, and rich 
-media, are considered to be poor candidates for conventional version control 
-solutions, which works best with plain text.
+The repository also includes a verification suite of shallow water test cases for the barotropic solver of ocean models. Each of these test cases verifies the implementation of a subset of terms in the prognostic momentum and continuity equations e.g. the linear pressure gradient term, the linear constant or variable-coefficient Coriolis and bathymetry terms, and the non-linear advection terms. Convergence studies are conducted with refinement in 
 
-You have the option to separately run either (a) the Jupyter Notebooks or 
-(b) the Python scripts using the makefile which executes all the scripts in the 
-proper sequence. Regarding the latter approach, typing make run over the 
-terminal will do the trick and typing make clean will delete the generated 
-\_\_pycache\_\_ directory. You can also run each individual Python script from 
-the terminal by typing python <file_name.py>. But please remember that if you 
-run any of the Jupyter Notebooks, it is going to modify the corresponding Python 
-script by adding the line <br/> 
-get_ipython().system('jupyter nbconvert --to script<file_name.ipynb>') <br/>
-at the very end. This command basically converts the Jupyter Notebook into its 
-corresponding Python script but the mere presence of this line will cause an 
-error if you simply run the Python script (later on) by itself (in which case 
-you need to delete the above-mentioned line).
+    a. both space and time (for test cases equipped with exact solutions);
+    b. only in space; and 
+    c. only in time.
 
-If you specify the argument Show in a plotting routine as True, the Jupyter 
-Notebook will display the figure right after execution of the cell containing 
-the routine. I have, however, specified it to False at every instance. This is 
-because if the user decides to run the Python script by itself, the display of 
-the figure will pause the execution of the code, and the user has to close the 
-figure window to resume it, which would be quite annoying. Besides, if the user 
-decides to run just the Python script on a remote machine, specifying Show as 
-True (i.e. attempting to display the figure during code execution) might result 
-in an error and stop (not just pause) the execution of the code altogether.
+RSWVS can also be used as a platform for developing and testing novel time-stepping methods to advance the barotropic equations of an ocean model. It is organized into the following directories: 
 
-Finally, I have tested every routine and verified the results. The option to 
-test any routine is specified by the parameter do_<routine_name> (or 
-test_<routine_name> or run_<routine_name> or something similar) following the 
-routine. If it is turned on (i.e. specified as True), the routine will be 
-executed. I have, however, turned off (i.e. specified to False) every such 
-parameter in the code, after I am done with the testing and I am satisfied with 
-the results. The reason is because if the testing of some routines is turned on 
-and the script containing these routines is imported as a module by another 
-routine, the execution of the second routine will be significantly slower than 
-necessary. 
+    |-- meshes
+    |   |-- MPAS_Ocean_Shallow_Meshes
+    |-- src
+    |   |-- MPAS_Ocean_Shallow_Water
+    |   |-- DGSEM_Rotating_Shallow_Water
+    |-- tests
+    |   |-- MPAS_Ocean_Shallow_Water_Tests
+    |   |-- DGSEM_Rotating_Shallow_Water_Tests
+    |-- tutorials
+    |   |-- MPAS_Ocean_Shallow_Water_Tutorials
+    |   |-- DGSEM_Rotating_Shallow_Water_Tutorials
+    |-- output
+    |   |-- MPAS_Ocean_Shallow_Water_Output
+    |   |-- DGSEM_Rotating_Shallow_Water_Output
+    |-- LICENSE
+    |-- README.md
 
-While you are checking out the Jupyter Notebooks after cloning the git 
-repository onto your local computer, I would encourage you to revert the Show 
-argument and the do_<routine_name> parameters to True everywhere and study the 
-results. If you do so, you should be able to test the respective routines and 
-generate all the figures (within a directory named MPAS_O_Shallow_Water_Output 
-created within the local MPAS_O_Shallow_Water repository).
+The src directory contains the source code and the visualization code, the tests directory contains code for testing the functions in the scripts of the src directory. The scripts in the tutorials directory are exact replicas of the ones in the tests directory but in Jupiter Notebook format. It is up to the user to choose between a specific Python script in the tests directory and its equivalent Jupyter Notebook in the tutorials directory to test one or more functions in the corresponding script in the src directory. The reason the Jupyter Notebooks are included is because it is sometimes convenient to run only a few cells of the Jupiter Notebook, and check out any error message or the output of print statements right below the cells as opposed to all over the terminal. As shown above, each of the src, tests, tutorials, and output directories contains two subdirectories corresponding to two types of spatial discretizations: the TRiSK-based mimetic finite volume method and DGSEM. The MPAS_Ocean_Shallow_Water_Meshes subdirectory within the meshes directory should contain the planar hexagonal MPAS-Ocean mesh files for simulating the numerical solutions and conducting convergence studies. These mesh files being of considerable size, are not included within the Github repository. But the entire MPAS_Ocean_Shallow_Water_Meshes subdirectory can be downloaded from [here](https://zenodo.org/record/7419817). The output generated by the two types of spatial discretizations will be placed in the respective subdirectories within the output directory. Interested modelers can download some output files and plots from [here](https://zenodo.org/record/7420073). These include plots of the exact solution and the numerical error of the various test cases at specific instants of time; and convergence plots of the L<sup>2</sup> error norm with respect to the exact solution for refinement in both space and time, and convergence plots of the L<sup>2</sup> norm of the difference in the numerical solution for refinement only in space and only in time.
