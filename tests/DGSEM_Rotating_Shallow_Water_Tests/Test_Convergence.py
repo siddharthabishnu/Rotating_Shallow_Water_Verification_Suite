@@ -59,8 +59,10 @@ def Test_ConvergenceStudy():
         if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
              or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
             EntityToBeInterpolated = 'Solution'
+            ReadFromSELFOutputData = True
         else:
             EntityToBeInterpolated = 'Error'
+            ReadFromSELFOutputData = False
         StartTimePerProblemType = time.time()
         for iTimeIntegrator in range(iTimeIntegratorLowerLimit,iTimeIntegratorUpperLimit):
             StartTimePerProblemTypePerTimeIntegrator = time.time()
@@ -76,7 +78,7 @@ def Test_ConvergenceStudy():
                                          PrintAmplitudesOfWaveModes,TimeIntegrator,
                                          LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                          Generalized_FB_with_AB3_AM4_Step_Type,
-                                         PerformInterpolation,EntityToBeInterpolated)
+                                         PerformInterpolation,EntityToBeInterpolated,ReadFromSELFOutputData)
             EndTimePerProblemTypePerTimeIntegrator = time.time()
             ElapsedTimePerProblemTypePerTimeIntegrator = (EndTimePerProblemTypePerTimeIntegrator
                                                           - StartTimePerProblemTypePerTimeIntegrator)
@@ -87,8 +89,8 @@ def Test_ConvergenceStudy():
         EndTimePerProblemType = time.time()
         ElapsedTimePerProblemType = EndTimePerProblemType - StartTimePerProblemType
         print('The total time taken by the time integrators for the %s test case is %s.'
-              %(ProblemType_Title,(Main.FormatSimulationTime(ElapsedTimePerProblemType,
-                                                             non_integral_seconds=True)).lower()))
+             %(ProblemType_Title,(Main.FormatSimulationTime(ElapsedTimePerProblemType,
+                                                            non_integral_seconds=True)).lower()))
     EndTime = time.time()
     ElapsedTime = EndTime - StartTime
     print('The total elapsed time is %s.' 
@@ -129,10 +131,15 @@ def Test_PlotConvergenceData():
     # nElementsX = np.array([32,64,128,256]) and not otherwise e.g. if nElementsX = np.array([100,110,120,130,140,150]).
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
+        if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
+             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+            ReadFromSELFOutputData = True
+        else:
+            ReadFromSELFOutputData = False
         Convergence.PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator,SingleTimeIntegratorIndex,
                                         PlotOnlySurfaceElevationConvergenceData,
                                         PlotAgainstNumberOfCellsInZonalDirection,PlotAgainstNumberOfTimeSteps,
-                                        UseBestFitLine,set_xticks_manually)
+                                        UseBestFitLine,set_xticks_manually,ReadFromSELFOutputData)
     
     
 do_Test_PlotConvergenceData = False
@@ -167,9 +174,14 @@ def Test_PlotAllConvergenceData():
     # nElementsX = np.array([32,64,128,256]) and not otherwise e.g. if nElementsX = np.array([100,110,120,130,140,150]).
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
+        if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
+             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+            ReadFromSELFOutputData = True
+        else:
+            ReadFromSELFOutputData = False
         Convergence.PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationConvergenceData,
                                            PlotAgainstNumberOfCellsInZonalDirection,PlotAgainstNumberOfTimeSteps,
-                                           UseBestFitLine,set_xticks_manually)
+                                           UseBestFitLine,set_xticks_manually,ReadFromSELFOutputData)
     
     
 do_Test_PlotAllConvergenceData = False

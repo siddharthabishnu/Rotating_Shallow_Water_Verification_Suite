@@ -531,30 +531,9 @@ def SpecifyAsymptoticPointsForSlopeComputation(ConvergenceType,ProblemType,TimeI
     if ConvergenceType == 'SpaceAndTime':
         iPointLowerLimit = 0
         iPointUpperLimit = 4
-        if ProblemType == 'NonLinear_Manufactured_Solution':
-            if (TimeIntegrator == 'ExplicitMidpointMethod' or TimeIntegrator == 'SecondOrderAdamsBashforthMethod'
-                or TimeIntegrator == 'FourthOrderAdamsBashforthMethod'):
-                iPointLowerLimit = 3
-                iPointUpperLimit = 4
-            elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
-                iPointLowerLimit = 2
-                iPointUpperLimit = 4
-    elif ConvergenceType == 'Space':
+    elif ConvergenceType == 'Space' or ConvergenceType == 'Time':
         iPointLowerLimit = 0
         iPointUpperLimit = 3
-        if ProblemType == 'NonLinear_Manufactured_Solution':
-            if TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-                iPointLowerLimit = 2
-    elif ConvergenceType == 'Time':
-        if (ProblemType == 'Barotropic_Tide' 
-            and TimeIntegrator == 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'):
-            iPointLowerLimit = 1
-        else:
-            iPointLowerLimit = 0
-        if ProblemType == 'NonLinear_Manufactured_Solution' and TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-            iPointUpperLimit = 2
-        else:
-            iPointUpperLimit = 3
     return iPointLowerLimit, iPointUpperLimit
 
    
