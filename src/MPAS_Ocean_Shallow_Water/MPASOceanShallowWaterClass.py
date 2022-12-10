@@ -41,7 +41,8 @@ class MPASOceanShallowWater:
                  TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                  Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,
                  BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber=0.5,
-                 UseCourantNumberToDetermineTimeStep=False):
+                 UseCourantNumberToDetermineTimeStep=False,SpecifyBoundaryCondition=False,BoundaryCondition='Periodic',
+                 ReadDomainExtentsfromMeshFile=False,DebugVersion=False):
         myMPASOceanShallowWater.myNameList = (
         Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                 LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
@@ -49,7 +50,16 @@ class MPASOceanShallowWater:
                                 UseCourantNumberToDetermineTimeStep))
         myMPASOceanShallowWater.myMesh = MeshClass.Mesh(myMPASOceanShallowWater.myNameList,PrintBasicGeometry,
                                                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,
-                                                        PrintOutput,UseAveragedQuantities)
+                                                        PrintOutput,UseAveragedQuantities,SpecifyBoundaryCondition,
+                                                        BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        if ReadDomainExtentsfromMeshFile:
+            lX = myMPASOceanShallowWater.myMesh.lX
+            lY = myMPASOceanShallowWater.myMesh.lY
+            dx = myMPASOceanShallowWater.myMesh.dx
+            dy = myMPASOceanShallowWater.myMesh.dy
+            myMPASOceanShallowWater.myNameList.ModifyNameList(PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                                              CourantNumber,UseCourantNumberToDetermineTimeStep,
+                                                              BoundaryCondition,lX,lY,dx,dy)
         nCells = myMPASOceanShallowWater.myMesh.nCells
         nEdges = myMPASOceanShallowWater.myMesh.nEdges
         nVertices = myMPASOceanShallowWater.myMesh.nVertices

@@ -256,7 +256,8 @@ class ExactSolutionParameters:
         
 
 def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,ProblemType_NoExactSolution,
-                                   ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes):
+                                   ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                   ReadDomainExtentsFromMeshFile=False,lX=0.0,lY=0.0):
     beta0 = 2.0*10.0**(-11.0)
     if ProblemType == 'Plane_Gaussian_Wave':
         g = 1.0
@@ -278,7 +279,8 @@ def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,Probl
         # propagate eastward else it will propagate westward.
     else:
         alpha0 = 0.0
-    lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
+    if not(ReadDomainExtentsFromMeshFile):
+        lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
     kX1, kY1, kX2, kY2 = SpecifyWaveNumbers(ProblemType,lX,lY)
     if ProblemType == 'Plane_Gaussian_Wave':
         x0 = -0.5*(0.5*lX)
@@ -746,3 +748,30 @@ class NameList:
         myNameList.ProblemType_Title, myNameList.ProblemType_FileName = SpecifyTitleAndFileNamePrefixes(ProblemType)
         myNameList.UseWettingDrying = False
         myNameList.ThicknessFluxType = 'centered'
+        
+    def ModifyNameList(myNameList,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
+                       UseCourantNumberToDetermineTimeStep,BoundaryCondition,lX,lY,dx,dy):
+        myNameList.BoundaryCondition = BoundaryCondition
+        myNameList.lX = lX
+        myNameList.lY = lY
+        myNameList.dx = dx
+        myNameList.dy = dy
+        myNameList.myExactSolutionParameters = (
+        SpecifyExactSolutionParameters(myNameList.ProblemType,myNameList.ProblemType_GeophysicalWave,
+                                       myNameList.ProblemType_NoExactSolution,myNameList.ProblemType_EquatorialWave,
+                                       PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                       ReadDomainExtentsFromMeshFile=True,lX=lX,lY=lY))
+        (myNameList.ExactSurfaceElevationLimits, myNameList.ExactZonalVelocityLimits, 
+         myNameList.ExactMeridionalVelocityLimits) = (
+        ESST.DetermineExactSolutionLimits(myNameList.ProblemType,myNameList.myExactSolutionParameters))
+        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_NoExactSolution):
+            cX1 = myNameList.myExactSolutionParameters.cX1
+            cX2 = myNameList.myExactSolutionParameters.cX2
+            cY1 = myNameList.myExactSolutionParameters.cY1
+            cY2 = myNameList.myExactSolutionParameters.cY2
+            abs_cX = max(abs(cX1),abs(cX2))
+            abs_cY = max(abs(cY1),abs(cY2))
+            myNameList.dt = CourantNumber/(abs_cX/(myNameList.dx) + abs_cY/(myNameList.dy))
+            print('The time step for Courant number %.6f is %.3g seconds.' %(CourantNumber,myNameList.dt))
+        else:
+            myNameList.dt = SpecifyTimeStep(myNameList.ProblemType,myNameList.ProblemType_NoExactSolution)

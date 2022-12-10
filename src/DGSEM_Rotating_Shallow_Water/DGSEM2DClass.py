@@ -43,11 +43,16 @@ class DGSEM2D:
     def __init__(myDGSEM2D,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                  LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                  Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,nEtaPlot,
-                 CourantNumber=0.5,UseCourantNumberToDetermineTimeStep=False,ReadFromSELFOutputData=False):
+                 CourantNumber=0.5,UseCourantNumberToDetermineTimeStep=False,ReadFromSELFOutputData=False,
+                 BoundaryConditionAndDomainExtentsSpecified=False,BoundaryCondition='Periodic',lX=0.0,lY=0.0):
         myDGSEM2D.myNameList = (
         Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                 LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                 Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber,UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData))
+        if BoundaryConditionAndDomainExtentsSpecified:
+            myDGSEM2D.myNameList.ModifyNameList(
+            PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,nXi,nEta,CourantNumber,
+            UseCourantNumberToDetermineTimeStep,BoundaryCondition,lX,lY)
         myDGSEM2D.myDGSEM2DParameters = (
         DGSEM2DParameters(ProblemType,myDGSEM2D.myNameList.ProblemType_NoExactSolution,
                           myDGSEM2D.myNameList.Problem_is_Linear,myDGSEM2D.myNameList.BoundaryCondition,
@@ -877,8 +882,8 @@ def WriteInterpolatedStateDGSEM2D(myDGSEM2D,filename,ComputeOnlyExactSolution=Fa
     
     
 def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColorBarLimits=True,
-                           UseInterpolatedErrorLimits=True,ComputeOnlyExactSolution=False,
-                           SpecifyDataTypeInPlotFileName=False,PlotNumericalSolution=False):
+                           ComputeOnlyExactSolution=False,SpecifyDataTypeInPlotFileName=False,
+                           PlotNumericalSolution=False):
     ProblemType_NoExactSolution = myDGSEM2D.myDGSEM2DParameters.ProblemType_NoExactSolution
     ProblemType = myDGSEM2D.myDGSEM2DParameters.ProblemType
     nElementsX = myDGSEM2D.myDGSEM2DParameters.nElementsX
@@ -1048,13 +1053,10 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                                                       SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        ZonalVelocityErrorLimits = [-np.max(abs(uError)),np.max(abs(uError))]
-                    else:
-                        FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
-                                    + '_ZonalVelocityErrorLimits')
-                        ZonalVelocityErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
-                                                                                      FileName+'.curve')
+                    FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_ZonalVelocityErrorLimits')
+                    ZonalVelocityErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
+                                                                                  FileName+'.curve')
                 else:
                     ZonalVelocityErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nZonal Velocity Error after\n' + DisplayTime
@@ -1089,13 +1091,10 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                                                       SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        MeridionalVelocityErrorLimits = [-np.max(abs(vError)),np.max(abs(vError))]
-                    else:
-                        FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
-                                    + '_MeridionalVelocityErrorLimits')
-                        MeridionalVelocityErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
-                                                                                           FileName+'.curve')
+                    FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_MeridionalVelocityErrorLimits')
+                    MeridionalVelocityErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
+                                                                                       FileName+'.curve')
                 else:
                     MeridionalVelocityErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nMeridional Velocity Error after\n' + DisplayTime
@@ -1130,13 +1129,10 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                                                       SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        SurfaceElevationErrorLimits = [-np.max(abs(etaError)),np.max(abs(etaError))]
-                    else:
-                        FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
-                                    + '_SurfaceElevationErrorLimits')
-                        SurfaceElevationErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
-                                                                                         FileName+'.curve')
+                    FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_SurfaceElevationErrorLimits')
+                    SurfaceElevationErrorLimits = CR.ReadStateVariableLimitsFromFile(myDGSEM2D.OutputDirectory,
+                                                                                     FileName+'.curve')
                 else:
                     SurfaceElevationErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nSurface Elevation Error after\n' + DisplayTime

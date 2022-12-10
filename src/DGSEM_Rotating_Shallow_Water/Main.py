@@ -348,12 +348,11 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                                                            display_time=False,ProblemType_PlanetaryTopographicRossbyWave
                                                            =ProblemType_PlanetaryTopographicRossbyWave)
                         UseGivenColorBarLimits = True
-                        UseInterpolatedErrorLimits = True
                         ComputeOnlyExactSolution = True
                         SpecifyDataTypeInPlotFileName = False
                         DGSEM2DClass.PythonPlotStateDGSEM2D(myDGSEM2D,FileName,DataType,DisplayTime,
-                                                            UseGivenColorBarLimits,UseInterpolatedErrorLimits,
-                                                            ComputeOnlyExactSolution,SpecifyDataTypeInPlotFileName)
+                                                            UseGivenColorBarLimits,ComputeOnlyExactSolution,
+                                                            SpecifyDataTypeInPlotFileName)
                         
                         
 def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
@@ -576,9 +575,7 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                                            =ProblemType_PlanetaryTopographicRossbyWave,
                                                            ProblemType_NoExactSolution=ProblemType_NoExactSolution)
                         UseGivenColorBarLimits = True
-                        UseInterpolatedErrorLimits = True
                         SpecifyDataTypeInPlotFileName = False
                         DGSEM2DClass.PythonPlotStateDGSEM2D(myDGSEM2D,FileName,DataType,DisplayTime,
-                                                            UseGivenColorBarLimits,UseInterpolatedErrorLimits,
-                                                            ComputeOnlyExactSolution,SpecifyDataTypeInPlotFileName,
-                                                            PlotNumericalSolution)
+                                                            UseGivenColorBarLimits,ComputeOnlyExactSolution,
+                                                            SpecifyDataTypeInPlotFileName,PlotNumericalSolution)

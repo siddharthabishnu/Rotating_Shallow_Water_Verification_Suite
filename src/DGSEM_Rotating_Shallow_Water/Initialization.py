@@ -196,7 +196,8 @@ class ExactSolutionParameters:
         
 
 def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,ProblemType_NoExactSolution,
-                                   ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes):
+                                   ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                   DomainExtentsSpecified=False,lX=0.0,lY=0.0):
     beta0 = 2.0*10.0**(-11.0)
     if ProblemType == 'Plane_Gaussian_Wave':
         g = 1.0
@@ -218,7 +219,8 @@ def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,Probl
         # propagate eastward else it will propagate westward.
     else:
         alpha0 = 0.0
-    lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
+    if not(DomainExtentsSpecified):
+        lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
     kX1, kY1, kX2, kY2 = SpecifyWaveNumbers(ProblemType,lX,lY)
     if ProblemType == 'Plane_Gaussian_Wave':
         x0 = -0.5*(0.5*lX)
@@ -504,7 +506,7 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
     elif ProblemType == 'Equatorial_Yanai_Wave':
         dt = 180.0
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        dt = 1200.0
+        dt = 240.0
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
         dt = 108.0
     elif ProblemType == 'Barotropic_Tide':
@@ -515,10 +517,13 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
 
 
 def SpecifyDumpFrequency(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOutputData):
-    if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Equatorial_Kelvin_Wave' 
-        or ProblemType == 'Equatorial_Yanai_Wave' or ProblemType == 'Equatorial_Rossby_Wave' 
-        or ProblemType == 'Equatorial_Inertia_Gravity_Wave' or ProblemType == 'Barotropic_Tide'):
+    if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide':
         nDumpFrequency = 10
+    elif (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
+          or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
+        nDumpFrequency = 5
+    elif ProblemType == 'Equatorial_Rossby_Wave':
+        nDumpFrequency = 25
     elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
           or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
           or ProblemType == 'NonLinear_Manufactured_Solution'):
@@ -560,7 +565,7 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSEL
         nTime_Minimum = 528 + 1
         nTime = 530 + 1
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        nTime_Minimum = 525 + 1
+        nTime_Minimum = 2625 + 1
         nTime = nTime_Minimum
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
         nTime_Minimum = 533 + 1
@@ -681,6 +686,8 @@ class NameList:
             myNameList.BoundaryCondition = 'NonPeriodic_xy'
         myNameList.lX, myNameList.lY = SpecifyDomainExtents(ProblemType,myNameList.ProblemType_NoExactSolution,
                                                             myNameList.ProblemType_EquatorialWave)
+        myNameList.nElementsX = nElementsX
+        myNameList.nElementsY = nElementsY
         myNameList.dx = myNameList.lX/float(nElementsX)
         myNameList.dy = myNameList.lY/float(nElementsY)
         myNameList.myExactSolutionParameters = (
@@ -718,3 +725,30 @@ class NameList:
         myNameList.LogicalArrayPlot = SpecifyLogicalArrayPlot(ProblemType)
         myNameList.ProblemType_Title, myNameList.ProblemType_FileName = SpecifyTitleAndFileNamePrefixes(ProblemType)
         myNameList.nEquations = 3
+        
+    def ModifyNameList(myNameList,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,nXi,nEta,CourantNumber,
+                       UseCourantNumberToDetermineTimeStep,BoundaryCondition,lX,lY):
+        myNameList.BoundaryCondition = BoundaryCondition
+        myNameList.lX = lX
+        myNameList.lY = lY
+        myNameList.dx = lX/float(myNameList.nElementsX)
+        myNameList.dy = lY/float(myNameList.nElementsY)
+        myNameList.myExactSolutionParameters = (
+        SpecifyExactSolutionParameters(myNameList.ProblemType,myNameList.ProblemType_GeophysicalWave,
+                                       myNameList.ProblemType_NoExactSolution,myNameList.ProblemType_EquatorialWave,
+                                       PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                       DomainExtentsSpecified=True,lX=lX,lY=lY))
+        (myNameList.ExactSurfaceElevationLimits, myNameList.ExactZonalVelocityLimits, 
+         myNameList.ExactMeridionalVelocityLimits) = (
+        ESST.DetermineExactSolutionLimits(myNameList.ProblemType,myNameList.myExactSolutionParameters))
+        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_NoExactSolution):
+            cX1 = myNameList.myExactSolutionParameters.cX1
+            cX2 = myNameList.myExactSolutionParameters.cX2
+            cY1 = myNameList.myExactSolutionParameters.cY1
+            cY2 = myNameList.myExactSolutionParameters.cY2
+            abs_cX = max(abs(cX1),abs(cX2))
+            abs_cY = max(abs(cY1),abs(cY2))
+            myNameList.dt = CourantNumber/(abs_cX/(myNameList.dx/float(nXi**2)) + abs_cY/(myNameList.dy/float(nEta**2)))
+            print('The time step for Courant number %.6f is %.3g seconds.' %(CourantNumber,myNameList.dt))
+        else:
+            myNameList.dt = SpecifyTimeStep(myNameList.ProblemType,myNameList.ProblemType_NoExactSolution)
