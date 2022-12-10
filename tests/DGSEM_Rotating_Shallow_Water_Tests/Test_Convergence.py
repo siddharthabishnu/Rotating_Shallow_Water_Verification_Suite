@@ -104,10 +104,10 @@ if do_Test_ConvergenceStudy:
 def Test_PlotConvergenceData():
     ConvergenceType = 'SpaceAndTime' # Choose ConvergenceType to be 'SpaceAndTime' or 'Space' or 'Time'.
     if ConvergenceType == 'SpaceAndTime':
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
                         'NonLinear_Manufactured_Solution']
     else:
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
                         'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave',
                         'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave','Barotropic_Tide',
                         'NonLinear_Manufactured_Solution']
@@ -143,10 +143,10 @@ if do_Test_PlotConvergenceData:
 def Test_PlotAllConvergenceData():
     ConvergenceType = 'SpaceAndTime' # Choose ConvergenceType to be 'SpaceAndTime' or 'Space' or 'Time'.
     if ConvergenceType == 'SpaceAndTime':
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
                         'NonLinear_Manufactured_Solution']
     else:
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
                         'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave',
                         'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave','Barotropic_Tide',
                         'NonLinear_Manufactured_Solution']

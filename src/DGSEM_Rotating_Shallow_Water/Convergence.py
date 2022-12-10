@@ -897,7 +897,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         else:
             xLabel = 'Time step'
     elif (ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space'):
-        xLabel = 'Number of cells'
+        xLabel = 'Number of cells in zonal direction'
     labelfontsizes = [22.5,22.5]
     labelpads = [10.0,10.0]
     tickfontsizes = [15.0,15.0]

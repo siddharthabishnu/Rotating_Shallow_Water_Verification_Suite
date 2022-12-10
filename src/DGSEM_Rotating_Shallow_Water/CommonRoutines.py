@@ -420,7 +420,7 @@ def PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels
                                        DataType='Structured',colormap=plt.cm.jet,cbarlabelformat='%.2g',
                                        cbarfontsize=13.75,set_xticks_manually=False,xticks_set_manually=[],
                                        set_yticks_manually=False,yticks_set_manually=[],FileFormat='pdf',
-                                       bbox_inches='tight'):
+                                       bbox_inches='tight',specify_n_ticks=False,n_ticks=[0,0]):
     cwd = os.getcwd()
     path = cwd + '/' + output_directory + '/'
     if not os.path.exists(path):
@@ -464,6 +464,11 @@ def PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels
         ax.set_xticks(xticks_set_manually,minor=False)
     if set_yticks_manually:
         ax.set_yticks(yticks_set_manually,minor=False)
+    if specify_n_ticks:
+        n_xticks = n_ticks[0]
+        n_yticks = n_ticks[1]
+        ax.xaxis.set_major_locator(plt.MaxNLocator(n_xticks))
+        ax.yaxis.set_major_locator(plt.MaxNLocator(n_yticks))
     if SaveAsPDF:
         plt.savefig(FileName+'.'+FileFormat,format=FileFormat,bbox_inches=bbox_inches)
     if Show:
@@ -479,6 +484,7 @@ def PythonReadFileAndMakeFilledContourPlot2D(output_directory,filename,nContours
         x, y, phi = ReadTecPlot2DStructured(output_directory,filename,ReturnIndependentVariables=True)
     elif DataType == 'Unstructured':
         x, y, phi = ReadTecPlot2DUnstructured(output_directory,filename,ReturnIndependentVariables=True)
+    filename = filename.replace('.tec','')
     PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels,labelfontsizes,labelpads,tickfontsizes,
                                        useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,title,titlefontsize,
                                        SaveAsPDF,filename,Show,DataType=DataType)

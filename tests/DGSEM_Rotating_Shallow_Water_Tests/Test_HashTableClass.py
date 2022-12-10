@@ -1,7 +1,8 @@
 """
 Name: Test_HashTableClass.py
 Author: Sid Bishnu
-Details: As the name implies, this script tests the hash table class defined in ../../src/DGSEM_Rotating_Shallow_Water/HashTableClass.py.
+Details: As the name implies, this script tests the hash table class defined in 
+../../src/DGSEM_Rotating_Shallow_Water/HashTableClass.py.
 """
 
 

@@ -26,7 +26,7 @@ class LagrangeInterpolation2D:
         yInterpolatingPoint))
         LagrangeInterpolant = 0.0
         for iX in range(0,myLagrangeInterpolation2D.myLagrangeInterpolation1DX.nX+1):
-            for iY in range(0,myLagrangeInterpolation2D.myLagrangeInterpolation1DX.nX+1):
+            for iY in range(0,myLagrangeInterpolation2D.myLagrangeInterpolation1DY.nX+1):
                 LagrangeInterpolant += (f[iX,iY]*LagrangeInterpolatingPolynomialsAtPointX[iX]
                                         *LagrangeInterpolatingPolynomialsAtPointY[iY])
         return LagrangeInterpolant

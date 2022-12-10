@@ -1,17 +1,17 @@
 """
-Name: ConvergenceOfSpatialOperators.py
+Name: SpatialOperators.py
 Author: Sid Bishnu
-Details: This script contains functions for verifying the order of convergence of spatial operators of DGSEM.
+Details: This script contains functions for computing the spatial operators of DGSEM.
 """
 
 
 import numpy as np
-import sympy as sp
 from sympy.utilities.lambdify import lambdify
 from IPython.utils import io
 import os
 with io.capture_output() as captured: 
     import CommonRoutines as CR
+    import Initialization
     import DGSEM2DClass
 
     
@@ -37,12 +37,12 @@ def SurfaceElevationLaplacian(lX,lY,x,y):
     return Laplacian
 
 
-def WriteStateDGSEM2D(myDGSEM2D,filename):
+def WriteStateDGSEM2D(myDGSEM2D,OutputDirectory,filename):
     nElements = myDGSEM2D.myDGSEM2DParameters.nElements
     nXi = myDGSEM2D.myDGSEM2DParameters.nXi
     nEta = myDGSEM2D.myDGSEM2DParameters.nEta
     cwd = os.getcwd()
-    path = cwd + '/' + myDGSEM2D.OutputDirectory + '/'
+    path = cwd + '/' + OutputDirectory + '/'
     os.chdir(path)
     filename += '.tec'
     outputfile = open(filename,'w')
@@ -77,8 +77,7 @@ def WriteStateDGSEM2D(myDGSEM2D,filename):
     os.chdir(cwd)  
 
 
-def DetermineNumericalSpatialOperatorsAndError(lX,nElementsX,WriteState=False):
-    ProblemType = 'Inertia_Gravity_Wave'
+def DetermineNumericalSpatialOperatorsAndError(ProblemType,nElementsX,nXi,WriteState=False):
     PrintPhaseSpeedOfWaveModes = False
     PrintAmplitudesOfWaveModes = False
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -86,34 +85,21 @@ def DetermineNumericalSpatialOperatorsAndError(lX,nElementsX,WriteState=False):
     Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     nElementsY = nElementsX
-    nXi = 3
     nEta = nXi
     nXiPlot = 10
     nEtaPlot = nXiPlot
     CourantNumber = 0.5
-    UseCourantNumberToDetermineTimeStep = True 
-    lY = lX
+    UseCourantNumberToDetermineTimeStep = True
+    SpecifyRiemannSolver = True
+    RiemannSolver = 'BassiRebay'
     myDGSEM2D = DGSEM2DClass.DGSEM2D(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                      LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                      Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,
                                      nEtaPlot,CourantNumber,UseCourantNumberToDetermineTimeStep,
-                                     BoundaryConditionAndDomainExtentsSpecified=True,BoundaryCondition='Periodic',lX=lX,
-                                     lY=lY)
+                                     SpecifyRiemannSolver=SpecifyRiemannSolver,RiemannSolver=RiemannSolver)
+    lX = myDGSEM2D.myNameList.lX
+    lY = myDGSEM2D.myNameList.lY
     nElements = myDGSEM2D.myQuadMesh.nElements
-    c0 = 1.0
-    f0 = 0.0
-    g = 1.0
-    H0 = 1.0
-    myDGSEM2D.myNameList.myExactSolutionParameters.c0 = c0
-    myDGSEM2D.myNameList.myExactSolutionParameters.f0 = f0
-    myDGSEM2D.myNameList.myExactSolutionParameters.g = g
-    myDGSEM2D.myNameList.myExactSolutionParameters.H0 = H0
-    for iElement in range(0,nElements):
-        myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.c[:,:] = c0
-        myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.f[:,:] = f0
-        myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.H[:,:] = H0
-        myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.cBoundary[:,:] = c0
-        myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.HBoundary[:,:] = H0
     for iElement in range(0,nElements):
         for iXi in range(0,nXi+1):
             for iEta in range(0,nEta+1):
@@ -141,10 +127,11 @@ def DetermineNumericalSpatialOperatorsAndError(lX,nElementsX,WriteState=False):
                 (myDGSEM2D.myDGSolution2D[iElement].SolutionAtInteriorNodes[:,iXi,iEta] 
                  - myDGSEM2D.myDGSolution2D[iElement].ExactSolutionAtInteriorNodes[:,iXi,iEta]))
     L2ErrorNorm = DGSEM2DClass.ComputeErrorNorm(myDGSEM2D)
+    OutputDirectory = myDGSEM2D.OutputDirectory + '/../Convergence_of_Spatial_Operators'
     if WriteState:
-        FileName = 'ConvergenceOfSpatialOperators_%2.2dx%2.2d' %(nElementsX,nElementsY)
-        WriteStateDGSEM2D(myDGSEM2D,FileName)
-    return myDGSEM2D.OutputDirectory, L2ErrorNorm
+        FileName = 'ConvergenceOfSpatialOperators_%2.2dx%2.2d_Mesh_PolynomialOrder_%d' %(nElementsX,nElementsY,nXi+1)
+        WriteStateDGSEM2D(myDGSEM2D,OutputDirectory,FileName)
+    return OutputDirectory, L2ErrorNorm
 
         
 def WriteL2ErrorNorm(OutputDirectory,nIntervals,Intervals,L2ErrorNorm,FileName):
@@ -165,7 +152,7 @@ def WriteL2ErrorNorm(OutputDirectory,nIntervals,Intervals,L2ErrorNorm,FileName):
     os.chdir(cwd)
     
     
-def ReadL2ErrorNorm(OutputDirectory,FileName):
+def ReadL2ErrorNorm(OutputDirectory,FileName,ReadDivergenceErrorNorm=False):
     cwd = os.getcwd()
     path = cwd + '/' + OutputDirectory + '/'
     if not os.path.exists(path):
@@ -182,16 +169,23 @@ def ReadL2ErrorNorm(OutputDirectory,FileName):
     nCases = data.shape[0]
     nIntervals = np.zeros(nCases)
     Intervals = np.zeros(nCases)
-    L2ErrorNorm = np.zeros((3,nCases))
+    if ReadDivergenceErrorNorm:
+        L2ErrorNorm = np.zeros((3,nCases))
+    else:
+        L2ErrorNorm = np.zeros((2,nCases))
     for iCase in range(0,nCases):
         nIntervals[iCase] = data[iCase,0]
         Intervals[iCase] = data[iCase,1]
-        L2ErrorNorm[:,iCase] = data[iCase,2:5]
+        if ReadDivergenceErrorNorm:
+            L2ErrorNorm[:,iCase] = data[iCase,2:5]
+        else:
+            L2ErrorNorm[:,iCase] = data[iCase,2:4]
     os.chdir(cwd)
     return nIntervals, Intervals, L2ErrorNorm
         
              
-def ConvergenceStudyOfSpatialOperators(PlotSolution=False):
+def ConvergenceStudyOfSpatialOperators(nXi,WriteState=False):
+    ProblemType = 'Convergence_of_Spatial_Operators'
     nCases = 5
     nElementsX = np.zeros(nCases,dtype=int)
     nElementsX_Minimum = 4
@@ -200,24 +194,27 @@ def ConvergenceStudyOfSpatialOperators(PlotSolution=False):
             nElementsX[iCase] = nElementsX_Minimum
         else:
             nElementsX[iCase] = nElementsX[iCase-1]*2
-    lX = 50.0*1000.0
+    lX, lY = Initialization.SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution=False,
+                                                 ProblemType_EquatorialWave=False)
     dx = lX/nElementsX
     L2ErrorNorm = np.zeros((3,nCases))
     for iCase in range(0,nCases):
-        OutputDirectory, L2ErrorNorm[:,iCase] = DetermineNumericalSpatialOperatorsAndError(lX,nElementsX[iCase],
-                                                                                           PlotSolution)
-    FileName = 'ConvergencePlot_SpatialOperators_L2ErrorNorm'
+        OutputDirectory, L2ErrorNorm[:,iCase] = (
+        DetermineNumericalSpatialOperatorsAndError(ProblemType,nElementsX[iCase],nXi,WriteState))
+    FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1)
     nIntervals = nElementsX
     Intervals = dx
     WriteL2ErrorNorm(OutputDirectory,nIntervals,Intervals,L2ErrorNorm,FileName)
     
     
-def PlotConvergenceDataOfSpatialOperators(PlotAgainstNumberOfCellsInZonalDirection=True,UseBestFitLine=False,
-                                          set_xticks_manually=False):
-    ProblemType = 'Inertia_Gravity_Wave'
-    OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/' + ProblemType
-    FileName = 'ConvergencePlot_SpatialOperators_L2ErrorNorm'
-    nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve')
+def PlotConvergenceDataOfSpatialOperators(nXi,PlotAgainstNumberOfCellsInZonalDirection=True,UseBestFitLine=False,
+                                          set_xticks_manually=False,ReadFromSELFOutputData=False,
+                                          ReadDivergenceErrorNorm=False):
+    OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/Convergence_of_Spatial_Operators'
+    if ReadFromSELFOutputData:
+        OutputDirectory += '_SELFOutputData'
+    FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1)
+    nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve',ReadDivergenceErrorNorm)
     linewidth = 2.0
     linewidths = [2.0,2.0]
     linestyle = '-'
@@ -234,9 +231,9 @@ def PlotConvergenceDataOfSpatialOperators(PlotAgainstNumberOfCellsInZonalDirecti
         xLabel = 'Number of cells in zonal direction'
     else:
         xLabel = 'Cell width'    
-    yLabels = ['L$^2$ error norm of\nnumerical zonal gradient operator',
-               'L$^2$ error norm of\nnumerical meridional gradient operator',
-               'L$^2$ error norm of\nnumerical divergence operator']
+    yLabels = ['L$^2$ error norm of\nzonal gradient operator',
+               'L$^2$ error norm of\nmeridional gradient operator',
+               'L$^2$ error norm of\ndivergence operator']
     labelfontsizes = [22.5,22.5]
     labelpads = [10.0,10.0]
     tickfontsizes = [15.0,15.0]
@@ -246,17 +243,21 @@ def PlotConvergenceDataOfSpatialOperators(PlotAgainstNumberOfCellsInZonalDirecti
     else:
         legendposition = 'upper left'
         set_xticks_manually = False
-    Titles = ['Convergence of Zonal Gradient Operator','Convergence of Meridional Gradient Operator',
-              'Convergence of Divergence Operator']
+    Titles = ['Convergence of Zonal Gradient Operator\nfor Polynomial Order %d' %(nXi+1),
+              'Convergence of Meridional Gradient Operator\nfor Polynomial Order %d' %(nXi+1),
+              'Convergence of Divergence Operator\nfor Polynomial Order %d' %(nXi+1)]
     titlefontsize = 27.5 
-    FileNames = ['ConvergencePlot_ZonalGradientOperator_L2ErrorNorm',
-                 'ConvergencePlot_MeridionalGradientOperator_L2ErrorNorm',
-                 'ConvergencePlot_DivergenceOperator_L2ErrorNorm']
+    FileNames = ['ConvergencePlot_ZonalGradientOperator_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1),
+                 'ConvergencePlot_MeridionalGradientOperator_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1),
+                 'ConvergencePlot_DivergenceOperator_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1)]
     if PlotAgainstNumberOfCellsInZonalDirection:
         dx = nIntervals
     else:
         dx = Intervals
-    nSpatialOperators = 3
+    if ReadDivergenceErrorNorm:
+        nSpatialOperators = 3
+    else:
+        nSpatialOperators = 2
     for iSpatialOperator in range(0,nSpatialOperators):
         L2ErrorNormPerOperator = L2ErrorNorm[iSpatialOperator,:]
         yLabel = yLabels[iSpatialOperator]
@@ -289,3 +290,132 @@ def PlotConvergenceDataOfSpatialOperators(PlotAgainstNumberOfCellsInZonalDirecti
                                      useDefaultMethodToSpecifyTickFontSize=False,drawMajorGrid=True,drawMinorGrid=True,
                                      set_xticks_manually=set_xticks_manually,xticks_set_manually=xticks_set_manually,
                                      FileFormat='pdf')
+            
+
+def SpecifyAsymptoticPointsForSlopeComputation(PolynomialOrder,SpatialOperator,ReadFromSELFOutputData,nCases):
+    iPointLowerLimit = 0
+    iPointUpperLimit = nCases - 1
+    return iPointLowerLimit, iPointUpperLimit
+
+
+def SetOfLegends(nXiMinimum,slopes):
+    legends = ['Polynomial Order %d' %(nXiMinimum+1),'Polynomial Order %d' %(nXiMinimum+2),
+               'Polynomial Order %d' %(nXiMinimum+3)]            
+    for i_legend in range(0,len(legends)):
+        legends[i_legend] += ':\nSlope = %.2f' %slopes[i_legend]
+    legendfontsize = 14.0
+    legendpads = [0.0,0.0]
+    return legends, legendfontsize, legendpads
+
+
+def PlotConvergenceDataOfAllSpatialOperators(nXiMinimum,PlotAgainstNumberOfCellsInZonalDirection=True,
+                                             UseBestFitLine=False,set_xticks_manually=False,
+                                             ReadFromSELFOutputData=False,ReadDivergenceErrorNorm=False):
+    OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/Convergence_of_Spatial_Operators'
+    if ReadFromSELFOutputData:
+        OutputDirectory += '_SELFOutputData'
+    FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXiMinimum+1)
+    nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve',ReadDivergenceErrorNorm)
+    nCases = len(nIntervals)
+    if PlotAgainstNumberOfCellsInZonalDirection:
+        dx = nIntervals
+    else:
+        dx = Intervals
+    if ReadDivergenceErrorNorm:
+        nSpatialOperators = 3
+    else:
+        nSpatialOperators = 2
+    n_nXi = 3
+    L2ErrorNormPerOperator = np.zeros((n_nXi,nSpatialOperators,nCases))
+    L2ErrorNormPerOperatorWithBestFitLine = np.zeros((n_nXi,nSpatialOperators,2,nCases))
+    mPerOperator = np.zeros((n_nXi,nSpatialOperators))
+    SpatialOperators = ['ZonalGradientOperator','MeridionalGradientOperator','DivergenceOperator']
+    for i_nXi in range(0,n_nXi):
+        nXi = nXiMinimum + i_nXi
+        FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1)
+        nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve',ReadDivergenceErrorNorm)
+        for iSpatialOperator in range(0,nSpatialOperators):
+            SpatialOperator = SpatialOperators[iSpatialOperator]
+            L2ErrorNormPerOperator[i_nXi,iSpatialOperator,:] = L2ErrorNorm[iSpatialOperator,:]
+            iPointLowerLimit, iPointUpperLimit = (
+            SpecifyAsymptoticPointsForSlopeComputation(nXi+1,SpatialOperator,ReadFromSELFOutputData,nCases))
+            dx_SlopeComputation = dx[iPointLowerLimit:iPointUpperLimit+1]    
+            if set_xticks_manually:
+                xticks_set_manually = dx 
+            else:
+                xticks_set_manually = []
+            A = np.vstack([np.log10(dx_SlopeComputation),np.ones(len(dx_SlopeComputation))]).T
+            L2ErrorNormPerOperator_SlopeComputation = (
+            L2ErrorNormPerOperator[i_nXi,iSpatialOperator,iPointLowerLimit:iPointUpperLimit+1])
+            mPerOperator[i_nXi,iSpatialOperator], c = (
+            np.linalg.lstsq(A,np.log10(L2ErrorNormPerOperator_SlopeComputation),rcond=None)[0])
+            if UseBestFitLine:
+                y = mPerOperator[i_nXi,iSpatialOperator]*(np.log10(dx)) + c
+                y = 10.0**y
+                L2ErrorNormPerOperatorWithBestFitLine[i_nXi,iSpatialOperator,0,:] = (
+                L2ErrorNormPerOperator[i_nXi,iSpatialOperator,:])
+                L2ErrorNormPerOperatorWithBestFitLine[i_nXi,iSpatialOperator,1,:] = y
+    linewidths = 2.0*np.ones(n_nXi)
+    linestyles  = ['-','-','-']
+    colors = ['blue','green','red']
+    markers = np.ones(n_nXi,dtype=bool)
+    markertypes = ['o','H','s']
+    markersizes = np.array([12.5,12.5,10.0])
+    if PlotAgainstNumberOfCellsInZonalDirection:
+        xLabel = 'Number of cells in zonal direction'
+    else:
+        xLabel = 'Cell width'    
+    yLabels = ['L$^2$ error norm of\nzonal gradient operator','L$^2$ error norm of\nmeridional gradient operator',
+               'L$^2$ error norm of\ndivergence operator']    
+    labelfontsizes = [22.5,22.5]
+    labelpads = [10.0,10.0]
+    tickfontsizes = [15.0,15.0]
+    legendfontsize = 22.5
+    if PlotAgainstNumberOfCellsInZonalDirection:
+        legendposition = 'upper right'
+    else:
+        legendposition = 'upper left'
+        set_xticks_manually = False
+    Titles = ['Convergence of Zonal Gradient Operator','Convergence of Meridional Gradient Operator',
+              'Convergence of Divergence Operator']
+    titlefontsize = 27.5 
+    SaveAsPDF = True
+    FileNames = ['ConvergencePlot_ZonalGradientOperator_L2ErrorNorm',
+                 'ConvergencePlot_MeridionalGradientOperator_L2ErrorNorm',
+                 'ConvergencePlot_DivergenceOperator_L2ErrorNorm']
+    Show = False
+    shadow = False
+    framealpha = 0.75
+    if PlotAgainstNumberOfCellsInZonalDirection:
+        legendposition = 'lower left'
+    else:
+        legendposition = 'lower right'
+        set_xticks_manually = False
+    for iSpatialOperator in range(0,nSpatialOperators):
+        yLabel = yLabels[iSpatialOperator]
+        labels = [xLabel,yLabel]
+        Title = Titles[iSpatialOperator]
+        FileName = FileNames[iSpatialOperator]
+        if set_xticks_manually:
+            xticks_set_manually = dx 
+        else:
+            xticks_set_manually = []
+        legends, legendfontsize, legendpads = SetOfLegends(nXiMinimum,mPerOperator[:,iSpatialOperator])
+        if UseBestFitLine:
+            FileName += '_BestFitLine'
+            CR.PythonConvergencePlots1DSaveAsPDF(
+            OutputDirectory,'log-log',dx,L2ErrorNormPerOperatorWithBestFitLine[:,iSpatialOperator,:,:],linewidths,
+            linestyles,colors,markertypes,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,
+            legendfontsize,legendposition,Title,titlefontsize,SaveAsPDF,FileName,Show,fig_size=[9.25,9.25],
+            useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=True,drawMinorGrid=True,legendWithinBox=False,
+            legendpads=legendpads,shadow=shadow,framealpha=framealpha,titlepad=1.035,
+            set_xticks_manually=set_xticks_manually,xticks_set_manually=xticks_set_manually,FileFormat='pdf')
+        else:
+            CR.PythonPlots1DSaveAsPDF(
+            OutputDirectory,'log-log',dx,L2ErrorNormPerOperator[:,iSpatialOperator,:],linewidths,linestyles,colors,
+            markers,markertypes,markersizes,labels,labelfontsizes,labelpads,tickfontsizes,legends,legendfontsize,
+            legendposition,Title,titlefontsize,SaveAsPDF,FileName,Show,fig_size=[9.25,9.25],
+            useDefaultMethodToSpecifyTickFontSize=True,drawMajorGrid=True,drawMinorGrid=True,
+            setXAxisLimits=[False,False],xAxisLimits=[0.0,0.0],setYAxisLimits=[False,False],yAxisLimits=[0.0,0.0],
+            legendWithinBox=True,legendpads=legendpads,shadow=shadow,framealpha=framealpha,titlepad=1.035,
+            set_xticks_manually=set_xticks_manually,xticks_set_manually=xticks_set_manually,FileFormat='pdf')

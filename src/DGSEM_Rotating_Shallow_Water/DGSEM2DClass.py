@@ -44,11 +44,13 @@ class DGSEM2D:
                  LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                  Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,nEtaPlot,
                  CourantNumber=0.5,UseCourantNumberToDetermineTimeStep=False,ReadFromSELFOutputData=False,
-                 BoundaryConditionAndDomainExtentsSpecified=False,BoundaryCondition='Periodic',lX=0.0,lY=0.0):
+                 BoundaryConditionAndDomainExtentsSpecified=False,BoundaryCondition='Periodic',lX=0.0,lY=0.0,
+                 SpecifyRiemannSolver=False,RiemannSolver='LocalLaxFriedrichs'):
         myDGSEM2D.myNameList = (
         Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                 LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber,UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData))
+                                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber,
+                                UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData))
         if BoundaryConditionAndDomainExtentsSpecified:
             myDGSEM2D.myNameList.ModifyNameList(
             PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,nXi,nEta,CourantNumber,
@@ -78,6 +80,8 @@ class DGSEM2D:
                                                                                          ReadFromSELFOutputData)
         myDGSEM2D.iTime = 0
         myDGSEM2D.time = 0.0
+        myDGSEM2D.SpecifyRiemannSolver = SpecifyRiemannSolver
+        myDGSEM2D.RiemannSolver = RiemannSolver
             
     def DetermineCoriolisParameterAndBottomDepth(myDGSEM2D):
         alpha0 = myDGSEM2D.myNameList.myExactSolutionParameters.alpha0
@@ -432,6 +436,27 @@ def ExactRiemannSolver(g,c,nHatX,nHatY,qInternalState,qExternalState,
     return NumericalFlux
 
 
+def BassiRebayRiemannSolver(g,H,nHatX,nHatY,InternalState,ExternalState,Problem_is_Linear,
+                            PrognosticVariables='VelocitiesAndSurfaceElevation'):
+    InternalFluxNormalToEdge = ComputeFluxNormalToEdge(g,H,nHatX,nHatY,InternalState,Problem_is_Linear,
+                                                       PrognosticVariables)
+    ExternalFluxNormalToEdge = ComputeFluxNormalToEdge(g,H,nHatX,nHatY,ExternalState,Problem_is_Linear,
+                                                       PrognosticVariables)
+    NumericalFlux = np.zeros(3)
+    if PrognosticVariables == 'VelocitiesAndSurfaceElevation':
+        iEquation_Start = 0
+        iEquation_End = 3
+    elif PrognosticVariables == 'Velocities':
+        iEquation_Start = 0
+        iEquation_End = 2
+    elif PrognosticVariables == 'SurfaceElevation':
+        iEquation_Start = 2
+        iEquation_End = 3
+    for iEquation in range(iEquation_Start,iEquation_End):
+        NumericalFlux[iEquation] = 0.5*(InternalFluxNormalToEdge[iEquation] + ExternalFluxNormalToEdge[iEquation])
+    return NumericalFlux
+
+
 def LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,ExternalState,Problem_is_Linear,
                                     PrognosticVariables='VelocitiesAndSurfaceElevation'):
     InternalFluxNormalToEdge = ComputeFluxNormalToEdge(g,H,nHatX,nHatY,InternalState,Problem_is_Linear,
@@ -460,7 +485,8 @@ def LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,ExternalStat
 
 def ComputeNumericalFlux(myEdge,myExactSolutionParameters,myQuadMeshParameters,myDGSEM2DParameters,myQuadElements,
                          myDGSolution2D,time,dt,PrognosticVariables='VelocitiesAndSurfaceElevation',
-                         ComputeExternalSurfaceElevationOneTimeStepEarlier=False):
+                         ComputeExternalSurfaceElevationOneTimeStepEarlier=False,SpecifyRiemannSolver=False,
+                         RiemannSolver='LocalLaxFriedrichs'):
     ProblemType = myDGSEM2DParameters.ProblemType
     Problem_is_Linear = myDGSEM2DParameters.Problem_is_Linear
     BoundaryCondition = myDGSEM2DParameters.BoundaryCondition
@@ -499,12 +525,15 @@ def ComputeNumericalFlux(myEdge,myExactSolutionParameters,myQuadMeshParameters,m
             nHatY = nHat.Components[1]
             InternalState = myDGSolution2D[ElementID1-1].SolutionAtBoundaries[:,jXi,ElementSide1-1]
             ExternalState = myDGSolution2D[ElementID2-1].SolutionAtBoundaries[:,kXi,ElementSide2-1]
-            if Problem_is_Linear:
+            if Problem_is_Linear and not(SpecifyRiemannSolver):
                 NumericalFlux = ExactRiemannSolver(g,c,nHatX,nHatY,InternalState,ExternalState,PrognosticVariables)
             else:
-                NumericalFlux = (
-                LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,ExternalState,Problem_is_Linear,
-                                                PrognosticVariables))
+                if RiemannSolver == 'LocalLaxFriedrichs':
+                    NumericalFlux = LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,ExternalState,
+                                                                    Problem_is_Linear,PrognosticVariables)
+                else: # if RiemannSolver == 'BassiRebay':
+                    NumericalFlux = BassiRebayRiemannSolver(g,H,nHatX,nHatY,InternalState,ExternalState,
+                                                            Problem_is_Linear,PrognosticVariables)
             for iEquation in range(iEquation_Start,iEquation_End):
                 myDGSolution2D[ElementID1-1].FluxAtBoundaries[iEquation,jXi,ElementSide1-1] = (
                 (NumericalFlux[iEquation]
@@ -601,12 +630,17 @@ def ComputeNumericalFlux(myEdge,myExactSolutionParameters,myQuadMeshParameters,m
                 ExternalState[0,jXi] = -2.0*nHatX*nHatY*InternalState[1] - (nHatX**2.0 - nHatY**2.0)*InternalState[0]
                 ExternalState[1,jXi] = -2.0*nHatX*nHatY*InternalState[0] + (nHatX**2.0 - nHatY**2.0)*InternalState[1]
                 ExternalState[2,jXi] = InternalState[2]
-            if Problem_is_Linear:
+            if Problem_is_Linear and not(SpecifyRiemannSolver):
                 NumericalFlux = ExactRiemannSolver(g,c,nHatX,nHatY,InternalState,ExternalState[:,jXi],
                                                    PrognosticVariables)
             else:
-                NumericalFlux = LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,
-                                                                ExternalState[:,jXi],Problem_is_Linear,PrognosticVariables)
+                if RiemannSolver == 'LocalLaxFriedrichs':
+                    NumericalFlux = LocalLaxFriedrichsRiemannSolver(g,H,c,nHatX,nHatY,InternalState,
+                                                                    ExternalState[:,jXi],Problem_is_Linear,
+                                                                    PrognosticVariables)
+                else: # if RiemannSolver == 'BassiRebay':
+                    NumericalFlux = BassiRebayRiemannSolver(g,H,nHatX,nHatY,InternalState,ExternalState[:,jXi],
+                                                            Problem_is_Linear,PrognosticVariables)
             for iEquation in range(iEquation_Start,iEquation_End):
                 myDGSolution2D[ElementID1-1].FluxAtBoundaries[iEquation,jXi,ElementSide1-1] = (
                 (NumericalFlux[iEquation]
@@ -714,7 +748,8 @@ def GlobalTimeDerivative(myDGSEM2D,time,PrognosticVariables='VelocitiesAndSurfac
         ComputeNumericalFlux(myDGSEM2D.myQuadMesh.myEdges[iEdge],myDGSEM2D.myNameList.myExactSolutionParameters,
                              myDGSEM2D.myQuadMesh.myQuadMeshParameters,myDGSEM2D.myDGSEM2DParameters,
                              myDGSEM2D.myQuadMesh.myQuadElements,myDGSEM2D.myDGSolution2D,time,dt,PrognosticVariables,
-                             ComputeExternalSurfaceElevationOneTimeStepEarlier)
+                             ComputeExternalSurfaceElevationOneTimeStepEarlier,myDGSEM2D.SpecifyRiemannSolver,
+                             myDGSEM2D.RiemannSolver)
     for iElement in range(0,nElements):
         DGTimeDerivative(myDGSEM2D.myNameList.myExactSolutionParameters,myDGSEM2D.myDGSEM2DParameters,
                          myDGSEM2D.myDGNodalStorage2D,myDGSEM2D.myQuadMesh.myQuadElements[iElement].myMappedGeometry2D,
@@ -890,6 +925,7 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
     nElementsY = myDGSEM2D.myDGSEM2DParameters.nElementsY
     nXiPlot = myDGSEM2D.myDGSEM2DParameters.nXiPlot
     nEtaPlot = myDGSEM2D.myDGSEM2DParameters.nEtaPlot
+    ProblemType_EquatorialWave = myDGSEM2D.myNameList.ProblemType_EquatorialWave
     PlotZonalVelocity = myDGSEM2D.myNameList.LogicalArrayPlot[0]
     PlotMeridionalVelocity = myDGSEM2D.myNameList.LogicalArrayPlot[1]
     PlotSurfaceElevation = myDGSEM2D.myNameList.LogicalArrayPlot[2]
@@ -999,7 +1035,7 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                                     eta[iPoint] = data[i,8]
                                 uError[iPoint] = data[i,9]
                                 vError[iPoint] = data[i,10]
-                                etaError[iPoint] = data[i,11]            
+                                etaError[iPoint] = data[i,11]
     os.chdir(cwd)
     titleroot = myDGSEM2D.myNameList.ProblemType_Title
     if SpecifyDataTypeInPlotFileName:
@@ -1029,6 +1065,12 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
         iTimeFormat = '%8.8d'
     else:
         iTimeFormat = '%3.3d' 
+    if ProblemType_EquatorialWave:
+        specify_n_ticks = True
+        n_ticks = [6,6]
+    else:
+        specify_n_ticks = False
+        n_ticks = [0,0]
     if PlotZonalVelocity:
         if UseGivenColorBarLimits:
             FileName = myDGSEM2D.myNameList.ProblemType_FileName + '_ExactZonalVelocityLimits'
@@ -1041,7 +1083,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
             CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,uExact,nContours,labels,labelfontsizes,
                                                   labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                   ExactZonalVelocityLimits,nColorBarTicks,title,titlefontsize,SaveAsPDF,
-                                                  PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                  PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                  specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Zonal Velocity after\n' + DisplayTime
@@ -1050,7 +1093,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,u,nContours,labels,labelfontsizes,
                                                       labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       ExactZonalVelocityLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -1065,7 +1109,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,uError,nContours,labels,
                                                       labelfontsizes,labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       ZonalVelocityErrorLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotMeridionalVelocity:
         if UseGivenColorBarLimits:
             FileName = myDGSEM2D.myNameList.ProblemType_FileName + '_ExactMeridionalVelocityLimits'
@@ -1079,7 +1124,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
             CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,vExact,nContours,labels,labelfontsizes,
                                                   labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                   ExactMeridionalVelocityLimits,nColorBarTicks,title,titlefontsize,
-                                                  SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                  SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                  specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Meridional Velocity after\n' + DisplayTime
@@ -1088,7 +1134,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,v,nContours,labels,labelfontsizes,
                                                       labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       ExactMeridionalVelocityLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -1103,7 +1150,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,vError,nContours,labels,
                                                       labelfontsizes,labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       MeridionalVelocityErrorLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotSurfaceElevation:
         if UseGivenColorBarLimits:
             FileName = myDGSEM2D.myNameList.ProblemType_FileName + '_ExactSurfaceElevationLimits'
@@ -1117,7 +1165,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
             CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,etaExact,nContours,labels,
                                                   labelfontsizes,labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                   ExactSurfaceElevationLimits,nColorBarTicks,title,titlefontsize,
-                                                  SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                  SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                  specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Surface Elevation after\n' + DisplayTime
@@ -1126,7 +1175,8 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,eta,nContours,labels,labelfontsizes,
                                                       labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       ExactSurfaceElevationLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myDGSEM2D.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -1141,4 +1191,5 @@ def PythonPlotStateDGSEM2D(myDGSEM2D,filename,DataType,DisplayTime,UseGivenColor
                 CR.PythonFilledContourPlot2DSaveAsPDF(myDGSEM2D.OutputDirectory,x,y,etaError,nContours,labels,
                                                       labelfontsizes,labelpads,tickfontsizes,UseGivenColorBarLimits,
                                                       SurfaceElevationErrorLimits,nColorBarTicks,title,titlefontsize,
-                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap)
+                                                      SaveAsPDF,PlotFileName,Show,DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)

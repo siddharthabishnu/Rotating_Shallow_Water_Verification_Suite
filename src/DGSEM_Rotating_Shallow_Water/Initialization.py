@@ -13,13 +13,50 @@ with io.capture_output() as captured:
     import ExactSolutionsAndSourceTerms as ESST
     
     
+def isGeophysicalWave(ProblemType):
+    if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+        or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'
+        or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
+        or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
+        ProblemType_GeophysicalWave = True
+    else:
+        ProblemType_GeophysicalWave = False
+    return ProblemType_GeophysicalWave
+    
+    
+def isEquatorialWave(ProblemType):
+    if (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
+        or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
+        ProblemType_EquatorialWave = True
+    else:
+        ProblemType_EquatorialWave = False
+    return ProblemType_EquatorialWave
+
+
+def SpecifyBoundaryCondition(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
+    if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Inertia_Gravity_Wave' 
+        or ProblemType == 'NonLinear_Manufactured_Solution'):
+        BoundaryCondition = 'Periodic'
+    elif ProblemType == 'Coastal_Kelvin_Wave':
+        BoundaryCondition = 'NonPeriodic_x'
+    elif (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
+          or ProblemType_EquatorialWave):
+        BoundaryCondition = 'NonPeriodic_y'
+    elif ProblemType_NoExactSolution:
+        BoundaryCondition = 'Radiation'
+        # Choose the boundary condition to be 'Radiation' or 'Reflection' i.e. no normal flow at the solid boundary.
+    else:
+        BoundaryCondition = 'NonPeriodic_xy'
+    return BoundaryCondition
+    
+    
 def SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Inertia_Gravity_Wave':           
+        etaHat1 = 0.1
+    elif ProblemType == 'Plane_Gaussian_Wave':
         etaHat1 = 0.0
     elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType_EquatorialWave:
         etaHat1 = 0.0001
-    elif ProblemType == 'Inertia_Gravity_Wave':           
-        etaHat1 = 0.1
     elif (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
           or ProblemType_NoExactSolution):
         etaHat1 = 0.01
@@ -27,7 +64,7 @@ def SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_Equato
         etaHat1 = 0.2
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         etaHat1 = 0.01
-    if ProblemType == 'NonLinear_Manufactured_Solution':
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'NonLinear_Manufactured_Solution':
         etaHat2 = 0.0 
     else:
         etaHat2 = 2.0*etaHat1
@@ -35,14 +72,15 @@ def SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_Equato
 
 
 def SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Planetary_Rossby_Wave' 
+        or ProblemType == 'Topographic_Rossby_Wave'):    
+        lX = 50.0*1000.0
+    elif ProblemType == 'Plane_Gaussian_Wave':
         lX = 2.0
     elif ProblemType == 'Coastal_Kelvin_Wave':
         lX = 5000.0*1000.0
     elif ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'NonLinear_Manufactured_Solution':
         lX = 10000.0*1000.0
-    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':    
-        lX = 50.0*1000.0
     elif ProblemType_NoExactSolution:
         lX = 1000.0*1000.0
     elif ProblemType_EquatorialWave:
@@ -74,7 +112,7 @@ def SpecifyWaveNumbers(ProblemType,lX,lY):
 
 def SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,beta0,c0,f0,g,H0,kX1,kY1,kX2,kY2,R,
                               LengthScale,TimeScale):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
         omega1 = c0
         omega2 = 0.0
     elif ProblemType == 'Coastal_Kelvin_Wave':
@@ -119,7 +157,7 @@ def SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,bet
 
 def SpecifyPhaseSpeeds(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave,c0,kX1,kY1,kX2,kY2,omega1,
                        omega2):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
         cX1 = omega1/kX1
         cY1 = omega1/kY1
         cX2 = 0.0
@@ -199,7 +237,7 @@ def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,Probl
                                    ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                                    DomainExtentsSpecified=False,lX=0.0,lY=0.0):
     beta0 = 2.0*10.0**(-11.0)
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
         g = 1.0
         H0 = 1.0
     else:
@@ -207,7 +245,8 @@ def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,Probl
         H0 = 1000.0    
     c0 = np.sqrt(g*H0)
     etaHat1, etaHat2 = SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
-    if ProblemType == 'Plane_Gaussian_Wave' or ProblemType_EquatorialWave:
+    if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave' 
+        or ProblemType_EquatorialWave):
         f0 = 0.0
     else:
         f0 = 10.0**(-4.0)
@@ -234,7 +273,8 @@ def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,Probl
     R0 = 0.2/(2.0*np.sqrt(np.log(2.0)))
     R0x = 10.0**5.0
     R0y = 10.0**5.0
-    if not(ProblemType == 'Plane_Gaussian_Wave' or ProblemType_EquatorialWave):
+    if not(ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave' 
+           or ProblemType_EquatorialWave):
         R = c0/f0
     else:
         R = 0.0
@@ -491,7 +531,9 @@ def SpecifyTimeSteppingParameters(TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedba
 
 
 def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        dt = 1.0
+    elif ProblemType == 'Plane_Gaussian_Wave':
         dt = 7.0*10.0**(-4.0)
     elif ProblemType == 'Coastal_Kelvin_Wave':
         dt = 50.0
@@ -502,26 +544,27 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
     elif ProblemType_NoExactSolution:
         dt = 0.5
     elif ProblemType == 'Equatorial_Kelvin_Wave':
-        dt = 330.0
+        dt = 175.0
     elif ProblemType == 'Equatorial_Yanai_Wave':
-        dt = 180.0
+        dt = 93.0
     elif ProblemType == 'Equatorial_Rossby_Wave':
         dt = 240.0
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
-        dt = 108.0
+        dt = 57.0
     elif ProblemType == 'Barotropic_Tide':
         dt = 2.4
     elif ProblemType == 'NonLinear_Manufactured_Solution':
-        dt = 66.0
+        dt = 35.0
     return dt
 
 
 def SpecifyDumpFrequency(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOutputData):
-    if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        nDumpFrequency = 1
+    elif (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Equatorial_Kelvin_Wave' 
+          or ProblemType == 'Equatorial_Yanai_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'
+          or ProblemType == 'Barotropic_Tide'):
         nDumpFrequency = 10
-    elif (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
-          or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
-        nDumpFrequency = 5
     elif ProblemType == 'Equatorial_Rossby_Wave':
         nDumpFrequency = 25
     elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
@@ -539,10 +582,13 @@ def SpecifyDumpFrequency(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOut
 
 
 def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOutputData):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        nTime_Minimum = 1
+        nTime = 1
+    elif ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'NonLinear_Manufactured_Solution':
         nTime_Minimum = 2021 + 1
         nTime = 2040 + 1
-    elif ProblemType == 'Coastal_Kelvin_Wave':
+    elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Equatorial_Kelvin_Wave':
         nTime_Minimum = 1000 + 1
         nTime = 1000 + 1
     elif ProblemType == 'Inertia_Gravity_Wave':
@@ -557,25 +603,19 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSEL
             nTime = 86400*60*2 + 1
         else:
             nTime_Minimum = 86400*2 + 1
-            nTime = 86400*2 + 1 
-    elif ProblemType == 'Equatorial_Kelvin_Wave':
-        nTime_Minimum = 531 + 1
-        nTime = 535 + 1
+            nTime = 86400*2 + 1
     elif ProblemType == 'Equatorial_Yanai_Wave':
-        nTime_Minimum = 528 + 1
-        nTime = 530 + 1
+        nTime_Minimum = 1022 + 1
+        nTime = 1030 + 1
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        nTime_Minimum = 2625 + 1
-        nTime = nTime_Minimum
+        nTime_Minimum = 2622 + 1
+        nTime = 2625 + 1
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
-        nTime_Minimum = 533 + 1
-        nTime = 535 + 1
+        nTime_Minimum = 1009 + 1
+        nTime = 1010 + 1
     elif ProblemType == 'Barotropic_Tide':
         nTime_Minimum = 1042 + 1
         nTime = 1050 + 1
-    elif ProblemType == 'NonLinear_Manufactured_Solution':
-        nTime_Minimum = 1072 + 1
-        nTime = 1080 + 1
     # Note that (a) nTime_Minimum is the minimum integer such that (nTime_Minimum - 1) times the time step is greater 
     # than or equal to the simulation time, and (b) nTime is the minimum integer such that nTime >= nTime_Minimum and 
     # nTime - 1 is a multiple of nDumpFrequency.
@@ -597,7 +637,10 @@ def SpecifyLogicalArrayPlot(ProblemType):
 
 
 def SpecifyTitleAndFileNamePrefixes(ProblemType):
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        ProblemType_Title = 'Convergence of Spatial Operators'
+        ProblemType_FileName = 'ConvergenceOfSpatialOperators'
+    elif ProblemType == 'Plane_Gaussian_Wave':
         ProblemType_Title = 'Plane Gaussian Wave'
         ProblemType_FileName = 'PlaneGaussianWave'
     elif ProblemType == 'Coastal_Kelvin_Wave':
@@ -646,23 +689,13 @@ class NameList:
                  Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber,
                  UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData):
         myNameList.ProblemType = ProblemType
-        if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-            or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'
-            or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
-            or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
-            myNameList.ProblemType_GeophysicalWave = True
-        else:
-            myNameList.ProblemType_GeophysicalWave = False
+        myNameList.ProblemType_GeophysicalWave = isGeophysicalWave(ProblemType)
         if (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
             myNameList.ProblemType_NoExactSolution = True
         else:
             myNameList.ProblemType_NoExactSolution = False
-        if (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
-            or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
-            myNameList.ProblemType_EquatorialWave = True
-        else:
-            myNameList.ProblemType_EquatorialWave = False
+        myNameList.ProblemType_EquatorialWave = isEquatorialWave(ProblemType)
         if (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
             or ProblemType == 'NonLinear_Manufactured_Solution'):
             myNameList.NonTrivialSourceTerms = True
@@ -672,18 +705,8 @@ class NameList:
             myNameList.Problem_is_Linear = False
         else:
             myNameList.Problem_is_Linear = True
-        if ProblemType == 'Coastal_Kelvin_Wave':
-            myNameList.BoundaryCondition = 'NonPeriodic_x'
-        elif ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'NonLinear_Manufactured_Solution':
-            myNameList.BoundaryCondition = 'Periodic'
-        elif (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-              or myNameList.ProblemType_EquatorialWave):
-            myNameList.BoundaryCondition = 'NonPeriodic_y'
-        elif myNameList.ProblemType_NoExactSolution:
-            myNameList.BoundaryCondition = 'Radiation'
-            # Choose the boundary condition to be 'Radiation' or 'Reflection' i.e. no normal flow at the solid boundary.
-        else:
-            myNameList.BoundaryCondition = 'NonPeriodic_xy'
+        myNameList.BoundaryCondition = SpecifyBoundaryCondition(ProblemType,myNameList.ProblemType_NoExactSolution,
+                                                                myNameList.ProblemType_EquatorialWave)
         myNameList.lX, myNameList.lY = SpecifyDomainExtents(ProblemType,myNameList.ProblemType_NoExactSolution,
                                                             myNameList.ProblemType_EquatorialWave)
         myNameList.nElementsX = nElementsX

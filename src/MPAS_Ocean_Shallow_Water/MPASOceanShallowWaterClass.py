@@ -655,7 +655,8 @@ def ReadStateMPASOceanShallowWater(myMPASOceanShallowWater,filename_normalVeloci
 def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useGivenColorBarLimits,ColorBarLimits,
                                                 nColorBarTicks,colormap,colorbarfontsize,labels,labelfontsizes,
                                                 labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,
-                                                fig_size=[10.0,10.0],cbarlabelformat='%.2g',FigureFormat='pdf'):
+                                                fig_size=[10.0,10.0],cbarlabelformat='%.2g',FigureFormat='pdf',
+                                                specify_n_ticks=False,n_ticks=[0,0]):
     cwd = os.getcwd()
     path = cwd + '/' + myMPASOceanShallowWater.OutputDirectory + '/'
     if not os.path.exists(path):
@@ -742,6 +743,11 @@ def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useG
         or ProblemType == 'NonLinear_Manufactured_Solution'):
         ax.xaxis.set_major_locator(plt.MaxNLocator(7))
         ax.yaxis.set_major_locator(plt.MaxNLocator(7))
+    if specify_n_ticks:
+        n_xticks = n_ticks[0]
+        n_yticks = n_ticks[1]
+        ax.xaxis.set_major_locator(plt.MaxNLocator(n_xticks))
+        ax.yaxis.set_major_locator(plt.MaxNLocator(n_yticks))
     if SaveAsPDF:
         plt.savefig(FileName+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')
     if Show:
@@ -754,6 +760,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                          ComputeOnlyExactSolution=False,PlotNumericalSolution=False,
                                          PlotOnMPASOceanMesh=True):
     ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
+    ProblemType_EquatorialWave = myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave
     ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
     PlotZonalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[0]
     PlotMeridionalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[1]
@@ -822,6 +829,12 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
     colormap = plt.cm.seismic
     colorbarfontsize = 15.0
     iTimeFormat = '%3.3d' 
+    if ProblemType_EquatorialWave:
+        specify_n_ticks = True
+        n_ticks = [6,6]
+    else:
+        specify_n_ticks = False
+        n_ticks = [0,0]
     if PlotZonalVelocity:
         if UseGivenColorBarLimits:
             FileName = myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_ExactZonalVelocityLimits'
@@ -834,15 +847,16 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
             PlotFileName = PlotFileNameRoot + '_ExactZonalVelocity_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
                 FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,uExact,UseGivenColorBarLimits,
-                                                            ExactZonalVelocityLimits,nColorBarTicks,colormap,colorbarfontsize,labels,labelfontsizes,labelpads,
+                                                            ExactZonalVelocityLimits,nColorBarTicks,colormap,
+                                                            colorbarfontsize,labels,labelfontsizes,labelpads,
                                                             tickfontsizes,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                            Show)
+                                                            Show,specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             else:
                 CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,uExact,nContours,
                                                       labels,labelfontsizes,labelpads,tickfontsizes,
                                                       UseGivenColorBarLimits,ExactZonalVelocityLimits,nColorBarTicks,
                                                       title,titlefontsize,SaveAsPDF,PlotFileName,Show,DataType=DataType,
-                                                      colormap=colormap)
+                                                      colormap=colormap,specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Zonal Velocity after\n' + DisplayTime
@@ -853,13 +867,15 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 ExactZonalVelocityLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,u,nContours,
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,ExactZonalVelocityLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -876,13 +892,15 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 ZonalVelocityErrorLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,uError,nContours,
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,ZonalVelocityErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotMeridionalVelocity:
         if UseGivenColorBarLimits:
             FileName = myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_ExactMeridionalVelocityLimits'
@@ -895,15 +913,17 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
             PlotFileName = PlotFileNameRoot + '_ExactMeridionalVelocity_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
                 FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,vExact,UseGivenColorBarLimits,
-                                                            ExactMeridionalVelocityLimits,nColorBarTicks,colormap,colorbarfontsize,labels,labelfontsizes,labelpads,
+                                                            ExactMeridionalVelocityLimits,nColorBarTicks,colormap,
+                                                            colorbarfontsize,labels,labelfontsizes,labelpads,
                                                             tickfontsizes,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                            Show)
+                                                            Show,specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             else:
                 CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,vExact,nContours,
                                                       labels,labelfontsizes,labelpads,tickfontsizes,
                                                       UseGivenColorBarLimits,ExactMeridionalVelocityLimits,
                                                       nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,Show,
-                                                      DataType=DataType,colormap=colormap)
+                                                      DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Meridional Velocity after\n' + DisplayTime
@@ -914,13 +934,15 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 ExactMeridionalVelocityLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,v,nContours,
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,ExactMeridionalVelocityLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -937,13 +959,15 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 MeridionalVelocityErrorLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,vError,nContours,
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,MeridionalVelocityErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotSurfaceElevation:
         if UseGivenColorBarLimits:
             FileName = myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_ExactSurfaceElevationLimits'
@@ -956,15 +980,17 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
             PlotFileName = PlotFileNameRoot + '_ExactSurfaceElevation_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
                 FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,sshExact,UseGivenColorBarLimits,
-                                                            ExactSurfaceElevationLimits,nColorBarTicks,colormap,colorbarfontsize,labels,labelfontsizes,labelpads,
+                                                            ExactSurfaceElevationLimits,nColorBarTicks,colormap,
+                                                            colorbarfontsize,labels,labelfontsizes,labelpads,
                                                             tickfontsizes,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                            Show)
+                                                            Show,specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             else:
                 CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,sshExact,nContours,
                                                       labels,labelfontsizes,labelpads,tickfontsizes,
                                                       UseGivenColorBarLimits,ExactSurfaceElevationLimits,
                                                       nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,Show,
-                                                      DataType=DataType,colormap=colormap)
+                                                      DataType=DataType,colormap=colormap,
+                                                      specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Surface Elevation after\n' + DisplayTime
@@ -975,13 +1001,15 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 ExactSurfaceElevationLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,ssh,nContours,
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,ExactSurfaceElevationLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
@@ -998,10 +1026,12 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                 SurfaceElevationErrorLimits,nColorBarTicks,colormap,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
-                                                                PlotFileName,Show)
+                                                                PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                                n_ticks=n_ticks)
                 else:
                     CR.PythonFilledContourPlot2DSaveAsPDF(myMPASOceanShallowWater.OutputDirectory,x,y,sshError,
                                                           nContours,labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,SurfaceElevationErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap)
+                                                          Show,DataType=DataType,colormap=colormap,
+                                                          specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)

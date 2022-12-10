@@ -46,7 +46,7 @@ class LegendreGaussLobattoQuadrature1D:
             myLegendreGaussLobattoQuadrature1D.w[0] = 2.0/float(nX*(nX+1))
             myLegendreGaussLobattoQuadrature1D.x[nX] = 1.0
             myLegendreGaussLobattoQuadrature1D.w[nX] = myLegendreGaussLobattoQuadrature1D.w[0]
-            for jX in range(1,int(np.floor(float(nX+1)/2.0))):
+            for jX in range(1,int(float(nX+1)/2.0)):
                 myLegendreGaussLobattoQuadrature1D.x[jX] = (
                 -np.cos((float(jX) + 0.25)*np.pi/float(nX) - 3.0/(8.0*float(nX)*np.pi*(float(jX) + 0.25))))
                 for kX in range(0,nIterations+1):

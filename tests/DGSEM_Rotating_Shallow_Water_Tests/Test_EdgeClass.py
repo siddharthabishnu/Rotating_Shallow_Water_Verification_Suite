@@ -1,7 +1,8 @@
 """
 Name: Test_EdgeClass.py
 Author: Sid Bishnu
-Details: As the name implies, this script tests the edge class defined in ../../src/DGSEM_Rotating_Shallow_Water/EdgeClass.py.
+Details: As the name implies, this script tests the edge class defined in 
+../../src/DGSEM_Rotating_Shallow_Water/EdgeClass.py.
 """
 
 

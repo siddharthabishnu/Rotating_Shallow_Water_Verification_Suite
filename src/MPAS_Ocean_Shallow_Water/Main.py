@@ -150,7 +150,7 @@ def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
     elif ProblemType == 'Equatorial_Yanai_Wave':
         dt = 474.0
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        dt = 3144.0
+        dt = 1200.0
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
         dt = 285.0
     elif ProblemType == 'Barotropic_Tide':
@@ -280,16 +280,22 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
     else:
         ProblemType_PlanetaryTopographicRossbyWave = False
     if myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
-        HermiteFunctionMaximumAmplitude = (
-        ESST.DetermineHermiteFunctionMaximumAmplitudeWithMeridionalLocation(ProblemType,ReturnMeridionalLocation=False))
+        yMaximumAmplitude, HermiteFunctionMaximumAmplitude = (
+        ESST.DetermineHermiteFunctionMaximumAmplitudeWithMeridionalLocation(ProblemType))
         etaHat1 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.etaHat1
         etaHat2 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.etaHat2
         VelocityScale = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.VelocityScale
         ExactMeridionalVelocityMaximumMagnitude = VelocityScale*HermiteFunctionMaximumAmplitude*(etaHat1 + etaHat2)
+    else:
+        yMaximumAmplitude = 0.0
     PlotExactZonalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[0]
     PlotExactMeridionalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[1]
     PlotExactSurfaceElevation = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[2]
+    ProblemType_Title = myMPASOceanShallowWater.myNameList.ProblemType_Title
     ProblemType_FileName = myMPASOceanShallowWater.myNameList.ProblemType_FileName
+    (LinewidthsAlongSection, LinestylesAlongSection, ColorsAlongSection, rPlotAlongSection, xPlotAlongSection, 
+     yPlotAlongSection, LabelsAlongSection, LegendsAlongSection, TitleAlongSection, FileNameAlongSection) = (
+    ESST.SpecifyPlottingAttributesAlongSection(myMPASOceanShallowWater.myNameList,yMaximumAmplitude))
     ComputeOnlyExactSolution = True
     for iCounter in range(0,nCounters):
         for iTime in range(0,nTime):
@@ -299,6 +305,9 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                 if iCounter == 0:
                     MPASOceanShallowWaterClass.DetermineExactSolutions(myMPASOceanShallowWater,
                                                                        InterpolateExactVelocitiesFromEdgesToCellCenters)
+                    ExactStateVariablesAlongSection = ESST.DetermineExactStateVariablesAlongSection(
+                    ProblemType,myMPASOceanShallowWater.myNameList.myExactSolutionParameters,xPlotAlongSection,
+                    yPlotAlongSection,myMPASOceanShallowWater.time)
                     ExactZonalVelocities = myMPASOceanShallowWater.mySolution.uExact[:]
                     ExactMeridionalVelocities = myMPASOceanShallowWater.mySolution.vExact[:]
                     ExactSurfaceElevations = myMPASOceanShallowWater.mySolution.sshExact[:]
@@ -345,6 +354,10 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                         FileName = ProblemType_FileName + '_ExactSolution_%3.3d' %iTime
                         MPASOceanShallowWaterClass.WriteStateMPASOceanShallowWater(myMPASOceanShallowWater,FileName,
                                                                                    ComputeOnlyExactSolution)
+                        FileName = (ProblemType_FileName + '_ExactSolutionAlongSection_' + '%3.3d' %iTime)  
+                        ESST.WriteExactStateVariablesAlongSectionToFile(
+                        ProblemType,myMPASOceanShallowWater.OutputDirectory,rPlotAlongSection,
+                        ExactStateVariablesAlongSection,FileName)
                         if iTime == nTime - 1:
                             if PlotExactZonalVelocity:
                                 FileName = ProblemType_FileName + '_ExactZonalVelocityLimits'
@@ -372,7 +385,28 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                         UseGivenColorBarLimits = True
                         MPASOceanShallowWaterClass.PythonPlotStateMPASOceanShallowWater(
                         myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,ComputeOnlyExactSolution)
-
+                        FileName = ProblemType_FileName + '_ExactSolutionAlongSection_' + '%3.3d' %iTime
+                        ExactStateVariablesAlongSection = ESST.ReadExactStateVariablesAlongSectionFromFile(
+                        ProblemType,myMPASOceanShallowWater.OutputDirectory,FileName+'.curve')
+                        ToleranceAsPercentage = 12.0
+                        if ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
+                            StateVariableLimitsAlongSection = (
+                            ESST.SpecifyStateVariableLimitsAlongSection(ExactMeridionalVelocityLimits,
+                                                                        ToleranceAsPercentage))
+                        else:
+                            StateVariableLimitsAlongSection = (
+                            ESST.SpecifyStateVariableLimitsAlongSection(ExactSurfaceElevationLimits,
+                                                                        ToleranceAsPercentage))
+                        Title = ProblemType_Title + ':\n' + TitleAlongSection + ' after\n' + DisplayTime
+                        FileName = ProblemType_FileName + '_' + FileNameAlongSection + '_%3.3d' %iTime
+                        ESST.PlotExactStateVariablesAlongSectionSaveAsPDF(
+                        ProblemType,myMPASOceanShallowWater.OutputDirectory,rPlotAlongSection,
+                        ExactStateVariablesAlongSection,StateVariableLimitsAlongSection,LinewidthsAlongSection,
+                        LinestylesAlongSection,ColorsAlongSection,LabelsAlongSection,[22.5,22.5],[10.0,10.0],
+                        [15.0,15.0],LegendsAlongSection,15.0,'lower left',Title,25.0,True,FileName,False,
+                        fig_size=[9.25,9.25],legendWithinBox=True,shadow=False,framealpha=0.75,titlepad=1.035,
+                        ProblemType_EquatorialWave=ProblemType_EquatorialWave,FigureFormat='pdf')
+                        
                         
 def DetermineNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                 LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,

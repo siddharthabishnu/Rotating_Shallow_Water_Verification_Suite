@@ -140,17 +140,17 @@ def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
     elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         dt = 39000.0
     elif ProblemType == 'Equatorial_Kelvin_Wave':
-        dt = 330.0
+        dt = 175.0
     elif ProblemType == 'Equatorial_Yanai_Wave':
-        dt = 180.0
+        dt = 93.0
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        dt = 1200.0
+        dt = 240.0
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
-        dt = 108.0
+        dt = 57.0
     elif ProblemType == 'Barotropic_Tide':
         dt = 2.4
     elif ProblemType == 'NonLinear_Manufactured_Solution':
-        dt = 66.0
+        dt = 35.0
     CourantNumber = DetermineCourantNumberForGivenTimeStep(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
@@ -407,8 +407,11 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
         iTime_Start = Restart_iTime
     else:
         iTime_Start = 0
+    DisplayProgress = True
     for iCounter in range(0,nCounters):
         for iTime in range(iTime_Start,nTime):
+            if (iCounter == 0 or (iCounter == 1 and np.mod(iTime,nDumpFrequency) == 0.0)) and DisplayProgress:
+                print('Displaying Progress: iCounter = %1d and iTime = %3d.' %(iCounter,iTime))
             myDGSEM2D.iTime = iTime
             myDGSEM2D.time = float(iTime)*dt
             if iCounter == 0: 

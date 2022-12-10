@@ -332,28 +332,28 @@ def TestInterpolateSolutionFromVerticesAndEdgesToCellCenters(PlotFigures=True):
                                                   ExactSSHAtCellCenters,nContours,labels,labelfontsizes,labelpads,
                                                   tickfontsizes,useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,
                                                   Title,titlefontsize,SaveAsPDF,FileName,Show,DataType=DataType)       
-            Title = 'Interpolated Surface Elevation from Vertices to Cell Centers'
+            Title = 'Interpolated Surface Elevation\nfrom Vertices to Cell Centers'
             FileName = 'InterpolatedSurfaceElevationFromVerticesToCellCenters_' + BoundaryCondition 
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,myMesh.xCell/1000.0,myMesh.yCell/1000.0,
                                                   InterpolatedSSHFromVerticesToCellCenters,nContours,labels,
                                                   labelfontsizes,labelpads,tickfontsizes,useGivenColorBarLimits,
                                                   ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,
                                                   Show,DataType=DataType)   
-            Title = 'Surface Elevation Interpolation Error from Vertices to Cell Centers'
+            Title = 'Surface Elevation Interpolation Error\nfrom Vertices to Cell Centers'
             FileName = 'SurfaceElevationInterpolationErrorFromVerticesToCellCenters_' + BoundaryCondition 
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,myMesh.xCell/1000.0,myMesh.yCell/1000.0,
                                                   SSHInterpolationErrorFromVerticesToCellCenters,nContours,labels,
                                                   labelfontsizes,labelpads,tickfontsizes,useGivenColorBarLimits,
                                                   ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,
                                                   Show,DataType=DataType,cbarlabelformat='%.2e')              
-            Title = 'Interpolated Surface Elevation from Edges to Cell Centers'
+            Title = 'Interpolated Surface Elevation\nfrom Edges to Cell Centers'
             FileName = 'InterpolatedSurfaceElevationFromEdgesToCellCenters_' + BoundaryCondition 
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,myMesh.xCell/1000.0,myMesh.yCell/1000.0,
                                                   InterpolatedSSHFromEdgesToCellCenters,nContours,labels,
                                                   labelfontsizes,labelpads,tickfontsizes,useGivenColorBarLimits,
                                                   ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,
                                                   Show,DataType=DataType,cbarlabelformat='%.2e')           
-            Title = 'Surface Elevation Interpolation Error from Edges to Cell Centers'
+            Title = 'Surface Elevation Interpolation Error\nfrom Edges to Cell Centers'
             FileName = 'SurfaceElevationInterpolationErrorFromEdgesToCellCenters_' + BoundaryCondition 
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,myMesh.xCell/1000.0,myMesh.yCell/1000.0,
                                                   SSHInterpolationErrorFromEdgesToCellCenters,nContours,labels,
@@ -490,14 +490,14 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
                                                   sshOnCoarseMesh,nContours,labels,labelfontsizes,labelpads,
                                                   tickfontsizes,useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,
                                                   Title,titlefontsize,SaveAsPDF,FileName,Show,DataType=DataType)
-            Title = 'Exact Surface Elevation on Coarse Rectilinear Mesh'
+            Title = 'Exact Surface Elevation\non Coarse Rectilinear Mesh'
             FileName = 'ExactSurfaceElevationOnCoarseRectilinearMesh_' + BoundaryCondition
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,xCellOnCoarseRectilinearMesh/1000.0,
                                                   yCellOnCoarseRectilinearMesh/1000.0,exactSSHOnCoarseRectilinearMesh,
                                                   nContours,labels,labelfontsizes,labelpads,tickfontsizes,
                                                   useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,Title,
                                                   titlefontsize,SaveAsPDF,FileName,Show,DataType=DataType)
-            Title = 'Interpolated Surface Elevation on Coarse Rectilinear Mesh'
+            Title = 'Interpolated Surface Elevation\non Coarse Rectilinear Mesh'
             FileName = 'InterpolatedSurfaceElevationOnCoarseRectilinearMesh_' + BoundaryCondition
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,xCellOnCoarseRectilinearMesh/1000.0,
                                                   yCellOnCoarseRectilinearMesh/1000.0,
@@ -511,7 +511,7 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
                                                   sshOnFineMesh,nContours,labels,labelfontsizes,labelpads,
                                                   tickfontsizes,useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,
                                                   Title,titlefontsize,SaveAsPDF,FileName,Show,DataType=DataType)
-            Title = 'Interpolated Surface Elevation on Fine Rectilinear Mesh'
+            Title = 'Interpolated Surface Elevation\non Fine Rectilinear Mesh'
             FileName = 'InterpolatedSurfaceElevationOnFineRectilinearMesh_' + BoundaryCondition
             CR.PythonFilledContourPlot2DSaveAsPDF(OutputDirectory,xCellOnFineRectilinearMesh/1000.0,
                                                   yCellOnFineRectilinearMesh/1000.0,

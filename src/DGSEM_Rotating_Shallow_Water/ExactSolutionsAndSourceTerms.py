@@ -12,6 +12,23 @@ import sympy as sp
 from sympy.utilities.lambdify import lambdify
 
 
+def SurfacElevationTestFunction(etaHat,kX,kY,x,y):
+    eta = etaHat*np.sin(kX*x)*np.sin(kY*y)
+    return eta
+
+
+def ZonalVelocityTestFunction(etaHat,kX,kY,x,y):
+    eta_x = etaHat*kX*np.cos(kX*x)*np.sin(kY*y)
+    u = eta_x
+    return u
+
+
+def MeridionalVelocityTestFunction(etaHat,kX,kY,x,y):
+    eta_y = etaHat*kY*np.sin(kX*x)*np.cos(kY*y)
+    v = eta_y
+    return v
+
+
 def DeterminePlaneGaussianWaveExactSurfaceElevation(c0,g,kX,kY,R0,x0,y0,x,y,time):
     eta = np.exp(-(kX*(x - x0) + kY*(y - y0) - c0*time)**2.0/R0**2.0)/g
     return eta
@@ -456,7 +473,9 @@ def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,tim
     LengthScale = myExactSolutionParameters.LengthScale
     TimeScale = myExactSolutionParameters.TimeScale
     SurfaceElevationScale = myExactSolutionParameters.SurfaceElevationScale
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        ExactSurfaceElevation = SurfacElevationTestFunction(etaHat1,kX1,kY1,x,y)
+    elif ProblemType == 'Plane_Gaussian_Wave':
         ExactSurfaceElevation = DeterminePlaneGaussianWaveExactSurfaceElevation(c0,g,kX1,kY1,R0,x0,y0,x,y,time)
     elif ProblemType == 'Coastal_Kelvin_Wave':
         ExactSurfaceElevation = (DetermineCoastalKelvinWaveExactSurfaceElevation(c0,etaHat1,H0,kY1,R,x,y,time)
@@ -531,7 +550,9 @@ def DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time):
     LengthScale = myExactSolutionParameters.LengthScale
     TimeScale = myExactSolutionParameters.TimeScale
     VelocityScale = myExactSolutionParameters.VelocityScale
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        ExactZonalVelocity = ZonalVelocityTestFunction(etaHat1,kX1,kY1,x,y)
+    elif ProblemType == 'Plane_Gaussian_Wave':
         ExactZonalVelocity = DeterminePlaneGaussianWaveExactZonalVelocity(c0,kX1,kY1,R0,x0,y0,x,y,time)
     elif ProblemType == 'Coastal_Kelvin_Wave':
         ExactZonalVelocity = 0.0
@@ -603,7 +624,9 @@ def DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,t
     LengthScale = myExactSolutionParameters.LengthScale
     TimeScale = myExactSolutionParameters.TimeScale
     VelocityScale = myExactSolutionParameters.VelocityScale  
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
+        ExactMeridionalVelocity = MeridionalVelocityTestFunction(etaHat1,kX1,kY1,x,y)
+    elif ProblemType == 'Plane_Gaussian_Wave':
         ExactMeridionalVelocity = DeterminePlaneGaussianWaveExactMeridionalVelocity(c0,kX1,kY1,R0,x0,y0,x,y,time)
     elif ProblemType == 'Coastal_Kelvin_Wave':
         ExactMeridionalVelocity = (DetermineCoastalKelvinWaveExactMeridionalVelocity(c0,etaHat1,kY1,R,x,y,time)

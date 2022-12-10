@@ -48,13 +48,13 @@ class LegendreGaussQuadrature1D:
             myLegendreGaussQuadrature1D.x[1] = -myLegendreGaussQuadrature1D.x[0]
             myLegendreGaussQuadrature1D.w[1] = myLegendreGaussQuadrature1D.w[0]
         else:
-            for jX in range(0,int(np.floor(float(nX+1)/2.0))):
+            for jX in range(0,int(float(nX+1)/2.0)):
                 myLegendreGaussQuadrature1D.x[jX] = -np.cos((2.0*float(jX) + 1.0)*np.pi/(2.0*float(nX) + 2.0))
                 for kX in range(0,nIterations+1):
                     L_nX_plus_1, L_nX_plus_1_prime = (
                     LegendrePolynomialAndDerivative(nX+1,myLegendreGaussQuadrature1D.x[jX]))
                     Delta = -L_nX_plus_1/L_nX_plus_1_prime
-                    myLegendreGaussQuadrature1D.x[jX] = myLegendreGaussQuadrature1D.x[jX] + Delta
+                    myLegendreGaussQuadrature1D.x[jX] += Delta
                     if abs(Delta) <= tolerance*abs(myLegendreGaussQuadrature1D.x[jX]):
                         break
                 L_nX_plus_1, L_nX_plus_1_prime = (

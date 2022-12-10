@@ -1,5 +1,7 @@
 # Rotating_Shallow_Water_Verification_Suite
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7421136.svg)](https://doi.org/10.5281/zenodo.7421136)
+
 The Rotating_Shallow_Water_Verification_Suite (RSWVS) repository contains code in object-oriented Python for solving the rotating shallow water system of equations using
 
     a. two types of spatial discretizations:
@@ -29,6 +31,7 @@ RSWVS can also be used as a platform for developing and testing novel time-stepp
     |-- output
     |   |-- MPAS_Ocean_Shallow_Water_Output
     |   |-- DGSEM_Rotating_Shallow_Water_Output
+    |-- CITATION.cff
     |-- LICENSE
     |-- README.md
 

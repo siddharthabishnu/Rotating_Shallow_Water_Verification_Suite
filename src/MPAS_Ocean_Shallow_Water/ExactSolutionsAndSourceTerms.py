@@ -1593,11 +1593,88 @@ def ReadExactStateVariablesAlongSectionFromFile(ProblemType,OutputDirectory,file
     return ExactStateVariablesAlongSection
 
 
+def DetermineLatitude(MeridionalDistanceFromEquator):
+    RadiusOfEarth = 6371.0*1000.0
+    LatitudeInRadian = MeridionalDistanceFromEquator/RadiusOfEarth
+    Latitude = LatitudeInRadian*180.0/np.pi
+    return Latitude
+
+
+def SpecifyPlottingAttributesAlongSection(myNameList,yMaximumAmplitude):
+    lX = myNameList.lX
+    lY = myNameList.lY
+    ProblemType = myNameList.ProblemType
+    ProblemType_EquatorialWave = myNameList.ProblemType_EquatorialWave
+    ProblemType_GeophysicalWave = myNameList.ProblemType_GeophysicalWave
+    Req = myNameList.myExactSolutionParameters.Req
+    if ProblemType_GeophysicalWave:
+        LinewidthsAlongSection = [2.5,3.0,0.5]
+        LinestylesAlongSection = ['--',':','-']
+        ColorsAlongSection = ['k','k','k']
+    elif ProblemType == 'Barotropic_Tide':
+        LinewidthsAlongSection = [2.5,3.0,1.0,2.5,3.0,1.0,1.0]
+        LinestylesAlongSection = ['--',':','-','--',':','-','-']
+        ColorsAlongSection = ['r','r','r','b','b','b','g']
+    else:
+        LinewidthsAlongSection = [2.0]
+        LinestylesAlongSection = ['-']
+        ColorsAlongSection = ['k']
+    if ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
+        yLatitude = Req*yMaximumAmplitude
+        Latitude = DetermineLatitude(yLatitude)
+        TitleAlongSection = 'Exact Meridional Velocity'
+        FileNameAlongSection = 'ExactMeridionalVelocityAlongSection'    
+    else:
+        yLatitude = 0.0
+        Latitude = 0.0
+        TitleAlongSection = 'Exact Surface Elevation'
+        FileNameAlongSection = 'ExactSurfaceElevationAlongSection'
+    nPlotAlongSection = 150
+    rPlotAlongSection, xPlotAlongSection, yPlotAlongSection = (
+    DetermineCoordinatesAlongSection(ProblemType,lX,lY,nPlotAlongSection,yLatitude))
+    if ProblemType == 'Coastal_Kelvin_Wave':
+        xLabelAlongSection = 'Distance Along Coastline from South to North (km)'
+    elif (ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'Planetary_Rossby_Wave' 
+          or ProblemType == 'Topographic_Rossby_Wave' or ProblemType == 'NonLinear_Manufactured_Solution'):
+        xLabelAlongSection = 'Distance Along South-West to North-East Diagonal (km)'    
+    elif ProblemType_EquatorialWave:
+        if ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave':
+            xLabelAlongSection = 'Distance Along the Equator (km)'
+        else:
+            xLabelAlongSection = 'Distance Along %.2f\u00b0 N Latitude (km)' %Latitude
+    elif ProblemType == 'Barotropic_Tide':
+        xLabelAlongSection = 'Distance Along Any Zonal Section (km)'
+    if ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
+        yLabelAlongSection = 'Meridional Velocity (m/s)'
+    else:
+        yLabelAlongSection = 'Surface Elevation (m)'
+    LabelsAlongSection = [xLabelAlongSection,yLabelAlongSection]
+    if ProblemType_GeophysicalWave:
+        LegendsAlongSection = ['Wave Mode 1','Wave Mode 2','Resultant Wave']
+    elif ProblemType == 'Barotropic_Tide':
+        LegendsAlongSection = ['Wave Mode 1, Component 1','Wave Mode 1, Component 2','Wave Mode 1', 
+                               'Wave Mode 2, Component 1','Wave Mode 2, Component 2','Wave Mode 2','Resultant Wave']
+    else:
+        LegendsAlongSection = []
+    return (LinewidthsAlongSection, LinestylesAlongSection, ColorsAlongSection, rPlotAlongSection, xPlotAlongSection, 
+            yPlotAlongSection, LabelsAlongSection, LegendsAlongSection, TitleAlongSection, FileNameAlongSection)
+
+
+def SpecifyStateVariableLimitsAlongSection(StateVariableLimits,ToleranceAsPercentage):
+    StateVariableDifference = StateVariableLimits[1] - StateVariableLimits[0]
+    StateVariableLimitsAlongSection = np.zeros(2)
+    StateVariableLimitsAlongSection[0] = (
+    StateVariableLimits[0] - 0.5*ToleranceAsPercentage/100.0*StateVariableDifference)
+    StateVariableLimitsAlongSection[1] = (
+    StateVariableLimits[1] + 0.5*ToleranceAsPercentage/100.0*StateVariableDifference)    
+    return StateVariableLimitsAlongSection   
+
+
 def PlotExactStateVariablesAlongSectionSaveAsPDF(
 ProblemType,OutputDirectory,rPlotAlongSection,ExactStateVariablesAlongSection,StateVariableLimitsAlongSection,
 linewidths,linestyles,colors,labels,labelfontsizes,labelpads,tickfontsizes,legends,legendfontsize,legendposition,title,
 titlefontsize,SaveAsPDF,FigureTitle,Show,fig_size=[9.25,9.25],legendWithinBox=False,legendpads=[1.0,0.5],shadow=True,
-framealpha=1.0,titlepad=1.035,ProblemType_Equatorial_Wave=False,FigureFormat='pdf'):
+framealpha=1.0,titlepad=1.035,ProblemType_EquatorialWave=False,FigureFormat='pdf'):
     cwd = os.getcwd()
     path = cwd + '/' + OutputDirectory + '/'
     if not os.path.exists(path):
@@ -1635,7 +1712,7 @@ framealpha=1.0,titlepad=1.035,ProblemType_Equatorial_Wave=False,FigureFormat='pd
             ax.legend(fontsize=legendfontsize,loc=legendposition,bbox_to_anchor=(legendpads[0],legendpads[1]),
                       shadow=shadow,framealpha=framealpha) 
     ax.set_title(title,fontsize=titlefontsize,fontweight='bold',y=titlepad)
-    if ProblemType_Equatorial_Wave:
+    if ProblemType_EquatorialWave:
         ax.xaxis.set_major_locator(plt.MaxNLocator(6))
     if SaveAsPDF:
         plt.savefig(FigureTitle+'.'+FigureFormat,format=FigureFormat,bbox_inches='tight')

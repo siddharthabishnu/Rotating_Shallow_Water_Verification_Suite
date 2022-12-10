@@ -569,7 +569,7 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
     elif ProblemType == 'Equatorial_Yanai_Wave':
         dt = 474.0
     elif ProblemType == 'Equatorial_Rossby_Wave':
-        dt = 3144.0
+        dt = 1200.0
     elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
         dt = 285.0
     elif ProblemType == 'Barotropic_Tide':
@@ -580,12 +580,17 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
 
 
 def SpecifyDumpFrequency(ProblemType,ProblemType_EquatorialWave,ProblemType_NoExactSolution):
-    if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType_EquatorialWave or ProblemType == 'Barotropic_Tide'):
+    if ((ProblemType == 'Coastal_Kelvin_Wave' 
+         or (ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Rossby_Wave')) 
+         or ProblemType == 'Barotropic_Tide')):
         nDumpFrequency = 2
+    elif ProblemType == 'NonLinear_Manufactured_Solution':
+        nDumpFrequency = 3
     elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-          or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-          or ProblemType == 'NonLinear_Manufactured_Solution'):
+          or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'):
         nDumpFrequency = 4
+    elif ProblemType == 'Equatorial_Rossby_Wave':
+        nDumpFrequency = 5
     elif ProblemType_NoExactSolution:
         nDumpFrequency = 1440
     # Note that nDumpFrequency is chosen in such a way that we end up with approximately 100 output files for the entire
@@ -600,9 +605,14 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,ProblemType_
     elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType_EquatorialWave:
         if ProblemType == 'Equatorial_Inertia_Gravity_Wave':
             nTime_Minimum = 202 + 1
-        else: # if ProblemType == 'Coastal_Kelvin_Wave':
+        elif ProblemType == 'Equatorial_Rossby_Wave':
+            nTime_Minimum = 525 + 1
+        else:
             nTime_Minimum = 201 + 1
-        nTime = 202 + 1
+        if ProblemType == 'Equatorial_Rossby_Wave':
+            nTime = 525 + 1
+        else:
+            nTime = 202 + 1
     elif ProblemType == 'Inertia_Gravity_Wave':
         nTime_Minimum = 409 + 1
         nTime = 412 + 1
@@ -611,13 +621,13 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,ProblemType_
         nTime = 404 + 1
     elif ProblemType_NoExactSolution:
         nTime_Minimum = 86400*2 + 1
-        nTime = nTime_Minimum
+        nTime = 86400*2 + 1
     elif ProblemType == 'Barotropic_Tide':
         nTime_Minimum = 204 + 1
-        nTime = nTime_Minimum
+        nTime = 204 + 1
     elif ProblemType == 'NonLinear_Manufactured_Solution':
-        nTime_Minimum = 405 + 1
-        nTime = 408 + 1
+        nTime_Minimum = 364 + 1
+        nTime = 366 + 1
     # Note that (a) nTime_Minimum is the minimum integer such that (nTime_Minimum - 1) times the time step is greater 
     # than or equal to the simulation time, and (b) nTime is the minimum integer such that nTime >= nTime_Minimum and 
     # nTime - 1 is a multiple of nDumpFrequency.
