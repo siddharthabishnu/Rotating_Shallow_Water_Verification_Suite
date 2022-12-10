@@ -598,7 +598,7 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,ProblemType_
     elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType_EquatorialWave:
         if ProblemType == 'Equatorial_Inertia_Gravity_Wave':
             nTime_Minimum = 202 + 1
-        else:
+        else: # if ProblemType == 'Coastal_Kelvin_Wave':
             nTime_Minimum = 201 + 1
         nTime = 202 + 1
     elif ProblemType == 'Inertia_Gravity_Wave':

@@ -370,10 +370,8 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                                                            display_time=False,ProblemType_PlanetaryTopographicRossbyWave
                                                            =ProblemType_PlanetaryTopographicRossbyWave)
                         UseGivenColorBarLimits = True
-                        UseInterpolatedErrorLimits = True
                         MPASOceanShallowWaterClass.PythonPlotStateMPASOceanShallowWater(
-                        myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,UseInterpolatedErrorLimits,
-                        ComputeOnlyExactSolution)
+                        myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,ComputeOnlyExactSolution)
 
                         
 def DetermineNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
@@ -486,10 +484,13 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
         iTime_Start = Restart_iTime
     else:
         iTime_Start = 0
+    DisplayProgress = True
     for iCounter in range(0,nCounters):
         for iTime in range(iTime_Start,nTime):
             myMPASOceanShallowWater.iTime = iTime
             myMPASOceanShallowWater.time = float(iTime)*dt
+            if iCounter == 0 and DisplayProgress:
+                print('Displaying Progress: iTime = %3d.' %iTime)
             if iCounter == 0: 
                 if np.mod(iTime,nDumpFrequency) == 0.0:
                     MPASOceanShallowWaterClass.DetermineExactSolutions(myMPASOceanShallowWater,
@@ -664,7 +665,6 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                                            =ProblemType_PlanetaryTopographicRossbyWave,
                                                            ProblemType_NoExactSolution=ProblemType_NoExactSolution)
                         UseGivenColorBarLimits = True
-                        UseInterpolatedErrorLimits = True
                         MPASOceanShallowWaterClass.PythonPlotStateMPASOceanShallowWater(
-                        myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,UseInterpolatedErrorLimits,
-                        ComputeOnlyExactSolution,PlotNumericalSolution)
+                        myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,ComputeOnlyExactSolution,
+                        PlotNumericalSolution)

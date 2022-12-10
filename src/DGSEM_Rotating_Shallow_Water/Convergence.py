@@ -246,14 +246,18 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             dt[0] = 0.5
         else:
             dt[0] = myDGSEM2D.myNameList.dt
-        if (TimeIntegrator == 'SecondOrderAdamsBashforthMethod' 
-            or ((ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide')
-                and TimeIntegrator == 'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod')):
+        if TimeIntegrator == 'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod':
+            if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide':
+                dt[0] *= 0.5
+        elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
             dt[0] *= 0.5
         elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
             dt[0] *= 0.25
         elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-            dt[0] *= 0.125
+            if ProblemType == 'NonLinear_Manufactured_Solution':
+                dt[0] *= 0.25
+            else:
+                dt[0] *= 0.125
         for iCase in range(1,nCases):
             dt[iCase] = 0.5*dt[iCase-1]
         dt_Maximum = dt[0]
@@ -736,16 +740,11 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
                 SurfaceElevationL2ErrorNorm[iTimeIntegrator,:])
                 SurfaceElevationL2ErrorNormWithBestFitLine[iTimeIntegrator,1,:] = y
     linewidths = 2.0*np.ones(nTimeIntegrators)
-    linestyles  = ['-','-','-','-','-','-','-','-']
-    linestyles = linestyles[0:nTimeIntegrators]
-    colors = ['indigo','darkviolet','blue','green','gold','red','brown','chocolate']
-    colors = colors[0:nTimeIntegrators]
-    if nTimeIntegrators == 3:
-        colors = ['blue','gold','red']
+    linestyles  = ['-','-','-','-','-','-']
+    colors = ['indigo','darkviolet','blue','green','gold','red']
     markers = np.ones(nTimeIntegrators,dtype=bool)
-    markertypes = ['o','H','h','s','D','^','v','X']
-    markertypes = markertypes[0:nTimeIntegrators]
-    markersizes = 10.0*np.ones(nTimeIntegrators)
+    markertypes = ['o','H','h','s','D','^']
+    markersizes = np.array([12.5,12.5,12.5,10.0,10.0,11.25])
     if ConvergenceType == 'Time':
         if PlotAgainstNumberOfTimeSteps:
             xLabel = 'Number of time steps'

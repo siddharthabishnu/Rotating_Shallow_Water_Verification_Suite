@@ -344,13 +344,16 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             dt[0] = 0.5
         else:
             dt[0] = myMPASOceanShallowWater.myNameList.dt
-        if TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
+        if TimeIntegrator == 'WilliamsonLowStorageThirdOrderRungeKuttaMethod':
+            if ProblemType == 'Barotropic_Tide':
+                dt[0] *= 0.5
+        elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
             dt[0] *= 0.5
         elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
             dt[0] *= 0.25
         elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
             if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-                or ProblemType == 'Barotropic_Tide'):
+                or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
                 dt[0] *= 0.25
             else:
                 dt[0] *= 0.125
@@ -528,29 +531,7 @@ def SpecifyAsymptoticPointsForSlopeComputation(ConvergenceType,ProblemType,TimeI
     if ConvergenceType == 'SpaceAndTime':
         iPointLowerLimit = 0
         iPointUpperLimit = 4
-        if ProblemType == 'Coastal_Kelvin_Wave':
-            if TimeIntegrator == 'ExplicitMidpointMethod':
-                iPointLowerLimit = 2
-                iPointUpperLimit = 4
-            elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
-                iPointLowerLimit = 3
-                iPointUpperLimit = 4
-        elif ProblemType == 'Inertia_Gravity_Wave':
-            if TimeIntegrator == 'ExplicitMidpointMethod' or TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
-                iPointLowerLimit = 3
-                iPointUpperLimit = 4
-            elif (TimeIntegrator == 'ThirdOrderAdamsBashforthMethod' 
-                  or TimeIntegrator == 'FourthOrderAdamsBashforthMethod'):
-                iPointLowerLimit = 2
-                iPointUpperLimit = 4
-        elif ProblemType == 'Barotropic_Tide':
-            if TimeIntegrator == 'ExplicitMidpointMethod' or TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-                iPointLowerLimit = 2
-                iPointUpperLimit = 4
-            elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
-                iPointLowerLimit = 3
-                iPointUpperLimit = 4
-        elif ProblemType == 'NonLinear_Manufactured_Solution':
+        if ProblemType == 'NonLinear_Manufactured_Solution':
             if (TimeIntegrator == 'ExplicitMidpointMethod' or TimeIntegrator == 'SecondOrderAdamsBashforthMethod'
                 or TimeIntegrator == 'FourthOrderAdamsBashforthMethod'):
                 iPointLowerLimit = 3
@@ -561,10 +542,7 @@ def SpecifyAsymptoticPointsForSlopeComputation(ConvergenceType,ProblemType,TimeI
     elif ConvergenceType == 'Space':
         iPointLowerLimit = 0
         iPointUpperLimit = 3
-        if ProblemType == 'Coastal_Kelvin_Wave':
-            if TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
-                iPointLowerLimit = 1
-        elif ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution':
+        if ProblemType == 'NonLinear_Manufactured_Solution':
             if TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
                 iPointLowerLimit = 2
     elif ConvergenceType == 'Time':
@@ -779,16 +757,16 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
                 
 
 def SpecifyLineStyles(ConvergenceType,ProblemType):
+    linestyles  = ['-','-','-','-','-','-']
     if ConvergenceType == 'SpaceAndTime':
         if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide':
             linestyles  = ['-','-','-','-','--','-']
-        elif ProblemType == 'Inertia_Gravity_Wave':
+        elif ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'NonLinear_Manufactured_Solution':
             linestyles  = ['-','-','--','-',':','-']
     elif ConvergenceType == 'Space':
-        if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide':
+        if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+            or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
             linestyles  = ['-','-','--','-',':','-']
-    else:
-        linestyles  = ['-','-','-','-','-','-']
     return linestyles
 
 

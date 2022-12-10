@@ -741,8 +741,8 @@ def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useG
     
 
 def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,DisplayTime,UseGivenColorBarLimits=True,
-                                         UseInterpolatedErrorLimits=True,ComputeOnlyExactSolution=False,
-                                         PlotNumericalSolution=False,PlotOnMPASOceanMesh=True):
+                                         ComputeOnlyExactSolution=False,PlotNumericalSolution=False,
+                                         PlotOnMPASOceanMesh=True):
     ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
     ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
     PlotZonalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[0]
@@ -852,13 +852,10 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        ZonalVelocityErrorLimits = [-np.max(abs(uError)),np.max(abs(uError))]
-                    else:
-                        FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
-                                    + '_ZonalVelocityErrorLimits')
-                        ZonalVelocityErrorLimits = (
-                        CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
+                    FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_ZonalVelocityErrorLimits')
+                    ZonalVelocityErrorLimits = (
+                    CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
                 else:
                     ZonalVelocityErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nZonal Velocity Error after\n' + DisplayTime
@@ -916,13 +913,10 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        MeridionalVelocityErrorLimits = [-np.max(abs(vError)),np.max(abs(vError))]
-                    else:
-                        FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
-                                    + '_MeridionalVelocityErrorLimits')
-                        MeridionalVelocityErrorLimits = (
-                        CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
+                    FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_MeridionalVelocityErrorLimits')
+                    MeridionalVelocityErrorLimits = (
+                    CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
                 else:
                     MeridionalVelocityErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nMeridional Velocity Error after\n' + DisplayTime
@@ -980,13 +974,10 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           Show,DataType=DataType,colormap=colormap)
             if not(ProblemType_NoExactSolution):
                 if UseGivenColorBarLimits:
-                    if UseInterpolatedErrorLimits:
-                        SurfaceElevationErrorLimits = [-np.max(abs(sshError)),np.max(abs(sshError))]
-                    else:
-                        FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' 
-                                    + TimeIntegratorShortForm + '_SurfaceElevationErrorLimits')
-                        SurfaceElevationErrorLimits = (
-                        CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
+                    FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
+                                + '_SurfaceElevationErrorLimits')
+                    SurfaceElevationErrorLimits = (
+                    CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
                 else:
                     SurfaceElevationErrorLimits = [0.0,0.0]
                 title = titleroot + ':\nSurface Elevation Error after\n' + DisplayTime
