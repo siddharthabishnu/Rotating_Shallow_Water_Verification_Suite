@@ -1,5 +1,5 @@
 """
-Name: Main.py
+Name: Convergence.py
 Author: Sid Bishnu
 Details: This script contains functions for performing convergence studies of the various test cases with refinement in
 both space and time, only in space, and only in time.

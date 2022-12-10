@@ -1,5 +1,5 @@
 """
-Name: Main.py
+Name: Convergence.py
 Author: Sid Bishnu
 Details: This script contains functions for performing convergence studies of the various test cases with refinement in
 both space and time, only in space, and only in time.
@@ -7,7 +7,9 @@ both space and time, only in space, and only in time.
 
 
 import numpy as np
-import self.model2d as model2d
+AnalyzeSELFOutputData = False
+if AnalyzeSELFOutputData:
+    import self.model2d as model2d
 from IPython.utils import io
 import os
 with io.capture_output() as captured:
@@ -880,7 +882,11 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
                 SurfaceElevationL2ErrorNorm[iTimeIntegrator,:])
                 SurfaceElevationL2ErrorNormWithBestFitLine[iTimeIntegrator,1,:] = y
     linewidths = 2.0*np.ones(nTimeIntegrators)
-    linestyles  = ['-','-','-','-','-','-']
+    if (ConvergenceType == 'Space' and (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
+                                        or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+        linestyles  = ['-','-','--','--',':',':']
+    else:
+        linestyles  = ['-','-','-','-','-','-']
     colors = ['indigo','darkviolet','blue','green','gold','red']
     markers = np.ones(nTimeIntegrators,dtype=bool)
     markertypes = ['o','H','h','s','D','^']

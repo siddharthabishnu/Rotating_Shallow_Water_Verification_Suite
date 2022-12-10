@@ -115,13 +115,13 @@ def TestMesh():
             xLabel = 'Zonal Distance (km)'
             yLabel = 'Meridional Distance (km)'
             labels = [xLabel,yLabel]
-            labelfontsizes = [17.5,17.5]
+            labelfontsizes = [22.5,22.5]
             labelpads = [10.0,10.0]
             tickfontsizes = [15.0,15.0]
             MeshPlotTitle = MeshPlotTitles[iProblemType]
             CellCentersPlotTitle = CellCentersPlotTitles[iProblemType]
             ShiftedCellCentersPlotTitle = ShiftedCellCentersPlotTitles[iProblemType]
-            titlefontsize = 20.0
+            titlefontsize = 27.5
             SaveAsPDF = True
             MeshPlotFileName = MeshPlotFileNames[iProblemType]
             CellCentersPlotFileName = CellCentersPlotFileNames[iProblemType]
@@ -153,6 +153,81 @@ def TestMesh():
 do_TestMesh = False
 if do_TestMesh:
     TestMesh()
+    
+    
+def TestPlotMeshes():
+    PrintPhaseSpeedOfWaveModes = False
+    PrintAmplitudesOfWaveModes = False
+    TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
+    LF_TR_and_LF_AM3_with_FB_Feedback_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
+    Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
+    Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
+    CourantNumber = 0.5
+    UseCourantNumberToDetermineTimeStep = True
+    PrintBasicGeometry = False
+    FixAngleEdge = True
+    PrintOutput = False
+    UseAveragedQuantities = False
+    SpecifyBoundaryCondition = True
+    ReadDomainExtentsfromMeshFile = True
+    nCellsXArray = np.array([4,8])
+    CellCenterMarkerTypes = ['s','s']
+    CellCenterMarkerSizes = np.array([10.0,5.0])
+    MeshDirectories = ['../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_4x4_Cells',
+                       '../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_8x8_Cells']
+    ProblemTypes = ['Inertia_Gravity_Wave','Coastal_Kelvin_Wave','Planetary_Rossby_Wave',
+                    'NonLinear_Manufactured_Solution']
+    BaseMeshFileNames = ['base_mesh_Periodic.nc','culled_mesh_NonPeriodic_x.nc','culled_mesh_NonPeriodic_y.nc',
+                         'culled_mesh_NonPeriodic_xy.nc']
+    MeshFileNames = ['mesh_Periodic.nc','mesh_NonPeriodic_x.nc','mesh_NonPeriodic_y.nc','mesh_NonPeriodic_xy.nc']
+    BoundaryConditions = ['Periodic','NonPeriodic_x','NonPeriodic_y','NonPeriodic_xy']
+    for iProblemType in range(0,len(ProblemTypes)):
+        ProblemType = ProblemTypes[iProblemType]
+        for iMeshDirectory in range(0,len(MeshDirectories)):
+            nCellsX = nCellsXArray[iMeshDirectory]
+            nCellsY = nCellsX
+            myNameList = Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                                                 TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                                                 Generalized_FB_with_AB2_AM3_Step_Type,
+                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
+                                                 UseCourantNumberToDetermineTimeStep)
+            BaseMeshFileName = BaseMeshFileNames[iProblemType]
+            MeshFileName = MeshFileNames[iProblemType]
+            BoundaryCondition = BoundaryConditions[iProblemType]
+            MeshDirectory = MeshDirectories[iMeshDirectory] + '/' + BoundaryCondition
+            myMesh = MeshClass.Mesh(myNameList,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,
+                                    FixAngleEdge,PrintOutput,UseAveragedQuantities,SpecifyBoundaryCondition,
+                                    BoundaryCondition,ReadDomainExtentsfromMeshFile)
+            if iMeshDirectory == 0:
+                myCoarseMesh = myMesh
+            else:
+                myFineMesh = myMesh
+                OutputDirectory = MeshDirectory
+                linewidths = [2.5,2.5]
+                linestyles = ['-','--']
+                colors = ['r','b']
+                xLabel = 'Zonal Distance (km)'
+                yLabel = 'Meridional Distance (km)'
+                labels = [xLabel,yLabel]
+                labelfontsizes = [22.5,22.5]
+                labelpads = [10.0,10.0]
+                tickfontsizes = [15.0,15.0]
+                titlefontsize = 27.5
+                title = 'Planar Hexagonal MPAS-Ocean Meshes'
+                SaveAsPDF = True
+                FileName = 'MPASOceanMeshes_' + BoundaryCondition
+                Show = False
+                fig_size = [9.5,9.5]
+                UseDefaultMethodToSpecifyTickFontSize = True
+                MeshClass.PlotMeshes(myCoarseMesh,myFineMesh,OutputDirectory,linewidths,linestyles,colors,labels,
+                                     labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,
+                                     fig_size,UseDefaultMethodToSpecifyTickFontSize,CellCenterMarkerTypes,
+                                     CellCenterMarkerSizes)
+            
+            
+do_TestPlotMeshes = False
+if do_TestPlotMeshes:
+    TestPlotMeshes()
     
     
 def SurfaceElevation(lX,lY,x,y):
@@ -226,7 +301,7 @@ def TestInterpolateSolutionFromVerticesAndEdgesToCellCenters(PlotFigures=True):
             xLabel = 'Zonal Distance (km)'
             yLabel = 'Meridional Distance (km)'
             labels = [xLabel,yLabel]
-            labelfontsizes = [17.5,17.5]
+            labelfontsizes = [22.5,22.5]
             labelpads = [10.0,10.0]
             tickfontsizes = [15.0,15.0]
             useGivenColorBarLimits = False
@@ -235,7 +310,7 @@ def TestInterpolateSolutionFromVerticesAndEdgesToCellCenters(PlotFigures=True):
             xLabel = 'Zonal Distance (km)'
             yLabel = 'Meridional Distance (km)'
             labels = [xLabel,yLabel]
-            titlefontsize = 20.0
+            titlefontsize = 27.5
             SaveAsPDF = True
             Show = False
             DataType = 'Unstructured'
@@ -396,7 +471,7 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
             xLabel = 'Zonal Distance (km)'
             yLabel = 'Meridional Distance (km)'
             labels = [xLabel,yLabel]
-            labelfontsizes = [17.5,17.5]
+            labelfontsizes = [22.5,22.5]
             labelpads = [10.0,10.0]
             tickfontsizes = [15.0,15.0]
             useGivenColorBarLimits = False
@@ -405,7 +480,7 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
             xLabel = 'Zonal Distance (km)'
             yLabel = 'Meridional Distance (km)'
             labels = [xLabel,yLabel]
-            titlefontsize = 20.0
+            titlefontsize = 27.5
             SaveAsPDF = True
             Show = False
             DataType = 'Unstructured'

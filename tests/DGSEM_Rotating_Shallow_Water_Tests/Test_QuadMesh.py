@@ -16,12 +16,12 @@ with io.capture_output() as captured:
     
     
 def TestQuadMesh():
-    lX = 1.0
-    lY = 1.0
+    lX = 40.0*10**3.0
+    lY = 40.0*10**3.0
     nElementsX = 2
     nElementsY = 2
-    nXi = 10
-    nEta = 10
+    nXi = 4
+    nEta = 4
     myDGNodalStorage2D = DGNS2D.DGNodalStorage2D(nXi,nEta)
     ProblemType = 'Coastal_Kelvin_Wave'
     ProblemType_EquatorialWave = False
@@ -36,11 +36,48 @@ def TestQuadMesh():
                 myQuadMesh.myEdges[iEdge].NodeIDs[1],myQuadMesh.myEdges[iEdge].ElementIDs[0],
                 myQuadMesh.myEdges[iEdge].ElementIDs[1],myQuadMesh.myEdges[iEdge].ElementSides[0],
                 myQuadMesh.myEdges[iEdge].ElementSides[1]))
-    output_directory = '../../output/DGSEM_Rotating_Shallow_Water_Output/'
-    filename = 'myQuadMesh'
-    myQuadMesh.WriteQuadMesh(output_directory,filename)
+    OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/'
+    FileName = 'myQuadMesh'
+    myQuadMesh.WriteQuadMesh(OutputDirectory,FileName)
+    linewidth = 2.5
+    linestyle = '-'
+    color = 'k'
+    marker = 's'
+    markersize = 5.0
+    xLabel = 'Zonal Distance (km)'
+    yLabel = 'Meridional Distance (km)'
+    labels = [xLabel,yLabel]
+    labelfontsizes = [22.5,22.5]
+    labelpads = [10.0,10.0]
+    tickfontsizes = [15.0,15.0]
+    title = 'Quadrilateral Mesh for DGSEM'
+    titlefontsize = 27.5
+    SaveAsPDF = True
+    FileName = 'DGSEMQuadMesh'
+    Show = False
+    myQuadMesh.PlotQuadMesh(OutputDirectory,linewidth,linestyle,color,marker,markersize,labels,labelfontsizes,labelpads,
+                            tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show)
+    nXi = 3
+    nEta = 3
+    myDGNodalStorage2D = DGNS2D.DGNodalStorage2D(nXi,nEta)
+    PrintEdgeProperties = False
+    myCoarseQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,
+                                   ProblemType_EquatorialWave,PrintEdgeProperties)
+    nElementsX = 4
+    nElementsY = 4
+    myFineQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,ProblemType_EquatorialWave,
+                                 PrintEdgeProperties)
+    linewidths = [2.5,2.5]
+    linestyles = ['-','--']
+    colors = ['r','b']
+    markers = ['s','s']
+    markersizes = [7.5,5.0]
+    title = 'Quadrilateral Meshes for DGSEM'
+    FileName = 'DGSEMQuadMeshes'
+    QM.PlotQuadMeshes(myCoarseQuadMesh,myFineQuadMesh,OutputDirectory,linewidths,linestyles,colors,markers,markersizes,
+                      labels,labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show)
     
-
+    
 do_TestQuadMesh = False
 if do_TestQuadMesh:
     TestQuadMesh()

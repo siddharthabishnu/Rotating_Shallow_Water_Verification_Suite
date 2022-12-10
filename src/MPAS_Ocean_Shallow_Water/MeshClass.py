@@ -225,7 +225,7 @@ class Mesh:
             ax.tick_params(axis='y',labelsize=tickfontsizes[1])
         plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
         plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
-        ax.set_title(title,fontsize=titlefontsize,y=1.035)
+        ax.set_title(title,fontsize=titlefontsize,fontweight='bold',y=1.035)
         if SaveAsPDF:
             plt.savefig(FileName+'.pdf',format='pdf',bbox_inches='tight')
         if Show:
@@ -454,6 +454,58 @@ class Mesh:
                 if myMesh.MeshType == 'uniform':
                     SolutionAtCellCenters[iCell] += SolutionAtEdges[iEdge]/6.0
         return SolutionAtCellCenters
+    
+    
+def PlotMeshes(myCoarseMesh,myFineMesh,OutputDirectory,linewidths,linestyles,colors,labels,labelfontsizes,labelpads,
+               tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,fig_size,
+               UseDefaultMethodToSpecifyTickFontSize,CellCenterMarkerTypes,CellCenterMarkerSizes):
+    cwd = os.getcwd()
+    path = cwd + '/' + OutputDirectory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)    
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    myMeshes = [myCoarseMesh,myFineMesh]
+    for iMesh in range(0,2):
+        myMesh = myMeshes[iMesh]
+        linewidth = linewidths[iMesh]
+        linestyle = linestyles[iMesh]
+        color = colors[iMesh]
+        CellCenterMarkerType = CellCenterMarkerTypes[iMesh]
+        CellCenterMarkerSize = CellCenterMarkerSizes[iMesh]
+        for iEdge in range(0,myMesh.nEdges):
+            dvEdge = myMesh.dvEdge[iEdge]
+            vertexID1 = myMesh.verticesOnEdge[iEdge,0] - 1
+            vertexID2 = myMesh.verticesOnEdge[iEdge,1] - 1
+            x1 = myMesh.xVertex[vertexID1]
+            x2 = myMesh.xVertex[vertexID2]
+            y1 = myMesh.yVertex[vertexID1]
+            y2 = myMesh.yVertex[vertexID2]
+            edgeLength = np.sqrt((x2 - x1)**2.0 + (y2 - y1)**2.0)
+            dvEdgeTolerancePercentage = 1.0
+            if edgeLength <= dvEdge*(100.0 + dvEdgeTolerancePercentage)/100.0:
+                plt.plot([x1,x2],[y1,y2],linewidth=linewidth,linestyle=linestyle,color=color)
+        for iCell in range(0,myMesh.nCells):
+            plt.plot([myMesh.xCell[iCell]],[myMesh.yCell[iCell]],color=color,marker=CellCenterMarkerType,
+                     markersize=CellCenterMarkerSize)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if UseDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+    plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+    ax.set_title(title,fontsize=titlefontsize,fontweight='bold',y=1.035)
+    if SaveAsPDF:
+        plt.savefig(FileName+'.pdf',format='pdf',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
 
 
 def GenerateStructuredRectinilearMeshCoordinateArrays1D(xCellUnstructured,yCellUnstructured,

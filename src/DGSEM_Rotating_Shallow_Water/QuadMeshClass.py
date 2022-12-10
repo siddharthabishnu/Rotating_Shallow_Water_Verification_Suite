@@ -6,6 +6,8 @@ Details: This script defines the quadrilateral mesh class for two-dimensional sp
 
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import os
 import sys
 from IPython.utils import io
@@ -33,10 +35,14 @@ class QuadMesh:
     def __init__(myQuadMesh,lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,ProblemType_EquatorialWave=False,
                  PrintEdgeProperties=False):
         myQuadMesh.myQuadMeshParameters = QuadMeshParameters()
+        myQuadMesh.lX = lX
+        myQuadMesh.lY = lY
         myQuadMesh.nElementsX = nElementsX
         myQuadMesh.nElementsY = nElementsY
         nElements = nElementsX*nElementsY
         myQuadMesh.nElements = nElements
+        myQuadMesh.dx = lX/float(nElementsX)
+        myQuadMesh.dy = lY/float(nElementsY)
         myQuadMesh.myQuadElements = np.empty(nElements,dtype=QE.QuadElement) 
         nNodes = (nElementsX + 1)*(nElementsY + 1)
         myQuadMesh.nNodes = nNodes
@@ -57,15 +63,19 @@ class QuadMesh:
         # The EdgeMap is just the set of local NodeIDs connected by each edge viz. {(1,2), (2,3), (4,3) and (1,4)} 
         # where the ordering of the local NodeIDs are along the positive xi and eta directions.
         # Construct the corner nodes with their x and y coordinates.          
-        myQuadMesh.BuildCornerNodes(lX,lY,nElementsX,nElementsY,ProblemType,ProblemType_EquatorialWave)
+        myQuadMesh.BuildCornerNodes(ProblemType,ProblemType_EquatorialWave)
         # Construct the elements with elementID, the global NodeIDs of the four corner nodes, boundary curves, and 
         # geometry.
-        myQuadMesh.BuildQuadElements(nElementsX,nElementsY,myDGNodalStorage2D)
+        myQuadMesh.BuildQuadElements(myDGNodalStorage2D)
         myQuadMesh.GetNodeConnectivityAndConstructEdges(PrintEdgeProperties)
 
-    def BuildCornerNodes(myQuadMesh,lX,lY,nElementsX,nElementsY,ProblemType,ProblemType_EquatorialWave=False):
-        dx = lX/float(nElementsX)
-        dy = lY/float(nElementsY)
+    def BuildCornerNodes(myQuadMesh,ProblemType,ProblemType_EquatorialWave=False):
+        lX = myQuadMesh.lX
+        lY = myQuadMesh.lY
+        nElementsX = myQuadMesh.nElementsX
+        nElementsY = myQuadMesh.nElementsY
+        dx = myQuadMesh.dx
+        dy = myQuadMesh.dy
         for iNodeY in range(0,nElementsY+1):
             for iNodeX in range(0,nElementsX+1):
                 GlobalNodeID = iNodeY*(nElementsX+1) + iNodeX + 1
@@ -79,7 +89,9 @@ class QuadMesh:
                     yCoordinate = float(iNodeY)*dy
                 myQuadMesh.myCornerNodes[GlobalNodeID-1] = CN2D.CornerNode(xCoordinate,yCoordinate)
                 
-    def BuildQuadElements(myQuadMesh,nElementsX,nElementsY,myDGNodalStorage2D):
+    def BuildQuadElements(myQuadMesh,myDGNodalStorage2D):
+        nElementsX = myQuadMesh.nElementsX
+        nElementsY = myQuadMesh.nElementsY
         xCoordinate = np.zeros(4)
         yCoordinate = np.zeros(4)
         nParametricNodes = 2
@@ -339,27 +351,19 @@ class QuadMesh:
             if myQuadMesh.myEdges[iEdge].ElementIDs[1] == NONE:
                 print('Not all boundary elements have been labelled yet! Stopping!')
                 sys.exit()
- 
-    def GetMeshData(myQuadMesh):
-        nNodes = myQuadMesh.nNodes
-        nElementsX = myQuadMesh.nElementsX
-        nElementsY = myQuadMesh.nElementsRho
-        nElements = myQuadMesh.nElements 
-        nEdges = myQuadMesh.nEdges
-        return nNodes, nElementsX, nElementsY, nElements, nEdges
     
-    def WriteQuadMesh(myQuadMesh,output_directory,filename):
+    def WriteQuadMesh(myQuadMesh,OutputDirectory,filename):
         cwd = os.getcwd()
-        path = cwd + '/' + output_directory + '/'
+        path = cwd + '/' + OutputDirectory + '/'
         if not os.path.exists(path):
             os.mkdir(path) # os.makedir(path)
         os.chdir(path)
-        nXi = myQuadMesh.myQuadElements[0].myMappedGeometry2D.nXi
-        nEta = myQuadMesh.myQuadElements[0].myMappedGeometry2D.nEta
         filename = filename + '.tec'
         outputfile = open(filename,'w')
         outputfile.write('VARIABLES = "X", "Y", "Jacobian"\n')
         for iElement in range(0,myQuadMesh.nElements):
+            nXi = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nXi
+            nEta = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nEta
             ZoneID = myQuadMesh.myQuadElements[iElement].ElementID
             ZoneIDString = 'Element' + '%7.7d' %ZoneID
             outputfile.write('ZONE T="%s", I=%d, J=%d, F=POINT\n' %(ZoneIDString,nXi+1,nEta+1))
@@ -371,3 +375,160 @@ class QuadMesh:
                                        myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.Jacobian[iX,iY]))
         outputfile.close()
         os.chdir(cwd)
+        
+    def PlotQuadMesh(myQuadMesh,OutputDirectory,linewidth,linestyle,color,marker,markersize,labels,labelfontsizes,
+                     labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,fig_size=[9.5,9.5],
+                     UseDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035):
+        cwd = os.getcwd()
+        path = cwd + '/' + OutputDirectory + '/'
+        if not os.path.exists(path):
+            os.mkdir(path) # os.makedir(path)
+        os.chdir(path)
+        fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+        ax = fig.add_subplot(111) # Create an axes object in the figure
+        nElementsX = myQuadMesh.nElementsX
+        nElementsY = myQuadMesh.nElementsY
+        for iNodeY in range(0,nElementsY+1):
+            for iNodeX in range(0,nElementsX+1):
+                GlobalNodeID = iNodeY*(nElementsX+1) + iNodeX + 1
+                iGlobalNode = GlobalNodeID - 1
+                x1 = myQuadMesh.myCornerNodes[iGlobalNode].x
+                y1 = myQuadMesh.myCornerNodes[iGlobalNode].y
+                GlobalNodeIDOnRight = GlobalNodeID + 1
+                iGlobalNodeOnRight = GlobalNodeIDOnRight - 1
+                GlobalNodeIDOnTop = GlobalNodeID + nElementsX + 1
+                iGlobalNodeOnTop = GlobalNodeIDOnTop - 1
+                if GlobalNodeIDOnRight <= (nElementsX+1)*(nElementsY+1):
+                    x2 = myQuadMesh.myCornerNodes[iGlobalNodeOnRight].x
+                    y2 = myQuadMesh.myCornerNodes[iGlobalNodeOnRight].y
+                    if x2 > x1 and y2 == y1:
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=None)
+                if GlobalNodeIDOnTop <= (nElementsX+1)*(nElementsY+1):
+                    x2 = myQuadMesh.myCornerNodes[iGlobalNodeOnTop].x
+                    y2 = myQuadMesh.myCornerNodes[iGlobalNodeOnTop].y
+                    if x2 == x1 and y2 > y1:
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=None)
+        for iElement in range(0,myQuadMesh.nElements):
+            nXi = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nXi
+            nEta = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nEta
+            for iY in range(0,nEta+1):
+                for iX in range(0,nXi+1):
+                    x1 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX,iY]
+                    y1 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX,iY]
+                    plt.plot([x1],[y1],color=color,marker=marker,markersize=markersize)
+                    if iX < nXi:
+                        x2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX+1,iY]
+                        y2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX+1,iY]
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=0.5*linewidth,linestyle=linestyle,color=color,marker=None)
+                    if iY < nEta:
+                        x2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX,iY+1]
+                        y2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX,iY+1]
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=0.5*linewidth,linestyle=linestyle,color=color,marker=None)
+        plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+        plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+        if UseDefaultMethodToSpecifyTickFontSize:
+            plt.xticks(fontsize=tickfontsizes[0])
+            plt.yticks(fontsize=tickfontsizes[1])
+        else:
+            ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+            ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+        plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+        plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+        ax.set_title(title,fontsize=titlefontsize,fontweight='bold',y=titlepad)
+        if SaveAsPDF:
+            plt.savefig(FileName+'.pdf',format='pdf',bbox_inches='tight')
+        if Show:
+            plt.show()
+        plt.close()
+        os.chdir(cwd)
+
+        
+def PlotQuadMeshes(myCoarseQuadMesh,myFineQuadMesh,OutputDirectory,linewidths,linestyles,colors,markers,markersizes,
+                   labels,labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,
+                   fig_size=[9.5,9.5],UseDefaultMethodToSpecifyTickFontSize=True,titlepad=1.035):
+    cwd = os.getcwd()
+    path = cwd + '/' + OutputDirectory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    myQuadMeshes = [myCoarseQuadMesh,myFineQuadMesh]
+    for iQuadMesh in range(0,2):
+        myQuadMesh = myQuadMeshes[iQuadMesh]
+        nElementsX = myQuadMesh.nElementsX
+        nElementsY = myQuadMesh.nElementsY
+        linewidth = linewidths[iQuadMesh]
+        linestyle = linestyles[iQuadMesh]
+        color = colors[iQuadMesh]
+        marker = markers[iQuadMesh]
+        markersize = markersizes[iQuadMesh]
+        for iNodeY in range(0,nElementsY+1):
+            for iNodeX in range(0,nElementsX+1):
+                GlobalNodeID = iNodeY*(nElementsX+1) + iNodeX + 1
+                iGlobalNode = GlobalNodeID - 1
+                x1 = myQuadMesh.myCornerNodes[iGlobalNode].x
+                y1 = myQuadMesh.myCornerNodes[iGlobalNode].y
+                GlobalNodeIDOnRight = GlobalNodeID + 1
+                iGlobalNodeOnRight = GlobalNodeIDOnRight - 1
+                GlobalNodeIDOnTop = GlobalNodeID + nElementsX + 1
+                iGlobalNodeOnTop = GlobalNodeIDOnTop - 1
+                if GlobalNodeIDOnRight <= (nElementsX+1)*(nElementsY+1):
+                    x2 = myQuadMesh.myCornerNodes[iGlobalNodeOnRight].x
+                    y2 = myQuadMesh.myCornerNodes[iGlobalNodeOnRight].y
+                    if x2 > x1 and y2 == y1:
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=None)
+                if GlobalNodeIDOnTop <= (nElementsX+1)*(nElementsY+1):
+                    x2 = myQuadMesh.myCornerNodes[iGlobalNodeOnTop].x
+                    y2 = myQuadMesh.myCornerNodes[iGlobalNodeOnTop].y
+                    if x2 == x1 and y2 > y1:
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=linewidth,linestyle=linestyle,color=color,marker=None)
+        for iElement in range(0,myQuadMesh.nElements):
+            nXi = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nXi
+            nEta = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.nEta
+            for iY in range(0,nEta+1):
+                for iX in range(0,nXi+1):
+                    x1 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX,iY]
+                    y1 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX,iY]
+                    plt.plot([x1],[y1],color=color,marker=marker,markersize=markersize)
+                    if iX < nXi:
+                        x2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX+1,iY]
+                        y2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX+1,iY]
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=0.5*linewidth,linestyle=linestyle,color=color,marker=None)
+                    if iY < nEta:
+                        x2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.x[iX,iY+1]
+                        y2 = myQuadMesh.myQuadElements[iElement].myMappedGeometry2D.y[iX,iY+1]
+                        x = np.array([x1,x2])
+                        y = np.array([y1,y2])
+                        plt.plot(x,y,linewidth=0.5*linewidth,linestyle=linestyle,color=color,marker=None)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if UseDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+    plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+    ax.set_title(title,fontsize=titlefontsize,fontweight='bold',y=titlepad)
+    if SaveAsPDF:
+        plt.savefig(FileName+'.pdf',format='pdf',bbox_inches='tight')
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)

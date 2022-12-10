@@ -53,16 +53,15 @@ def Test_ConvergenceStudy():
     else:
         PerformInterpolation = False
     StartTime = time.time()
+    ReadFromSELFOutputData = False
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
         ProblemType_Title, ProblemType_FileName = Initialization.SpecifyTitleAndFileNamePrefixes(ProblemType) 
         if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
              or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
             EntityToBeInterpolated = 'Solution'
-            ReadFromSELFOutputData = True
         else:
             EntityToBeInterpolated = 'Error'
-            ReadFromSELFOutputData = False
         StartTimePerProblemType = time.time()
         for iTimeIntegrator in range(iTimeIntegratorLowerLimit,iTimeIntegratorUpperLimit):
             StartTimePerProblemTypePerTimeIntegrator = time.time()
@@ -89,8 +88,8 @@ def Test_ConvergenceStudy():
         EndTimePerProblemType = time.time()
         ElapsedTimePerProblemType = EndTimePerProblemType - StartTimePerProblemType
         print('The total time taken by the time integrators for the %s test case is %s.'
-             %(ProblemType_Title,(Main.FormatSimulationTime(ElapsedTimePerProblemType,
-                                                            non_integral_seconds=True)).lower()))
+              %(ProblemType_Title,(Main.FormatSimulationTime(ElapsedTimePerProblemType,
+                                                             non_integral_seconds=True)).lower()))
     EndTime = time.time()
     ElapsedTime = EndTime - StartTime
     print('The total elapsed time is %s.' 
@@ -127,15 +126,9 @@ def Test_PlotConvergenceData():
     PlotAgainstNumberOfTimeSteps = True
     UseBestFitLine = False
     set_xticks_manually = False
-    # Specify set_xticks_manually as True only if nElementsX consists of powers of 2 e.g. 
-    # nElementsX = np.array([32,64,128,256]) and not otherwise e.g. if nElementsX = np.array([100,110,120,130,140,150]).
+    ReadFromSELFOutputData = False
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
-        if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
-            ReadFromSELFOutputData = True
-        else:
-            ReadFromSELFOutputData = False
         Convergence.PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator,SingleTimeIntegratorIndex,
                                         PlotOnlySurfaceElevationConvergenceData,
                                         PlotAgainstNumberOfCellsInZonalDirection,PlotAgainstNumberOfTimeSteps,
@@ -170,15 +163,9 @@ def Test_PlotAllConvergenceData():
     PlotAgainstNumberOfTimeSteps = True
     UseBestFitLine = False
     set_xticks_manually = False
-    # Specify set_xticks_manually as True only if nElementsX consists of powers of 2 e.g. 
-    # nElementsX = np.array([32,64,128,256]) and not otherwise e.g. if nElementsX = np.array([100,110,120,130,140,150]).
+    ReadFromSELFOutputData = False
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
-        if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
-            ReadFromSELFOutputData = True
-        else:
-            ReadFromSELFOutputData = False
         Convergence.PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationConvergenceData,
                                            PlotAgainstNumberOfCellsInZonalDirection,PlotAgainstNumberOfTimeSteps,
                                            UseBestFitLine,set_xticks_manually,ReadFromSELFOutputData)
