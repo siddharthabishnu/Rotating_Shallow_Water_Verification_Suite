@@ -1,0 +1,46 @@
+# Directories
+commits/
+meshes/MPAS_Ocean_Shallow_Water_Meshes/
+notes/
+references/
+
+# Grid files
+*.info
+*.nc
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# MacOS
+*.DS_Store
+
+# Model output
+*.curve
+*.h5
+*.tec
+
+# Plots
+*.png
+*.pdf
+*.mp4
+
+# Python scripts
+output/DGSEM_Rotating_Shallow_Water_Output/Planetary_Rossby_Wave_SELF_Output_Data/*.py
+output/DGSEM_Rotating_Shallow_Water_Output/Topographic_Rossby_Wave_SELF_Output_Data/*.py
+src/DGSEM_Rotating_Shallow_Water/RoughWork.py
+src/MPAS_Ocean_Shallow_Water/RoughWork.py
+
+# Bash submission scripts
+*.sh
+
+# Swap files
+*.swp
+*~
+
+# Text files
+*.rtf
+*.txt
+
+# VSCode
+.vscode
