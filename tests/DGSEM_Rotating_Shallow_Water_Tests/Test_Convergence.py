@@ -16,18 +16,11 @@ with io.capture_output() as captured:
     import Initialization
     import Main
     import Convergence
-    
-    
+
+
 def Test_ConvergenceStudy():
     ConvergenceType = 'SpaceAndTime' # Choose ConvergenceType to be 'SpaceAndTime' or 'Space' or 'Time'.
-    if ConvergenceType == 'SpaceAndTime':
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
-    else:
-        ProblemTypes = ['Plane_Gaussian_Wave','Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
+    ProblemTypes = Convergence.SpecifyProblemTypes(ConvergenceType)
     SingleProblemType = True
     SingleProblemTypeIndex = 1
     if SingleProblemType:
@@ -39,7 +32,7 @@ def Test_ConvergenceStudy():
     SingleTimeIntegrator = True
     SingleTimeIntegratorIndex = 1
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = Convergence.SetOfTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = Convergence.SpecifyTimeIntegrators()
     if SingleTimeIntegrator:
         iTimeIntegratorLowerLimit = SingleTimeIntegratorIndex
         iTimeIntegratorUpperLimit = SingleTimeIntegratorIndex + 1
@@ -56,9 +49,9 @@ def Test_ConvergenceStudy():
     ReadFromSELFOutputData = False
     for iProblemType in range(iProblemTypeLowerLimit,iProblemTypeUpperLimit):
         ProblemType = ProblemTypes[iProblemType]
+        ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
         ProblemType_Title, ProblemType_FileName = Initialization.SpecifyTitleAndFileNamePrefixes(ProblemType) 
-        if ((ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-             or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+        if ProblemType_RossbyWave:
             EntityToBeInterpolated = 'Solution'
         else:
             EntityToBeInterpolated = 'Error'
@@ -103,14 +96,7 @@ if do_Test_ConvergenceStudy:
     
 def Test_PlotConvergenceData():
     ConvergenceType = 'SpaceAndTime' # Choose ConvergenceType to be 'SpaceAndTime' or 'Space' or 'Time'.
-    if ConvergenceType == 'SpaceAndTime':
-        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
-    else:
-        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
+    ProblemTypes = Convergence.SpecifyProblemTypes(ConvergenceType)
     SingleProblemType = True
     SingleProblemTypeIndex = 1
     if SingleProblemType:
@@ -142,14 +128,7 @@ if do_Test_PlotConvergenceData:
     
 def Test_PlotAllConvergenceData():
     ConvergenceType = 'SpaceAndTime' # Choose ConvergenceType to be 'SpaceAndTime' or 'Space' or 'Time'.
-    if ConvergenceType == 'SpaceAndTime':
-        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
-    else:
-        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave',
-                        'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave','Barotropic_Tide',
-                        'NonLinear_Manufactured_Solution']
+    ProblemTypes = Convergence.SpecifyProblemTypes(ConvergenceType)
     SingleProblemType = True
     SingleProblemTypeIndex = 1
     if SingleProblemType:

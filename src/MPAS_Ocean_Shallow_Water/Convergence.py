@@ -83,22 +83,19 @@ def InterpolateSolutionToCoarsestMesh(myMPASOceanShallowWater,myCoarsestMesh,Cel
     return mySolutionInterpolatedToCoarsestRectilinearMesh
 
 
-def DetermineNumericalSolutionAndError(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,
-                                       PrintAmplitudesOfWaveModes,CourantNumber,TimeIntegrator,
-                                       LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                                       Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,
-                                       MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
-                                       UseAveragedQuantities,dt,nTime,InterpolateExactVelocitiesFromEdgesToCellCenters,
-                                       PerformInterpolation=True,PerformInterpolationToCoarsestRectilinearMesh=False,
-                                       isCoarsestMesh=True,xCellOnCoarsestRectilinearMesh=[],
-                                       yCellOnCoarsestRectilinearMesh=[],myCoarsestMesh=[],
-                                       EntityToBeInterpolated='Error'):
+def DetermineNumericalSolutionAndError(
+ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber_Advection,
+CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,
+FixAngleEdge,PrintOutput,UseAveragedQuantities,dt,nTime,InterpolateExactVelocitiesFromEdgesToCellCenters,
+PerformInterpolation=True,PerformInterpolationToCoarsestRectilinearMesh=False,isCoarsestMesh=True,
+xCellOnCoarsestRectilinearMesh=[],yCellOnCoarsestRectilinearMesh=[],myCoarsestMesh=[],EntityToBeInterpolated='Error'):
     UseCourantNumberToDetermineTimeStep = False 
     myMPASOceanShallowWater = MPASOceanShallowWaterClass.MPASOceanShallowWater(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
-    UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep)
+    UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep)
     BoundaryCondition = myMPASOceanShallowWater.myNameList.BoundaryCondition
     myMPASOceanShallowWater.myNameList.dt = dt
     myMPASOceanShallowWater.myNameList.nTime = nTime
@@ -117,7 +114,7 @@ def DetermineNumericalSolutionAndError(ConvergenceType,ProblemType,PrintPhaseSpe
         if iTime == nTime:
             print('The final time for the %3d x %3d mesh is %.6f seconds.' %(nCellsX,nCellsY,
                                                                              myMPASOceanShallowWater.time))
-            if not(myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution):
+            if not(myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave):
                 MPASOceanShallowWaterClass.ComputeError(myMPASOceanShallowWater)
             if EntityToBeInterpolated == 'Solution':
                 State = 'Numerical'
@@ -274,19 +271,22 @@ def SpecifyNumberOfCells(ConvergenceType,ReturnSubscripts=False):
         return nCellsX
         
         
-def SpecifyMeshDirectoryAndMeshFileNamesForConvergenceStudy(ConvergenceType,ProblemType,ProblemType_EquatorialWave):
-    MeshDirectory = Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave,
-                                                                        ReturnOnlyMeshDirectory=True)
+def SpecifyMeshDirectoryAndMeshFileNamesForConvergenceStudy(ConvergenceType,ProblemType,
+                                                            ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                                                            ProblemType_EquatorialWave):
+    MeshDirectory = Initialization.SpecifyMeshDirectoryAndMeshFileNames(
+    ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,ProblemType_EquatorialWave,
+    ReturnOnlyMeshDirectory=True)
     MeshDirectory += '/ConvergenceStudyMeshes'
     nCellsX, Subscripts = SpecifyNumberOfCells(ConvergenceType,ReturnSubscripts=True)
     nCases = len(nCellsX)
     BaseMeshFileNames = ['' for x in range(0,nCases)]
     MeshFileNames = ['' for x in range(0,len(nCellsX))]
-    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+    if (ProblemType == 'Inertia_Gravity_Wave' or ProblemType_RossbyWave or ProblemType == 'Diffusion_Equation'
         or ProblemType == 'NonLinear_Manufactured_Solution'):
         BaseMeshFileNameRoot = 'base_mesh'
     else:
-        BaseMeshFileNameRoot = 'culled_mesh'
+        BaseMeshFileNameRoot= 'culled_mesh' 
     MeshFileNameRoot = 'mesh'
     for iCase in range(0,nCases):
         BaseMeshFileNames[iCase] = BaseMeshFileNameRoot + '_%s.nc' %Subscripts[iCase]
@@ -302,13 +302,18 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
     nCellsX = SpecifyNumberOfCells(ConvergenceType)
     nCellsY = nCellsX
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     MeshDirectory, BaseMeshFileNames, MeshFileNames = (
-    SpecifyMeshDirectoryAndMeshFileNamesForConvergenceStudy(ConvergenceType,ProblemType,ProblemType_EquatorialWave))
+    SpecifyMeshDirectoryAndMeshFileNamesForConvergenceStudy(ConvergenceType,ProblemType,
+                                                            ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                                                            ProblemType_EquatorialWave))
     nCases = len(nCellsX)
     if ConvergenceType == 'Time':
-        CourantNumber = 0.5
+        CourantNumber_Advection = 0.5
     else:
-        CourantNumber = 0.25
+        CourantNumber_Advection = 0.25
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     BaseMeshFileName = BaseMeshFileNames[nCases-1]
     MeshFileName = MeshFileNames[nCases-1]
@@ -316,13 +321,14 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX[nCases-1],nCellsY[nCases-1],PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,
-    PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep)
+    PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+    UseCourantNumberToDetermineTimeStep)
     dx = myMPASOceanShallowWater.myNameList.lX/nCellsX
     dt = np.zeros(nCases)
     nTime = np.zeros(nCases,dtype=int)
     nTime_Minimum = 32
     if ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space':
-        if myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution:
+        if myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave:
             dt_Minimum = 0.125
         else:
             dt_Minimum = myMPASOceanShallowWater.myNameList.dt
@@ -340,18 +346,23 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
         if ConvergenceType == 'Space':
             dt[:] = dt_Minimum
     else: # if ConvergenceType == 'Time':
-        if myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution:
+        if myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave:
             dt[0] = 0.5
         else:
             dt[0] = myMPASOceanShallowWater.myNameList.dt
         if TimeIntegrator == 'WilliamsonLowStorageThirdOrderRungeKuttaMethod':
-            if ProblemType == 'Barotropic_Tide':
+            if ProblemType_RossbyWave:
+                dt[0] *= 2.0
+            elif ProblemType == 'Barotropic_Tide':
                 dt[0] *= 0.5
-        elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
+        elif TimeIntegrator == 'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod':
+            if ProblemType_RossbyWave:
+                dt[0] *= 2.0
+        elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod' and not(ProblemType_RossbyWave):
             dt[0] *= 0.5
-        elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
+        elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod' and not(ProblemType_RossbyWave):
             dt[0] *= 0.25
-        elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
+        elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod' and not(ProblemType_RossbyWave):
             if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
                 or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
                 dt[0] *= 0.25
@@ -381,19 +392,20 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             if not(PerformInterpolation):
                 L2ErrorNorm[:,iCase] = (
                 DetermineNumericalSolutionAndError(
-                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,MeshDirectory,
-                BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,dt[iCase],nTime[iCase],
-                InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
-                EntityToBeInterpolated=EntityToBeInterpolated))
+                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],
+                nCellsY[iCase],PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
+                UseAveragedQuantities,dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,
+                PerformInterpolation,EntityToBeInterpolated=EntityToBeInterpolated))
             else: # if PerformInterpolation:
                 if PerformInterpolationToCoarsestRectilinearMesh:
                     if isCoarsestMesh:
                         xCellOnCoarsestRectilinearMesh, yCellOnCoarsestRectilinearMesh, L2ErrorNorm[:,iCase] = (
                         DetermineNumericalSolutionAndError(
-                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                        TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                        CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                        LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                         dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -402,8 +414,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                     else:
                         L2ErrorNorm[:,iCase] = (
                         DetermineNumericalSolutionAndError(
-                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                        TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                        CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                        LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                         dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -413,8 +426,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                     if isCoarsestMesh:
                         myCoarsestMesh, L2ErrorNorm[:,iCase] = (
                         DetermineNumericalSolutionAndError(
-                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                        TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                        CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                        LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                         dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -423,8 +437,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                     else:
                         L2ErrorNorm[:,iCase] = (
                         DetermineNumericalSolutionAndError(
-                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                        TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                        ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                        CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                        LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                         dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -437,8 +452,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                     (xCellOnCoarsestRectilinearMesh, yCellOnCoarsestRectilinearMesh, 
                      mySolutionOnCoarsestRectilinearMesh[:,:,iCase]) = (
                     DetermineNumericalSolutionAndError(
-                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                    TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                    CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                    LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                     Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                     MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                     dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -447,8 +463,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                 else:
                     mySolutionOnCoarsestRectilinearMesh[:,:,iCase] = (
                     DetermineNumericalSolutionAndError(
-                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                    TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                    CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                    LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                     Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                     MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                     dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -464,8 +481,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                 if isCoarsestMesh:
                     myCoarsestMesh, mySolutionOnCoarsestMesh[:,:,iCase] = (
                     DetermineNumericalSolutionAndError(
-                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                    TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                    CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                    LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                     Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                     MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                     dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -474,8 +492,9 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                 else:
                     (nCellsOnCoarsestMeshToBeConsidered, CellsOnCoarsestMeshToBeConsidered, 
                      mySolutionOnCoarsestMesh[:,:,iCase]) = DetermineNumericalSolutionAndError(
-                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                    TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+                    ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                    CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,
+                    LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                     Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,
                     MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
                     dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,PerformInterpolation,
@@ -490,11 +509,12 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                     mySolutionOnCoarsestMeshDifference))
         elif ConvergenceType == 'Time':           
             mySolution[:,:,iCase] = DetermineNumericalSolutionAndError(
-            ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-            TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-            Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],PrintBasicGeometry,MeshDirectory,
-            BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,dt[iCase],nTime[iCase],
-            InterpolateExactVelocitiesFromEdgesToCellCenters,EntityToBeInterpolated=EntityToBeInterpolated)
+            ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber_Advection,
+            CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+            Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nCellsX[iCase],nCellsY[iCase],
+            PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
+            UseAveragedQuantities,dt[iCase],nTime[iCase],InterpolateExactVelocitiesFromEdgesToCellCenters,
+            EntityToBeInterpolated=EntityToBeInterpolated)
             if not(isCoarsestMesh):
                 mySolutionDifference = mySolution[:,:,iCase] - mySolution[:,:,iCase-1]
                 L2ErrorNorm[:,iCase] = MPASOceanShallowWaterClass.ComputeErrorNorm(myMPASOceanShallowWater,True,
@@ -515,8 +535,21 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
         L2ErrorNorm = L2ErrorNorm[:,1:]
     WriteL2ErrorNorm(myMPASOceanShallowWater.OutputDirectory,nIntervals,Intervals,L2ErrorNorm,FileName)
     
+    
+def SpecifyProblemTypes(ConvergenceType):
+    if ConvergenceType == 'SpaceAndTime':
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Equatorial_Kelvin_Wave','Equatorial_Yanai_Wave',
+                        'Equatorial_Rossby_Wave','Equatorial_Inertia_Gravity_Wave','Barotropic_Tide',
+                        'NonLinear_Manufactured_Solution','Viscous_Burgers_Equation']
+    elif ConvergenceType == 'Space' or ConvergenceType == 'Time':
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Planetary_Rossby_Wave','Topographic_Rossby_Wave',
+                        'Equatorial_Kelvin_Wave','Equatorial_Yanai_Wave','Equatorial_Rossby_Wave',
+                        'Equatorial_Inertia_Gravity_Wave','Barotropic_Tide','NonLinear_Manufactured_Solution',
+                        'Viscous_Burgers_Equation']
+    return ProblemTypes
+    
 
-def SetOfTimeIntegrators():
+def SpecifyTimeIntegrators():
     TimeIntegrators = ['ExplicitMidpointMethod','SecondOrderAdamsBashforthMethod',
                        'WilliamsonLowStorageThirdOrderRungeKuttaMethod','ThirdOrderAdamsBashforthMethod',
                        'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod','FourthOrderAdamsBashforthMethod']
@@ -532,8 +565,17 @@ def SpecifyAsymptoticPointsForSlopeComputation(ConvergenceType,ProblemType,TimeI
         iPointLowerLimit = 0
         iPointUpperLimit = 4
     elif ConvergenceType == 'Space' or ConvergenceType == 'Time':
-        iPointLowerLimit = 0
-        iPointUpperLimit = 3
+        if ConvergenceType == 'Space' and ProblemType == 'Planetary_Rossby_Wave':
+            iPointLowerLimit = 1
+            iPointUpperLimit = 3
+        elif (ConvergenceType == 'Time' and ProblemType == 'Planetary_Rossby_Wave' 
+              and (TimeIntegrator == 'WilliamsonLowStorageThirdOrderRungeKuttaMethod' 
+                   or TimeIntegrator == 'ThirdOrderAdamsBashforthMethod')):
+            iPointLowerLimit = 0
+            iPointUpperLimit = 2
+        else:
+            iPointLowerLimit = 0
+            iPointUpperLimit = 3
     return iPointLowerLimit, iPointUpperLimit
 
    
@@ -590,7 +632,7 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
     # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
     # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SetOfTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     if SingleTimeIntegrator:
         iTimeIntegratorLowerLimit = SingleTimeIntegratorIndex
         iTimeIntegratorUpperLimit = SingleTimeIntegratorIndex + 1
@@ -755,15 +797,15 @@ def SpecifyShadowAndFrameAlpha():
     return shadow, framealpha
                 
                 
-def SetOfLegends(slopes):
-    legends = ['RK2','AB2','RK3','AB3','RK4','AB4']            
+def SpecifyLegends(slopes):
+    legends = ['RK2','AB2','RK3','AB3','RK4','AB4']
     for i_legend in range(0,len(legends)):
         legends[i_legend] += ': s = %.2f' %slopes[i_legend]
     legendfontsize = 14.0
     legendpads = [0.0,0.0]
     return legends, legendfontsize, legendpads
                 
-                
+
 def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationConvergenceData=True,
                            PlotAgainstNumberOfCellsInZonalDirection=True,PlotAgainstNumberOfTimeSteps=True,
                            UseBestFitLine=False,set_xticks_manually=False):
@@ -776,7 +818,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
     # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
     # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SetOfTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     nTimeIntegrators = len(TimeIntegrators)
     TimeIntegrator = TimeIntegrators[0]
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = LF_TR_and_LF_AM3_with_FB_Feedback_Types[0]
@@ -921,7 +963,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of zonal velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mZonalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mZonalVelocity)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -962,7 +1004,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of meridional velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mMeridionalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mMeridionalVelocity)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -1001,7 +1043,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of SSH'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mSurfaceElevation)
+        legends, legendfontsize, legendpads = SpecifyLegends(mSurfaceElevation)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection)
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):

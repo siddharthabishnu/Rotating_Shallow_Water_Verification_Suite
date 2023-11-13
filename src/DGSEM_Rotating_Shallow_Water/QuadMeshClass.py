@@ -32,8 +32,8 @@ class QuadMeshParameters:
 
 class QuadMesh:
     
-    def __init__(myQuadMesh,lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,ProblemType_EquatorialWave=False,
-                 PrintEdgeProperties=False):
+    def __init__(myQuadMesh,lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType_EquatorialWave=False,
+                 QuadElementType='CurvedSidedQuadrilateral',PrintEdgeProperties=False):
         myQuadMesh.myQuadMeshParameters = QuadMeshParameters()
         myQuadMesh.lX = lX
         myQuadMesh.lY = lY
@@ -63,14 +63,13 @@ class QuadMesh:
         # The EdgeMap is just the set of local NodeIDs connected by each edge viz. {(1,2), (2,3), (4,3) and (1,4)} 
         # where the ordering of the local NodeIDs are along the positive xi and eta directions.
         # Construct the corner nodes with their x and y coordinates.          
-        myQuadMesh.BuildCornerNodes(ProblemType,ProblemType_EquatorialWave)
+        myQuadMesh.BuildCornerNodes(ProblemType_EquatorialWave)
         # Construct the elements with elementID, the global NodeIDs of the four corner nodes, boundary curves, and 
         # geometry.
-        myQuadMesh.BuildQuadElements(myDGNodalStorage2D)
+        myQuadMesh.BuildQuadElements(myDGNodalStorage2D,QuadElementType)
         myQuadMesh.GetNodeConnectivityAndConstructEdges(PrintEdgeProperties)
 
-    def BuildCornerNodes(myQuadMesh,ProblemType,ProblemType_EquatorialWave=False):
-        lX = myQuadMesh.lX
+    def BuildCornerNodes(myQuadMesh,ProblemType_EquatorialWave=False):
         lY = myQuadMesh.lY
         nElementsX = myQuadMesh.nElementsX
         nElementsY = myQuadMesh.nElementsY
@@ -79,17 +78,14 @@ class QuadMesh:
         for iNodeY in range(0,nElementsY+1):
             for iNodeX in range(0,nElementsX+1):
                 GlobalNodeID = iNodeY*(nElementsX+1) + iNodeX + 1
-                if ProblemType == 'Plane_Gaussian_Wave':
-                    xCoordinate = float(iNodeX)*dx - 0.5*lX
-                else:
-                    xCoordinate = float(iNodeX)*dx
-                if ProblemType == 'Plane_Gaussian_Wave' or ProblemType_EquatorialWave:
+                xCoordinate = float(iNodeX)*dx
+                if ProblemType_EquatorialWave:
                     yCoordinate = float(iNodeY)*dy - 0.5*lY
                 else:
                     yCoordinate = float(iNodeY)*dy
                 myQuadMesh.myCornerNodes[GlobalNodeID-1] = CN2D.CornerNode(xCoordinate,yCoordinate)
                 
-    def BuildQuadElements(myQuadMesh,myDGNodalStorage2D):
+    def BuildQuadElements(myQuadMesh,myDGNodalStorage2D,QuadElementType):
         nElementsX = myQuadMesh.nElementsX
         nElementsY = myQuadMesh.nElementsY
         xCoordinate = np.zeros(4)
@@ -145,7 +141,8 @@ class QuadMesh:
                 BoundaryCurve[2] = GB2D.CurveInterpolant2D(ParametricNodes,BoundaryCurve31,BoundaryCurve32)
                 BoundaryCurve[3] = GB2D.CurveInterpolant2D(ParametricNodes,BoundaryCurve41,BoundaryCurve42)
                 myQuadMesh.myQuadElements[ElementID-1] = QE.QuadElement(NodeIDs,ElementIDX,ElementIDY,ElementID,
-                                                                        BoundaryCurve,myDGNodalStorage2D)
+                                                                        BoundaryCurve,myDGNodalStorage2D,
+                                                                        QuadElementType,xCoordinate,yCoordinate)
                 
     def GetNodeToElement(myQuadMesh):
         nElements = myQuadMesh.nElements

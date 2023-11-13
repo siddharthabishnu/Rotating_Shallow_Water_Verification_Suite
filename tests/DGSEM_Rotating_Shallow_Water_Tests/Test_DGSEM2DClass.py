@@ -60,14 +60,13 @@ def TestDGSEM2D():
         DataType = DataTypes[iDataType]
         DisplayTime = '0 Second'
         UseGivenColorBarLimits = False
-        UseInterpolatedErrorLimits = True
         ComputeOnlyExactSolution = False
         SpecifyDataTypeInPlotFileName = True
         PlotNumericalSolution = True
         DGSEM2DClass.PythonPlotStateDGSEM2D(myDGSEM2D,FileName,DataType,DisplayTime,UseGivenColorBarLimits,
-                                            UseInterpolatedErrorLimits,ComputeOnlyExactSolution,
-                                            SpecifyDataTypeInPlotFileName,PlotNumericalSolution)
-    
+                                            ComputeOnlyExactSolution,SpecifyDataTypeInPlotFileName,
+                                            PlotNumericalSolution)
+
 
 do_TestDGSEM2D = False
 if do_TestDGSEM2D:

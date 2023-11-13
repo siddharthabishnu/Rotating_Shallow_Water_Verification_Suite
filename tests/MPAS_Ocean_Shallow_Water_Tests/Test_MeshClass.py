@@ -24,7 +24,8 @@ def TestMesh():
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     PrintBasicGeometry = False
     FixAngleEdge = True
@@ -98,7 +99,8 @@ def TestMesh():
             myNameList = Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                                                  TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
                                                  Generalized_FB_with_AB2_AM3_Step_Type,
-                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
+                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,
+                                                 CourantNumber_Advection,CourantNumber_Diffusion,
                                                  UseCourantNumberToDetermineTimeStep)
             BaseMeshFileName = BaseMeshFileNames[iProblemType]
             MeshFileName = MeshFileNames[iProblemType]
@@ -162,7 +164,8 @@ def TestPlotMeshes():
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     PrintBasicGeometry = False
     FixAngleEdge = True
@@ -189,7 +192,8 @@ def TestPlotMeshes():
             myNameList = Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                                                  TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
                                                  Generalized_FB_with_AB2_AM3_Step_Type,
-                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
+                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,
+                                                 CourantNumber_Advection,CourantNumber_Diffusion,
                                                  UseCourantNumberToDetermineTimeStep)
             BaseMeshFileName = BaseMeshFileNames[iProblemType]
             MeshFileName = MeshFileNames[iProblemType]
@@ -246,7 +250,8 @@ def TestInterpolateSolutionFromVerticesAndEdgesToCellCenters(PlotFigures=True):
     MeshDirectoryRoot = '../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_50x50_Cells'
     nCellsX = 50
     nCellsY = nCellsX
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     PrintBasicGeometry = False
     FixAngleEdge = True
@@ -265,7 +270,8 @@ def TestInterpolateSolutionFromVerticesAndEdgesToCellCenters(PlotFigures=True):
         myNameList = Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                                              TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
                                              Generalized_FB_with_AB2_AM3_Step_Type,
-                                             Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
+                                             Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,
+                                             CourantNumber_Advection,CourantNumber_Diffusion,
                                              UseCourantNumberToDetermineTimeStep)
         BaseMeshFileName = BaseMeshFileNames[iProblemType]
         MeshFileName = MeshFileNames[iProblemType]
@@ -376,7 +382,8 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     MeshDirectoryRoot = (
     '../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_Interpolation_Study')
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     PrintBasicGeometry = False
     FixAngleEdge = True
@@ -402,7 +409,8 @@ def TestInterpolateSolutionToCoarsestRectilinearMPASOceanMesh(PlotFigures=True):
             myNameList = Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                                                  TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
                                                  Generalized_FB_with_AB2_AM3_Step_Type,
-                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
+                                                 Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,
+                                                 CourantNumber_Advection,CourantNumber_Diffusion,
                                                  UseCourantNumberToDetermineTimeStep)
             BaseMeshFileName = BaseMeshFileNames[iProblemType] + '_%sx%s.nc' %(nCellsX,nCellsX)
             MeshFileName = MeshFileNames[iProblemType] + '_%sx%s.nc' %(nCellsX,nCellsX)

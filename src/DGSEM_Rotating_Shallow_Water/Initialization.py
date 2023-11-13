@@ -15,7 +15,7 @@ with io.capture_output() as captured:
     
 def isGeophysicalWave(ProblemType):
     if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-        or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'
+        or ProblemType == 'Manufactured_Planetary_Rossby_Wave' or ProblemType == 'Manufactured_Topographic_Rossby_Wave'
         or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
         or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'):
         ProblemType_GeophysicalWave = True
@@ -33,32 +33,64 @@ def isEquatorialWave(ProblemType):
     return ProblemType_EquatorialWave
 
 
-def SpecifyBoundaryCondition(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
+def Specify_ProblemType_ManufacturedRossbyWave(ProblemType):
+    if ProblemType == 'Manufactured_Planetary_Rossby_Wave' or ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ProblemType_ManufacturedRossbyWave = True
+    else:
+        ProblemType_ManufacturedRossbyWave = False
+    return ProblemType_ManufacturedRossbyWave
+
+
+def Specify_ProblemType_RossbyWave(ProblemType):
+    if ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+        ProblemType_RossbyWave = True
+    else:
+        ProblemType_RossbyWave = False
+    return ProblemType_RossbyWave
+
+
+def SpecifyExactSolutionLimits(ProblemType):
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Coastal_Kelvin_Wave' 
+        or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+        or ProblemType == 'Barotropic_Tide' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
+        ProblemType_SpecifyExactSolutionLimits = True
+    else:
+        ProblemType_SpecifyExactSolutionLimits = False
+    return ProblemType_SpecifyExactSolutionLimits
+
+
+def SpecifyBoundaryCondition(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                             ProblemType_EquatorialWave,ReadFromSELFOutputData):
     if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Inertia_Gravity_Wave' 
-        or ProblemType == 'NonLinear_Manufactured_Solution'):
+        or ProblemType == 'Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution'):
         BoundaryCondition = 'Periodic'
-    elif ProblemType == 'Coastal_Kelvin_Wave':
+    elif (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Barotropic_Tide' 
+          or ProblemType == 'Viscous_Burgers_Equation'):
         BoundaryCondition = 'NonPeriodic_x'
-    elif (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-          or ProblemType_EquatorialWave):
+    elif ProblemType_ManufacturedRossbyWave or ProblemType_EquatorialWave:
         BoundaryCondition = 'NonPeriodic_y'
-    elif ProblemType_NoExactSolution:
-        BoundaryCondition = 'Radiation'
-        # Choose the boundary condition to be 'Radiation' or 'Reflection' i.e. no normal flow at the solid boundary.
+    elif ProblemType_RossbyWave:
+        if ReadFromSELFOutputData:
+            BoundaryCondition = 'Radiation'
+            # Choose the boundary condition to be 'Radiation' or 'Reflection' i.e. no normal flow at the solid boundary.
+        else:
+            BoundaryCondition = 'Periodic'
     else:
         BoundaryCondition = 'NonPeriodic_xy'
     return BoundaryCondition
     
     
-def SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
+def SpecifyAmplitudes(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,ProblemType_EquatorialWave):
     if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Inertia_Gravity_Wave':           
         etaHat1 = 0.1
-    elif ProblemType == 'Plane_Gaussian_Wave':
+    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+          or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation'):
         etaHat1 = 0.0
     elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType_EquatorialWave:
         etaHat1 = 0.0001
-    elif (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-          or ProblemType_NoExactSolution):
+    elif ProblemType_ManufacturedRossbyWave or ProblemType_RossbyWave:
         etaHat1 = 0.01
     elif ProblemType == 'Barotropic_Tide':
         etaHat1 = 0.2
@@ -71,22 +103,23 @@ def SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_Equato
     return etaHat1, etaHat2
 
 
-def SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave):
-    if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Planetary_Rossby_Wave' 
-        or ProblemType == 'Topographic_Rossby_Wave'):    
+def SpecifyDomainExtents(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                         ProblemType_EquatorialWave):
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType_ManufacturedRossbyWave:    
         lX = 50.0*1000.0
-    elif ProblemType == 'Plane_Gaussian_Wave':
-        lX = 2.0
+    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType_RossbyWave or ProblemType == 'Diffusion_Equation' 
+          or ProblemType == 'Viscous_Burgers_Equation'):
+        lX = 1000.0*1000.0
     elif ProblemType == 'Coastal_Kelvin_Wave':
         lX = 5000.0*1000.0
     elif ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'NonLinear_Manufactured_Solution':
         lX = 10000.0*1000.0
-    elif ProblemType_NoExactSolution:
-        lX = 1000.0*1000.0
     elif ProblemType_EquatorialWave:
         lX = 17500.0*1000.0
     elif ProblemType == 'Barotropic_Tide':
         lX = 250.0*1000.0
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        lX = 2.0
     lY = lX
     return lX, lY
 
@@ -102,6 +135,16 @@ def SpecifyWaveNumbers(ProblemType,lX,lY):
         kY1 = 0.0
         kX2 = 4.5*np.pi/lX
         kY2 = 0.0
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        kX1 = 1.0
+        kY1 = 1.0
+        kX2 = 0.0
+        kY2 = 0.0
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        kX1 = 0.0
+        kY1 = 0.0
+        kX2 = 0.0
+        kY2 = 0.0
     else:
         kX1 = 2.0*np.pi/lX
         kY1 = 2.0*np.pi/lY
@@ -110,8 +153,8 @@ def SpecifyWaveNumbers(ProblemType,lX,lY):
     return kX1, kY1, kX2, kY2
 
 
-def SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,beta0,c0,f0,g,H0,kX1,kY1,kX2,kY2,R,
-                              LengthScale,TimeScale):
+def SpecifyAngularFrequencies(ProblemType,ProblemType_RossbyWave,alpha0,beta0,c0,f0,g,H0,kX1,kY1,kX2,kY2,R,LengthScale,
+                              TimeScale):
     if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
         omega1 = c0
         omega2 = 0.0
@@ -121,13 +164,13 @@ def SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,bet
     elif ProblemType == 'Inertia_Gravity_Wave':
         omega1 = np.sqrt(g*H0*(kX1**2.0 + kY1**2.0) + f0**2.0)
         omega2 = np.sqrt(g*H0*(kX2**2.0 + kY2**2.0) + f0**2.0)
-    elif ProblemType == 'Planetary_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
         omega1 = -beta0*R**2.0*kX1/(1.0 + R**2.0*(kX1**2.0 + kY1**2.0))
         omega2 = -beta0*R**2.0*kX2/(1.0 + R**2.0*(kX2**2.0 + kY2**2.0))
-    elif ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         omega1 = alpha0*g/f0*kX1/(1.0 + R**2.0*(kX1**2.0 + kY1**2.0))
         omega2 = alpha0*g/f0*kX2/(1.0 + R**2.0*(kX2**2.0 + kY2**2.0))
-    elif ProblemType_NoExactSolution:
+    elif ProblemType_RossbyWave:
         omega1 = 0.0
         omega2 = 0.0
     elif ProblemType == 'Equatorial_Kelvin_Wave':
@@ -149,14 +192,18 @@ def SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,bet
     elif ProblemType == 'Barotropic_Tide':
         omega1 = np.sqrt(g*H0*kX1**2.0 + f0**2.0)
         omega2 = np.sqrt(g*H0*kX2**2.0 + f0**2.0) 
+    elif (ProblemType == 'Diffusion_Equation' or ProblemType == 'Advection_Diffusion_Equation' 
+          or ProblemType == 'Viscous_Burgers_Equation'):
+        omega1 = 0.0
+        omega2 = 0.0
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         omega1 = np.sqrt(g*H0*(kX1**2.0 + kY1**2.0))
         omega2 = 0.0
     return omega1, omega2
 
 
-def SpecifyPhaseSpeeds(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave,c0,kX1,kY1,kX2,kY2,omega1,
-                       omega2):
+def SpecifyPhaseSpeeds(ProblemType,ProblemType_RossbyWave,ProblemType_EquatorialWave,c0,kX1,kY1,kX2,kY2,omega1,omega2,
+                       u0,v0,uL):
     if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
         cX1 = omega1/kX1
         cY1 = omega1/kY1
@@ -167,8 +214,18 @@ def SpecifyPhaseSpeeds(ProblemType,ProblemType_NoExactSolution,ProblemType_Equat
         cY1 = -c0 # cY1 = omega1/kY1 = -c0.
         cX2 = 0.0
         cY2 = -c0 # cY2 = omega2/kY2 = -c0.
-    elif ProblemType_NoExactSolution:
+    elif ProblemType == 'Diffusion_Equation' or ProblemType_RossbyWave:
         cX1 = 0.0
+        cY1 = 0.0
+        cX2 = 0.0
+        cY2 = 0.0
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        cX1 = u0
+        cY1 = v0
+        cX2 = 0.0
+        cY2 = 0.0
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        cX1 = uL
         cY1 = 0.0
         cX2 = 0.0
         cY2 = 0.0
@@ -198,8 +255,9 @@ def SpecifyPhaseSpeeds(ProblemType,ProblemType_NoExactSolution,ProblemType_Equat
 
 class ExactSolutionParameters:
     
-    def __init__(myExactSolutionParameters,alpha0,beta0,c0,cX1,cX2,cY1,cY2,etaHat1,etaHat2,f0,g,H0,kX1,kX2,kY1,kY2,lX,
-                 lY,omega1,omega2,x0,y0,R0,R0x,R0y,R,Req,LengthScale,TimeScale,VelocityScale,SurfaceElevationScale):
+    def __init__(myExactSolutionParameters,alpha0,beta0,c0,cX1,cX2,cY1,cY2,etaHat1,etaHat2,f0_MidLatitude,f0,g,H0,
+                 kappa1,kappa2,kX1,kX2,kY1,kY2,lX,lY,nu,omega1,omega2,x0,y0,R0,R0x,R0y,s,uL,uR,u0,v0,R,Req,LengthScale,
+                 TimeScale,VelocityScale,SurfaceElevationScale):
         myExactSolutionParameters.alpha0 = alpha0
         myExactSolutionParameters.beta0 = beta0
         myExactSolutionParameters.c0 = c0
@@ -209,15 +267,19 @@ class ExactSolutionParameters:
         myExactSolutionParameters.cY2 = cY2
         myExactSolutionParameters.etaHat1 = etaHat1
         myExactSolutionParameters.etaHat2 = etaHat2
+        myExactSolutionParameters.f0_MidLatitude = f0_MidLatitude
         myExactSolutionParameters.f0 = f0
         myExactSolutionParameters.g = g
         myExactSolutionParameters.H0 = H0
+        myExactSolutionParameters.kappa1 = kappa1
+        myExactSolutionParameters.kappa2 = kappa2
         myExactSolutionParameters.kX1 = kX1
         myExactSolutionParameters.kX2 = kX2
         myExactSolutionParameters.kY1 = kY1
         myExactSolutionParameters.kY2 = kY2
         myExactSolutionParameters.lX = lX
         myExactSolutionParameters.lY = lY
+        myExactSolutionParameters.nu = nu
         myExactSolutionParameters.omega1 = omega1
         myExactSolutionParameters.omega2 = omega2
         myExactSolutionParameters.x0 = x0
@@ -225,6 +287,11 @@ class ExactSolutionParameters:
         myExactSolutionParameters.R0 = R0
         myExactSolutionParameters.R0x = R0x
         myExactSolutionParameters.R0y = R0y
+        myExactSolutionParameters.s = s
+        myExactSolutionParameters.uL = uL
+        myExactSolutionParameters.uR = uR
+        myExactSolutionParameters.u0 = u0
+        myExactSolutionParameters.v0 = v0
         myExactSolutionParameters.R = R
         myExactSolutionParameters.Req = Req
         myExactSolutionParameters.LengthScale = LengthScale
@@ -233,68 +300,105 @@ class ExactSolutionParameters:
         myExactSolutionParameters.SurfaceElevationScale = SurfaceElevationScale
         
 
-def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,ProblemType_NoExactSolution,
-                                   ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
-                                   DomainExtentsSpecified=False,lX=0.0,lY=0.0):
+def SpecifyExactSolutionParameters(ProblemType,ProblemType_GeophysicalWave,ProblemType_ManufacturedRossbyWave,
+                                   ProblemType_RossbyWave,ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,
+                                   PrintAmplitudesOfWaveModes,DomainExtentsSpecified=False,lX=0.0,lY=0.0):
     beta0 = 2.0*10.0**(-11.0)
-    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave':
+    if ProblemType == 'Convergence_of_Spatial_Operators':
         g = 1.0
+    else:
+        g = 10.0  
+    if ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Viscous_Burgers_Equation':
         H0 = 1.0
     else:
-        g = 10.0
-        H0 = 1000.0    
+        H0 = 1000.0
     c0 = np.sqrt(g*H0)
-    etaHat1, etaHat2 = SpecifyAmplitudes(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
+    etaHat1, etaHat2 = SpecifyAmplitudes(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                                         ProblemType_EquatorialWave)
+    f0_MidLatitude = 10.0**(-4.0)
     if (ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave' 
-        or ProblemType_EquatorialWave):
+        or ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'
+        or ProblemType == 'Diffusion_Equation' or ProblemType == 'Advection_Diffusion_Equation' 
+        or ProblemType == 'Viscous_Burgers_Equation' or ProblemType_EquatorialWave):
         f0 = 0.0
     else:
-        f0 = 10.0**(-4.0)
-    if (ProblemType == 'Topographic_Rossby_Wave'
-        or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
-        alpha0 = beta0*H0/f0
+        f0 = f0_MidLatitude
+    if ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+        alpha0 = beta0*H0/f0_MidLatitude
         # In the Northern Hemisphere where f0 > 0, the topographic Rossby wave travels with the shallower water on its 
         # right. Hence if alpha0 > 0 i.e. the ocean depth increases northward, the topographic Rossby wave will 
         # propagate eastward else it will propagate westward.
     else:
         alpha0 = 0.0
     if not(DomainExtentsSpecified):
-        lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave)
+        lX, lY = SpecifyDomainExtents(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                                      ProblemType_EquatorialWave)
     kX1, kY1, kX2, kY2 = SpecifyWaveNumbers(ProblemType,lX,lY)
-    if ProblemType == 'Plane_Gaussian_Wave':
-        x0 = -0.5*(0.5*lX)
-        y0 = -0.5*(0.5*lY)
-    elif ProblemType_NoExactSolution:
+    if ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Advection_Diffusion_Equation':
+        x0 = 0.25*lX
+        y0 = 0.25*lY
+    elif ProblemType_RossbyWave:
         x0 = 0.5*lX
         y0 = 0.5*lY
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        x0 = 0.25*lX # Zonal offset
+        y0 = 0.0
     else:
         x0 = 0.0
         y0 = 0.0
-    R0 = 0.2/(2.0*np.sqrt(np.log(2.0)))
+    w = 0.2*(0.5*10.0**6.0)
+    if ProblemType == 'Plane_Gaussian_Wave':
+        R0 = w/(2.0*np.sqrt(np.log(2.0)))
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        R0 = 0.05*lX
+    else:
+        R0 = 0.0
     R0x = 10.0**5.0
     R0y = 10.0**5.0
+    u0 = 1.0
+    v0 = u0
+    uL = 1.0 # Speed at the left boundary
+    uR = 0.0 # Speed at the right boundary
+    s = 0.5*(uL + uR) # Speed of the shock
+    if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+        nu = 25000.0 # Kinematic viscosity
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        nu = R0**2.0
+    else:
+        nu = 0.0
+    kappa1 = nu*(kX1**2.0 + kY1**2.0)
+    kappa2 = nu*(kX2**2.0 + kY2**2.0)
     if not(ProblemType == 'Convergence_of_Spatial_Operators' or ProblemType == 'Plane_Gaussian_Wave' 
-           or ProblemType_EquatorialWave):
+           or ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave'
+           or ProblemType == 'Diffusion_Equation' or ProblemType == 'Advection_Diffusion_Equation' 
+           or ProblemType == 'Viscous_Burgers_Equation' or ProblemType_EquatorialWave):
         R = c0/f0
     else:
         R = 0.0
     Req = np.sqrt(c0/beta0)
-    LengthScale = np.sqrt(c0/beta0)
-    TimeScale = 1.0/np.sqrt(beta0*c0)
-    VelocityScale = c0
-    SurfaceElevationScale = c0**2.0/g
-    omega1, omega2 = SpecifyAngularFrequencies(ProblemType,ProblemType_NoExactSolution,alpha0,beta0,c0,f0,g,H0,kX1,kY1,
-                                               kX2,kY2,R,LengthScale,TimeScale)
-    cX1, cY1, cX2, cY2 = SpecifyPhaseSpeeds(ProblemType,ProblemType_NoExactSolution,ProblemType_EquatorialWave,c0,kX1,
-                                            kY1,kX2,kY2,omega1,omega2)
+    if ProblemType == 'Viscous_Burgers_Equation':
+        LengthScale = 1.0
+        TimeScale = 1.0
+        VelocityScale = 1.0
+        SurfaceElevationScale = 1.0
+    else:
+        LengthScale = np.sqrt(c0/beta0)
+        TimeScale = 1.0/np.sqrt(beta0*c0)
+        VelocityScale = c0
+        SurfaceElevationScale = c0**2.0/g
+    omega1, omega2 = SpecifyAngularFrequencies(ProblemType,ProblemType_RossbyWave,alpha0,beta0,c0,f0_MidLatitude,g,H0,
+                                               kX1,kY1,kX2,kY2,R,LengthScale,TimeScale)
+    cX1, cY1, cX2, cY2 = SpecifyPhaseSpeeds(ProblemType,ProblemType_RossbyWave,ProblemType_EquatorialWave,c0,kX1,kY1,
+                                            kX2,kY2,omega1,omega2,u0,v0,uL)
     if (ProblemType_GeophysicalWave or ProblemType == 'Barotropic_Tide') and PrintPhaseSpeedOfWaveModes:
         print('The zonal component of the phase speed of the first wave mode is %.4g.' %cX1)
         print('The meridional component of the phase speed of the first wave mode is %.4g.' %cY1)
         print('The zonal component of the phase speed of the second wave mode is %.4g.' %cX2)
         print('The meridional component of the phase speed of the second wave mode is %.4g.' %cY2)
-    myExactSolutionParameters = ExactSolutionParameters(alpha0,beta0,c0,cX1,cX2,cY1,cY2,etaHat1,etaHat2,f0,g,H0,kX1,kX2,
-                                                        kY1,kY2,lX,lY,omega1,omega2,x0,y0,R0,R0x,R0y,R,Req,LengthScale,
-                                                        TimeScale,VelocityScale,SurfaceElevationScale)
+    myExactSolutionParameters = ExactSolutionParameters(alpha0,beta0,c0,cX1,cX2,cY1,cY2,etaHat1,etaHat2,f0_MidLatitude,
+                                                        f0,g,H0,kappa1,kappa2,kX1,kX2,kY1,kY2,lX,lY,nu,omega1,omega2,x0,
+                                                        y0,R0,R0x,R0y,s,uL,uR,u0,v0,R,Req,LengthScale,TimeScale,
+                                                        VelocityScale,SurfaceElevationScale)
     if (((ProblemType_GeophysicalWave and not(ProblemType_EquatorialWave)) or ProblemType == 'Barotropic_Tide') 
         and PrintAmplitudesOfWaveModes):        
         SurfaceElevationAmplitude, ZonalVelocityAmplitude, MeridionalVelocityAmplitude = (
@@ -323,6 +427,7 @@ class TimeSteppingParameters:
         myTimeSteppingParameters.nStepsRK3 = 3
         myTimeSteppingParameters.aRK3 = np.array([0.0,-5.0/9.0,-153.0/128.0])
         myTimeSteppingParameters.bRK3 = np.array([0.0,1.0/3.0,3.0/4.0])
+        myTimeSteppingParameters.bRK3Next = np.array([1.0/3.0,3.0/4.0,1.0])
         myTimeSteppingParameters.gRK3 = np.array([1.0/3.0,15.0/16.0,8.0/15.0])
         myTimeSteppingParameters.nStepsRK4 = 5
         myTimeSteppingParameters.aRK4 = np.zeros(5)
@@ -335,6 +440,8 @@ class TimeSteppingParameters:
         myTimeSteppingParameters.bRK4[2] = 2.0/3.0 + 2.0**(1.0/3.0)/3.0 + 2.0**(2.0/3.0)/6.0
         myTimeSteppingParameters.bRK4[3] = 1.0/3.0 - 2.0**(1.0/3.0)/3.0 - 2.0**(2.0/3.0)/6.0
         myTimeSteppingParameters.bRK4[4] = 1.0
+        myTimeSteppingParameters.bRK4Next = np.ones(5)
+        myTimeSteppingParameters.bRK4Next[0:4] = myTimeSteppingParameters.bRK4[1:5]
         myTimeSteppingParameters.gRK4 = np.zeros(5)
         myTimeSteppingParameters.gRK4[0] = 2.0/3.0 + 2.0**(1.0/3.0)/3.0 + 2.0**(2.0/3.0)/6.0
         myTimeSteppingParameters.gRK4[1] = -2.0**(2.0/3.0)/6.0 + 1.0/6.0
@@ -530,18 +637,18 @@ def SpecifyTimeSteppingParameters(TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedba
     return myTimeSteppingParameters 
 
 
-def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
+def SpecifyTimeStep(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,ReadFromSELFOutputData):
     if ProblemType == 'Convergence_of_Spatial_Operators':
         dt = 1.0
     elif ProblemType == 'Plane_Gaussian_Wave':
-        dt = 7.0*10.0**(-4.0)
+        dt = 3.5
     elif ProblemType == 'Coastal_Kelvin_Wave':
         dt = 50.0
     elif ProblemType == 'Inertia_Gravity_Wave':
         dt = 23.0
-    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType_ManufacturedRossbyWave:
         dt = 39000.0
-    elif ProblemType_NoExactSolution:
+    elif ProblemType_RossbyWave:
         dt = 0.5
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         dt = 175.0
@@ -553,35 +660,51 @@ def SpecifyTimeStep(ProblemType,ProblemType_NoExactSolution):
         dt = 57.0
     elif ProblemType == 'Barotropic_Tide':
         dt = 2.4
+    elif ProblemType == 'Diffusion_Equation':
+        dt = 40.0
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        if ReadFromSELFOutputData:
+            dt = 30.0
+        else:
+            dt = 40.0
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        dt = 4.0*10.0**(-4.0)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         dt = 35.0
     return dt
 
 
-def SpecifyDumpFrequency(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOutputData):
+def SpecifyDumpFrequency(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,ReadFromSELFOutputData):
     if ProblemType == 'Convergence_of_Spatial_Operators':
         nDumpFrequency = 1
+    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+          or ProblemType_ManufacturedRossbyWave or ProblemType == 'NonLinear_Manufactured_Solution'):
+        nDumpFrequency = 20
     elif (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Equatorial_Kelvin_Wave' 
           or ProblemType == 'Equatorial_Yanai_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'
           or ProblemType == 'Barotropic_Tide'):
         nDumpFrequency = 10
-    elif ProblemType == 'Equatorial_Rossby_Wave':
-        nDumpFrequency = 25
-    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-          or ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-          or ProblemType == 'NonLinear_Manufactured_Solution'):
-        nDumpFrequency = 20
-    elif ProblemType_NoExactSolution:
+    elif ProblemType_RossbyWave:
         if ReadFromSELFOutputData:
             nDumpFrequency = 86400*2
         else:
             nDumpFrequency = 1440
+    elif ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Advection_Diffusion_Equation':
+        nDumpFrequency = 25
+    elif ProblemType == 'Diffusion_Equation':
+        nDumpFrequency = 37
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        if ReadFromSELFOutputData:
+            nDumpFrequency = 11250
+        else:
+            nDumpFrequency = 250
     # Note that nDumpFrequency is chosen in such a way that we end up with approximately 100 output files for the entire
     # simulation time.
     return nDumpFrequency
 
 
-def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSELFOutputData):
+def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemType_RossbyWave,
+                             ReadFromSELFOutputData):
     if ProblemType == 'Convergence_of_Spatial_Operators':
         nTime_Minimum = 1
         nTime = 1
@@ -594,10 +717,10 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSEL
     elif ProblemType == 'Inertia_Gravity_Wave':
         nTime_Minimum = 2043 + 1
         nTime = 2060 + 1
-    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':   
+    elif ProblemType_ManufacturedRossbyWave:   
         nTime_Minimum = 2025 + 1
         nTime = 2040 + 1
-    elif ProblemType_NoExactSolution:
+    elif ProblemType_RossbyWave:
         if ReadFromSELFOutputData:
             nTime_Minimum = 86400*60*2 + 1
             nTime = 86400*60*2 + 1
@@ -616,6 +739,19 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSEL
     elif ProblemType == 'Barotropic_Tide':
         nTime_Minimum = 1042 + 1
         nTime = 1050 + 1
+    elif ProblemType == 'Diffusion_Equation':
+        nTime_Minimum = 3644 + 1
+        nTime = 3700 + 1
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        nTime_Minimum = 2500 + 1
+        nTime = 2500 + 1
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        if ReadFromSELFOutputData:
+            nTime_Minimum = 33750 + 1 
+            nTime = 33750 + 1 
+        else:
+            nTime_Minimum = 25000 + 1
+            nTime = 25000 + 1
     # Note that (a) nTime_Minimum is the minimum integer such that (nTime_Minimum - 1) times the time step is greater 
     # than or equal to the simulation time, and (b) nTime is the minimum integer such that nTime >= nTime_Minimum and 
     # nTime - 1 is a multiple of nDumpFrequency.
@@ -623,15 +759,19 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_NoExactSolution,ReadFromSEL
 
 
 def SpecifyLogicalArrayPlot(ProblemType):
-    if ProblemType == 'Coastal_Kelvin_Wave':
+    if ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Advection_Diffusion_Equation':
         PlotZonalVelocity = False
     else:
         PlotZonalVelocity = True
-    if ProblemType == 'Equatorial_Kelvin_Wave':
+    if (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation'):
         PlotMeridionalVelocity = False
     else:
         PlotMeridionalVelocity = True
-    PlotSurfaceElevation = True
+    if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+        PlotSurfaceElevation = False
+    else:
+        PlotSurfaceElevation = True
     LogicalArrayPlot = [PlotZonalVelocity,PlotMeridionalVelocity,PlotSurfaceElevation]
     return LogicalArrayPlot
 
@@ -649,18 +789,12 @@ def SpecifyTitleAndFileNamePrefixes(ProblemType):
     elif ProblemType == 'Inertia_Gravity_Wave':
         ProblemType_Title = 'Inertia Gravity Wave'
         ProblemType_FileName = 'InertiaGravityWave'
-    elif ProblemType == 'Planetary_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave' or ProblemType == 'Planetary_Rossby_Wave':
         ProblemType_Title = 'Planetary Rossby Wave'
         ProblemType_FileName = 'PlanetaryRossbyWave'
-    elif ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         ProblemType_Title = 'Topographic Rossby Wave'
         ProblemType_FileName = 'TopographicRossbyWave'
-    elif ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave':
-        ProblemType_Title = 'Planetary Rossby Wave'
-        ProblemType_FileName = 'CoastalKelvinInertiaGravityPlanetaryRossbyWave'
-    elif ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave':
-        ProblemType_Title = 'Topographic Rossby Wave'
-        ProblemType_FileName = 'CoastalKelvinInertiaGravityTopographicRossbyWave'
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         ProblemType_Title = 'Equatorial Kelvin Wave'
         ProblemType_FileName = 'EquatorialKelvinWave'
@@ -675,10 +809,19 @@ def SpecifyTitleAndFileNamePrefixes(ProblemType):
         ProblemType_FileName = 'EquatorialInertiaGravityWave'
     elif ProblemType == 'Barotropic_Tide':
         ProblemType_Title = 'Barotropic Tide'
-        ProblemType_FileName = 'BarotropicTide'     
+        ProblemType_FileName = 'BarotropicTide'   
+    elif ProblemType == 'Diffusion_Equation':
+        ProblemType_Title = 'Diffusion Equation'
+        ProblemType_FileName = 'DiffusionEquation' 
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        ProblemType_Title = 'Advection Diffusion Equation'
+        ProblemType_FileName = 'AdvectionDiffusionEquation'
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ProblemType_Title = 'Non-Linear Manufactured Solution'
         ProblemType_FileName = 'NonLinearManufacturedSolution'
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        ProblemType_Title = 'Viscous Burgers Equation'
+        ProblemType_FileName = 'ViscousBurgersEquation'  
     return ProblemType_Title, ProblemType_FileName
 
 
@@ -686,28 +829,38 @@ class NameList:
     
     def __init__(myNameList,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                  LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                 Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber,
-                 UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData):
+                 Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,CourantNumber_Advection,
+                 CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData):
+        myNameList.QuadElementType = 'StraightSidedQuadrilateral'
         myNameList.ProblemType = ProblemType
         myNameList.ProblemType_GeophysicalWave = isGeophysicalWave(ProblemType)
-        if (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-            or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
-            myNameList.ProblemType_NoExactSolution = True
-        else:
-            myNameList.ProblemType_NoExactSolution = False
         myNameList.ProblemType_EquatorialWave = isEquatorialWave(ProblemType)
-        if (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave' 
-            or ProblemType == 'NonLinear_Manufactured_Solution'):
-            myNameList.NonTrivialSourceTerms = True
-        else:
-            myNameList.NonTrivialSourceTerms = False
-        if ProblemType == 'NonLinear_Manufactured_Solution':
+        myNameList.ProblemType_ManufacturedRossbyWave = Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+        myNameList.ProblemType_RossbyWave = Specify_ProblemType_RossbyWave(ProblemType)
+        myNameList.ProblemType_SpecifyExactSolutionLimits = SpecifyExactSolutionLimits(ProblemType)
+        if ProblemType == 'NonLinear_Manufactured_Solution' or ProblemType == 'Viscous_Burgers_Equation':
             myNameList.Problem_is_Linear = False
         else:
             myNameList.Problem_is_Linear = True
-        myNameList.BoundaryCondition = SpecifyBoundaryCondition(ProblemType,myNameList.ProblemType_NoExactSolution,
-                                                                myNameList.ProblemType_EquatorialWave)
-        myNameList.lX, myNameList.lY = SpecifyDomainExtents(ProblemType,myNameList.ProblemType_NoExactSolution,
+        SimulateNonLinearRossbyWave = False
+        if SimulateNonLinearRossbyWave:
+            if myNameList.ProblemType_RossbyWave:
+                myNameList.Problem_is_Linear = False            
+        if myNameList.ProblemType_ManufacturedRossbyWave or ProblemType == 'NonLinear_Manufactured_Solution':
+            myNameList.NonTrivialSourceTerms = True
+        else:
+            myNameList.NonTrivialSourceTerms = False
+        if (ProblemType == 'Diffusion_Equation' or ProblemType == 'Advection_Diffusion_Equation' 
+            or ProblemType == 'Viscous_Burgers_Equation'):
+            myNameList.NonTrivialDiffusionTerms = True
+        else:
+            myNameList.NonTrivialDiffusionTerms = False
+        myNameList.BoundaryCondition = (
+        SpecifyBoundaryCondition(ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                 myNameList.ProblemType_RossbyWave,myNameList.ProblemType_EquatorialWave,
+                                 ReadFromSELFOutputData))
+        myNameList.lX, myNameList.lY = SpecifyDomainExtents(ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                                            myNameList.ProblemType_RossbyWave,
                                                             myNameList.ProblemType_EquatorialWave)
         myNameList.nElementsX = nElementsX
         myNameList.nElementsY = nElementsY
@@ -715,42 +868,68 @@ class NameList:
         myNameList.dy = myNameList.lY/float(nElementsY)
         myNameList.myExactSolutionParameters = (
         SpecifyExactSolutionParameters(ProblemType,myNameList.ProblemType_GeophysicalWave,
-                                       myNameList.ProblemType_NoExactSolution,myNameList.ProblemType_EquatorialWave,
-                                       PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes))
+                                       myNameList.ProblemType_ManufacturedRossbyWave,myNameList.ProblemType_RossbyWave,
+                                       myNameList.ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,
+                                       PrintAmplitudesOfWaveModes))
+        if not(myNameList.Problem_is_Linear) and ProblemType == 'Topographic_Rossby_Wave':
+            alpha0_reduction_factor = 10.0**(-6.0)
+            myNameList.myExactSolutionParameters.alpha0 *= alpha0_reduction_factor
         (myNameList.ExactSurfaceElevationLimits, myNameList.ExactZonalVelocityLimits, 
          myNameList.ExactMeridionalVelocityLimits) = (
         ESST.DetermineExactSolutionLimits(ProblemType,myNameList.myExactSolutionParameters))
         myNameList.myTimeSteppingParameters = (
         SpecifyTimeSteppingParameters(TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
                                       Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type))
-        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_NoExactSolution):
+        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_RossbyWave):
             cX1 = myNameList.myExactSolutionParameters.cX1
             cX2 = myNameList.myExactSolutionParameters.cX2
             cY1 = myNameList.myExactSolutionParameters.cY1
             cY2 = myNameList.myExactSolutionParameters.cY2
             abs_cX = max(abs(cX1),abs(cX2))
             abs_cY = max(abs(cY1),abs(cY2))
-            myNameList.dt = CourantNumber/(abs_cX/(myNameList.dx/float(nXi**2)) + abs_cY/(myNameList.dy/float(nEta**2)))
-            print('The time step for Courant number %.6f is %.3g seconds.' %(CourantNumber,myNameList.dt))
+            dx_smallest = myNameList.dx/float(nXi**2.0)
+            dy_smallest = myNameList.dy/float(nEta**2.0)
+            if myNameList.NonTrivialDiffusionTerms:
+                nu = myNameList.myExactSolutionParameters.nu
+                dt_Diffusion = CourantNumber_Diffusion/(nu*(1.0/dx_smallest**2.0 + 1.0/dy_smallest**2.0))
+            if ProblemType == 'Diffusion_Equation':
+                myNameList.dt = dt_Diffusion
+                print('The time step for diffusive Courant number %.6f is %.3g seconds.' 
+                      %(CourantNumber_Diffusion,myNameList.dt))
+            else:
+                dt_Advection = CourantNumber_Advection/(abs_cX/dx_smallest + abs_cY/dy_smallest)
+                UseMinimumOfAdvectiveAndDiffusiveTimeSteps = False
+                if myNameList.NonTrivialDiffusionTerms and UseMinimumOfAdvectiveAndDiffusiveTimeSteps:
+                    myNameList.dt = min(dt_Advection,dt_Diffusion)
+                    print(
+                    'The time step for advective Courant number %.6f and diffusive Courant number %.6f is %.3g seconds.' 
+                    %(CourantNumber_Advection,CourantNumber_Diffusion,myNameList.dt))
+                else:
+                    myNameList.dt = dt_Advection
+                    print('The time step for advective Courant number %.6f is %.3g seconds.' 
+                        %(CourantNumber_Advection,myNameList.dt))
         else:
-            myNameList.dt = SpecifyTimeStep(ProblemType,myNameList.ProblemType_NoExactSolution)
+            myNameList.dt = SpecifyTimeStep(ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                            myNameList.ProblemType_RossbyWave,ReadFromSELFOutputData)
         myNameList.ReadFromSELFOutputData = ReadFromSELFOutputData
-        myNameList.nDumpFrequency = SpecifyDumpFrequency(ProblemType,myNameList.ProblemType_NoExactSolution,
-                                                         ReadFromSELFOutputData)
-        if myNameList.ProblemType_NoExactSolution:
+        myNameList.nDumpFrequency = SpecifyDumpFrequency(ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                                         myNameList.ProblemType_RossbyWave,ReadFromSELFOutputData)
+        if myNameList.ProblemType_RossbyWave:
             nRestartFrequencyBynDumpFrequency = 10
         else:
             nRestartFrequencyBynDumpFrequency = 50
         myNameList.nRestartFrequency = nRestartFrequencyBynDumpFrequency*myNameList.nDumpFrequency
         # Specify myNameList.nRestartFrequency to be an integral multiple of myNameList.nDumpFrequency.
         myNameList.nTime_Minimum, myNameList.nTime = (
-        SpecifyNumberOfTimeSteps(ProblemType,myNameList.ProblemType_NoExactSolution,ReadFromSELFOutputData))
+        SpecifyNumberOfTimeSteps(ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                 myNameList.ProblemType_RossbyWave,ReadFromSELFOutputData))
         myNameList.LogicalArrayPlot = SpecifyLogicalArrayPlot(ProblemType)
         myNameList.ProblemType_Title, myNameList.ProblemType_FileName = SpecifyTitleAndFileNamePrefixes(ProblemType)
         myNameList.nEquations = 3
         
-    def ModifyNameList(myNameList,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,nXi,nEta,CourantNumber,
-                       UseCourantNumberToDetermineTimeStep,BoundaryCondition,lX,lY):
+    def ModifyNameList(myNameList,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,nXi,nEta,
+                       CourantNumber_Advection,CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,
+                       BoundaryCondition,lX,lY):
         myNameList.BoundaryCondition = BoundaryCondition
         myNameList.lX = lX
         myNameList.lY = lY
@@ -758,20 +937,40 @@ class NameList:
         myNameList.dy = lY/float(myNameList.nElementsY)
         myNameList.myExactSolutionParameters = (
         SpecifyExactSolutionParameters(myNameList.ProblemType,myNameList.ProblemType_GeophysicalWave,
-                                       myNameList.ProblemType_NoExactSolution,myNameList.ProblemType_EquatorialWave,
-                                       PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
-                                       DomainExtentsSpecified=True,lX=lX,lY=lY))
+                                       myNameList.ProblemType_ManufacturedRossbyWave,myNameList.ProblemType_RossbyWave,
+                                       myNameList.ProblemType_EquatorialWave,PrintPhaseSpeedOfWaveModes,
+                                       PrintAmplitudesOfWaveModes,DomainExtentsSpecified=True,lX=lX,lY=lY))
         (myNameList.ExactSurfaceElevationLimits, myNameList.ExactZonalVelocityLimits, 
          myNameList.ExactMeridionalVelocityLimits) = (
         ESST.DetermineExactSolutionLimits(myNameList.ProblemType,myNameList.myExactSolutionParameters))
-        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_NoExactSolution):
+        if UseCourantNumberToDetermineTimeStep and not(myNameList.ProblemType_RossbyWave):
             cX1 = myNameList.myExactSolutionParameters.cX1
             cX2 = myNameList.myExactSolutionParameters.cX2
             cY1 = myNameList.myExactSolutionParameters.cY1
             cY2 = myNameList.myExactSolutionParameters.cY2
             abs_cX = max(abs(cX1),abs(cX2))
             abs_cY = max(abs(cY1),abs(cY2))
-            myNameList.dt = CourantNumber/(abs_cX/(myNameList.dx/float(nXi**2)) + abs_cY/(myNameList.dy/float(nEta**2)))
-            print('The time step for Courant number %.6f is %.3g seconds.' %(CourantNumber,myNameList.dt))
+            dx_smallest = myNameList.dx/float(nXi**2.0)
+            dy_smallest = myNameList.dy/float(nEta**2.0)
+            if myNameList.NonTrivialDiffusionTerms:
+                nu = myNameList.myExactSolutionParameters.nu
+                dt_Diffusion = CourantNumber_Diffusion/(nu*(1.0/dx_smallest**2.0 + 1.0/dy_smallest**2.0))
+            if myNameList.ProblemType == 'Diffusion_Equation':
+                myNameList.dt = dt_Diffusion
+                print('The time step for diffusive Courant number %.6f is %.3g seconds.' 
+                      %(CourantNumber_Diffusion,myNameList.dt))
+            else:
+                dt_Advection = CourantNumber_Advection/(abs_cX/dx_smallest + abs_cY/dy_smallest)
+                UseMinimumOfAdvectiveAndDiffusiveTimeSteps = False
+                if myNameList.NonTrivialDiffusionTerms and UseMinimumOfAdvectiveAndDiffusiveTimeSteps:
+                    myNameList.dt = min(dt_Advection,dt_Diffusion)
+                    print(
+                    'The time step for advective Courant number %.6f and diffusive Courant number %.6f is %.3g seconds.' 
+                    %(CourantNumber_Advection,CourantNumber_Diffusion,myNameList.dt))
+                else:
+                    myNameList.dt = dt_Advection
+                    print('The time step for advective Courant number %.6f is %.3g seconds.' 
+                        %(CourantNumber_Advection,myNameList.dt))
         else:
-            myNameList.dt = SpecifyTimeStep(myNameList.ProblemType,myNameList.ProblemType_NoExactSolution)
+            myNameList.dt = SpecifyTimeStep(myNameList.ProblemType,myNameList.ProblemType_ManufacturedRossbyWave,
+                                            myNameList.ProblemType_RossbyWave,myNameList.ReadFromSELFOutputData)

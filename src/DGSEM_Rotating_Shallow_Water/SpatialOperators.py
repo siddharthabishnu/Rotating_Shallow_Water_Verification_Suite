@@ -90,13 +90,12 @@ def DetermineNumericalSpatialOperatorsAndError(ProblemType,nElementsX,nXi,WriteS
     nEtaPlot = nXiPlot
     CourantNumber = 0.5
     UseCourantNumberToDetermineTimeStep = True
-    SpecifyRiemannSolver = True
     RiemannSolver = 'BassiRebay'
     myDGSEM2D = DGSEM2DClass.DGSEM2D(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                      LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                      Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,
                                      nEtaPlot,CourantNumber,UseCourantNumberToDetermineTimeStep,
-                                     SpecifyRiemannSolver=SpecifyRiemannSolver,RiemannSolver=RiemannSolver)
+                                     RiemannSolver=RiemannSolver)
     lX = myDGSEM2D.myNameList.lX
     lY = myDGSEM2D.myNameList.lY
     nElements = myDGSEM2D.myQuadMesh.nElements
@@ -194,7 +193,7 @@ def ConvergenceStudyOfSpatialOperators(nXi,WriteState=False):
             nElementsX[iCase] = nElementsX_Minimum
         else:
             nElementsX[iCase] = nElementsX[iCase-1]*2
-    lX, lY = Initialization.SpecifyDomainExtents(ProblemType,ProblemType_NoExactSolution=False,
+    lX, lY = Initialization.SpecifyDomainExtents(ProblemType,ProblemType_RossbyWave=False,
                                                  ProblemType_EquatorialWave=False)
     dx = lX/nElementsX
     L2ErrorNorm = np.zeros((3,nCases))
@@ -212,7 +211,7 @@ def PlotConvergenceDataOfSpatialOperators(nXi,PlotAgainstNumberOfCellsInZonalDir
                                           ReadDivergenceErrorNorm=False):
     OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/Convergence_of_Spatial_Operators'
     if ReadFromSELFOutputData:
-        OutputDirectory += '_SELFOutputData'
+        OutputDirectory += '_SELF_Output_Data'
     FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXi+1)
     nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve',ReadDivergenceErrorNorm)
     linewidth = 2.0
@@ -313,7 +312,7 @@ def PlotConvergenceDataOfAllSpatialOperators(nXiMinimum,PlotAgainstNumberOfCells
                                              ReadFromSELFOutputData=False,ReadDivergenceErrorNorm=False):
     OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/Convergence_of_Spatial_Operators'
     if ReadFromSELFOutputData:
-        OutputDirectory += '_SELFOutputData'
+        OutputDirectory += '_SELF_Output_Data'
     FileName = 'ConvergencePlot_SpatialOperators_PolynomialOrder_%d_L2ErrorNorm' %(nXiMinimum+1)
     nIntervals, Intervals, L2ErrorNorm = ReadL2ErrorNorm(OutputDirectory,FileName+'.curve',ReadDivergenceErrorNorm)
     nCases = len(nIntervals)

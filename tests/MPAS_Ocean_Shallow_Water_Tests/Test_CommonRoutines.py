@@ -42,7 +42,7 @@ def TestRemoveElementFrom1DArray():
     xNew = CR.RemoveElementFrom1DArray(x,index)
     print('The array x is')
     print(x)
-    print('After removing element with index %d, the array x becomes')
+    print('After removing element with index %d, the array x becomes' %index)
     print(xNew)
     
     
@@ -317,7 +317,7 @@ if do_TestWriteTecPlot2DUnstructured:
 
 
 def TestReadTecPlot2DStructured():
-    x = np.array([1,2,3],dtype=int) 
+    x = np.array([1,2,3],dtype=float) 
     y = x
     nX = len(x) - 1
     nY = len(y) - 1
@@ -344,7 +344,7 @@ if do_TestReadTecPlot2DStructured:
 
 
 def TestReadTecPlot2DUnstructured():
-    x = np.array([1,2,3],dtype=int) 
+    x = np.array([1,2,3],dtype=float) 
     y = x
     nX = len(x) - 1
     nY = len(y) - 1
@@ -375,11 +375,13 @@ if do_TestReadTecPlot2DUnstructured:
     TestReadTecPlot2DUnstructured()
 
 
-def TestPythonReadFileAndMakeFilledContourPlot2D():
+def TestPythonReadFileAndMakeFilledContourAndScatterPlot2D():
     output_directory = '../../output/MPAS_Ocean_Shallow_Water_Output/'
     filenameStructured = 'TestWriteTecPlot2DStructured.tec'
     filenameUnstructured = 'TestWriteTecPlot2DUnstructured.tec'
     nContours = 300
+    marker = 's'
+    markersize = 12.0
     labels = ['x','y']
     labelfontsizes = [17.5,17.5]
     labelpads = [10.0,10.0]
@@ -398,11 +400,14 @@ def TestPythonReadFileAndMakeFilledContourPlot2D():
                                                 labelpads,tickfontsizes,useGivenColorBarLimits,ColorBarLimits,
                                                 nColorBarTicks,title,titlefontsize,SaveAsPDF,Show,
                                                 DataType='Unstructured')
+    CR.PythonReadFileAndMakeScatterPlotWithColorBar(output_directory,filenameUnstructured,marker,markersize,labels,
+                                                    labelfontsizes,labelpads,tickfontsizes,useGivenColorBarLimits,
+                                                    ColorBarLimits,nColorBarTicks,title,titlefontsize,SaveAsPDF,Show)
     
     
-do_TestPythonReadFileAndMakeFilledContourPlot2D = False
-if do_TestPythonReadFileAndMakeFilledContourPlot2D:   
-    TestPythonReadFileAndMakeFilledContourPlot2D()
+do_TestPythonReadFileAndMakeFilledContourAndScatterPlot2D = False
+if do_TestPythonReadFileAndMakeFilledContourAndScatterPlot2D:   
+    TestPythonReadFileAndMakeFilledContourAndScatterPlot2D()
     
     
 def Test_WriteStateVariableLimitsToFile_ReadStateVariableLimitsFromFile():

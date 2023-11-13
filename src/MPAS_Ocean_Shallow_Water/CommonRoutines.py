@@ -352,8 +352,8 @@ def PythonConvergencePlots1DSaveAsPDF(output_directory,plot_type,x,y,linewidths,
         plt.show()
     plt.close()
     os.chdir(cwd)
-
-
+    
+    
 def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsizes,labelpads,tickfontsizes,title,
                 titlefontsize,SaveAsPDF,FileName,Show,fig_size=[9.25,9.25],UseDefaultMethodToSpecifyTickFontSize=True,
                 titlepad=1.035,FileFormat='pdf'):
@@ -365,8 +365,7 @@ def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsiz
     fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
     ax = fig.add_subplot(111) # Create an axes object in the figure
     nPoints = np.size(x)
-    for iPoint in range(0,nPoints):
-        plt.plot([x[iPoint]],[y[iPoint]],color=color,marker=marker,markersize=markersize)
+    plt.scatter(x,y,color=color,marker=marker,s=markersize**2)
     plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
     plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
     if UseDefaultMethodToSpecifyTickFontSize:
@@ -382,6 +381,79 @@ def ScatterPlot(output_directory,x,y,color,marker,markersize,labels,labelfontsiz
         plt.show()
     plt.close()
     os.chdir(cwd)
+
+
+def ScatterPlotWithColorBar(output_directory,x,y,phi,marker,markersize,labels,labelfontsizes,labelpads,tickfontsizes,
+                            useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,title,titlefontsize,SaveAsPDF,FileName,
+                            Show,fig_size=[10.0,10.0],UseDefaultMethodToSpecifyTickFontSize=True,set_aspect_equal=False,
+                            colormap=plt.cm.jet,cbarlabelformat='%.2g',cbarfontsize=13.75,set_xticks_manually=False,
+                            xticks_set_manually=[],set_yticks_manually=False,yticks_set_manually=[],titlepad=1.035,
+                            FileFormat='pdf',bbox_inches='tight',specify_n_ticks=False,n_ticks=[0,0]):
+    cwd = os.getcwd()
+    path = cwd + '/' + output_directory + '/'
+    if not os.path.exists(path):
+        os.mkdir(path) # os.makedir(path)
+    os.chdir(path)    
+    fig = plt.figure(figsize=(fig_size[0],fig_size[1])) # Create a figure object
+    ax = fig.add_subplot(111) # Create an axes object in the figure
+    if set_aspect_equal:
+        ax.set_aspect('equal')
+    else:
+        xMin = min(x[:])
+        xMax = max(x[:])
+        yMin = min(y[:])
+        yMax = max(y[:])        
+        aspect_ratio = (xMax - xMin)/(yMax - yMin)
+        ax.set_aspect(aspect_ratio,adjustable='box')
+    if useGivenColorBarLimits:
+        cbar_min = ColorBarLimits[0]
+        cbar_max = ColorBarLimits[1]
+    else:
+        cbar_min = np.min(phi)
+        cbar_max = np.max(phi)
+    cbarlabels = np.linspace(cbar_min,cbar_max,num=nColorBarTicks,endpoint=True)
+    plt.scatter(x,y,c=phi,vmin=cbar_min,vmax=cbar_max,cmap=colormap,marker=marker,s=markersize)
+    plt.title(title,fontsize=titlefontsize,fontweight='bold',y=titlepad)
+    cbarShrinkRatio = 0.8075
+    cbar = plt.colorbar(shrink=cbarShrinkRatio) # Draw colorbar.
+    cbar.set_ticks(cbarlabels)
+    cbar.set_ticklabels(cbarlabels)
+    cbarlabels_final = cbar.get_ticks()
+    cbar.ax.set_yticklabels([cbarlabelformat %x for x in cbarlabels_final],fontsize=cbarfontsize)
+    plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
+    plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
+    if UseDefaultMethodToSpecifyTickFontSize:
+        plt.xticks(fontsize=tickfontsizes[0])
+        plt.yticks(fontsize=tickfontsizes[1])
+    else:
+        ax.tick_params(axis='x',labelsize=tickfontsizes[0])
+        ax.tick_params(axis='y',labelsize=tickfontsizes[1])
+    if set_xticks_manually:
+        ax.set_xticks(xticks_set_manually,minor=False)
+    if set_yticks_manually:
+        ax.set_yticks(yticks_set_manually,minor=False)
+    if specify_n_ticks:
+        n_xticks = n_ticks[0]
+        n_yticks = n_ticks[1]
+        ax.xaxis.set_major_locator(plt.MaxNLocator(n_xticks))
+        ax.yaxis.set_major_locator(plt.MaxNLocator(n_yticks))
+    if SaveAsPDF:
+        plt.savefig(FileName+'.'+FileFormat,format=FileFormat,bbox_inches=bbox_inches)
+    if Show:
+        plt.show()
+    plt.close()
+    os.chdir(cwd)
+    
+    
+def PythonReadFileAndMakeScatterPlotWithColorBar(output_directory,filename,marker,markersize,labels,labelfontsizes,
+                                                 labelpads,tickfontsizes,useGivenColorBarLimits,ColorBarLimits,
+                                                 nColorBarTicks,title,titlefontsize,SaveAsPDF,Show):
+    x, y, phi = ReadTecPlot2DUnstructured(output_directory,filename,ReturnIndependentVariables=True)
+    filename = filename.replace('.tec','')
+    filename += '_ScatterPlotWithColorBar'
+    ScatterPlotWithColorBar(output_directory,x,y,phi,marker,markersize,labels,labelfontsizes,labelpads,tickfontsizes,
+                            useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,title,titlefontsize,SaveAsPDF,filename,
+                            Show)
 
 
 def LagrangeInterpolation1D(xData,fData,x):
@@ -589,7 +661,7 @@ def PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels
         FCP = plt.tricontourf(x,y,phi,nContours,vmin=cbar_min,vmax=cbar_max,cmap=colormap)
     # FCP stands for filled contour plot.
     plt.title(title,fontsize=titlefontsize,fontweight='bold',y=1.035)
-    cbarShrinkRatio = 0.825
+    cbarShrinkRatio = 0.8075
     cbar = plt.colorbar(shrink=cbarShrinkRatio) # Draw colorbar.
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
@@ -624,6 +696,7 @@ def PythonReadFileAndMakeFilledContourPlot2D(output_directory,filename,nContours
     elif DataType == 'Unstructured':
         x, y, phi = ReadTecPlot2DUnstructured(output_directory,filename,ReturnIndependentVariables=True)
     filename = filename.replace('.tec','')
+    filename += '_FilledContourPlot'
     PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels,labelfontsizes,labelpads,tickfontsizes,
                                        useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,title,titlefontsize,
                                        SaveAsPDF,filename,Show,DataType=DataType)

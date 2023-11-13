@@ -53,50 +53,30 @@ if do_TestReturnTanInverseInProperQuadrant:
     
     
 def TestFixAngleEdge():
-    mesh_directory = '../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_4x4_Cells'
+    mesh_directory_root = '../../meshes/MPAS_Ocean_Shallow_Water_Meshes/MPAS_Ocean_Shallow_Water_Meshes_4x4_Cells'
     PrintOutput = False
     PrintRelevantMeshData = False
     ReturnComputedAngleEdge = False
-    mesh_file_name = 'base_mesh_P.nc'
-    DetermineYCellAlongLatitude = True
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    mesh_file_name = 'mesh_P.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = False
-    mesh_file_name = 'base_mesh_NP_x.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = True
-    mesh_file_name = 'culled_mesh_NP_x.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    mesh_file_name = 'mesh_NP_x.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = False
-    mesh_file_name = 'base_mesh_NP_y.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = True
-    mesh_file_name = 'culled_mesh_NP_y.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    mesh_file_name = 'mesh_NP_y.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = False
-    mesh_file_name = 'base_mesh_NP_xy.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    DetermineYCellAlongLatitude = True
-    mesh_file_name = 'culled_mesh_NP_xy.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
-    mesh_file_name = 'mesh_NP_xy.nc'
-    FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
-                      ReturnComputedAngleEdge)
+    BoundaryConditions = ['Periodic','NonPeriodic_x','NonPeriodic_y','NonPeriodic_xy']
+    for iBoundaryCondition in range(0,len(BoundaryConditions)):
+        BoundaryCondition = BoundaryConditions[iBoundaryCondition]
+        mesh_directory = mesh_directory_root + '/' + BoundaryCondition
+        if BoundaryCondition == 'Periodic':
+            DetermineYCellAlongLatitude = True
+        else:
+            DetermineYCellAlongLatitude = False
+        mesh_file_name = 'base_mesh_' + BoundaryCondition + '.nc'
+        FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
+                          ReturnComputedAngleEdge)
+        if not(BoundaryCondition == 'Periodic'):
+            DetermineYCellAlongLatitude = True
+            mesh_file_name = 'culled_mesh_' + BoundaryCondition + '.nc'
+            FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,
+                              PrintRelevantMeshData,ReturnComputedAngleEdge)        
+        # Note that DetermineYCellAlongLatitude is now specified as True.
+        mesh_file_name = 'mesh_' + BoundaryCondition + '.nc'
+        FAER.FixAngleEdge(mesh_directory,mesh_file_name,DetermineYCellAlongLatitude,PrintOutput,PrintRelevantMeshData,
+                          ReturnComputedAngleEdge)    
     
     
 do_TestFixAngleEdge = False

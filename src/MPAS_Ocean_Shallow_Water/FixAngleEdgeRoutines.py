@@ -8,7 +8,6 @@ center of cellsOnEdge[0] to that of cellsOnEdge[1], along the boundaries of the 
 
 import numpy as np
 import os
-import netCDF4 as nc
 from netCDF4 import Dataset
 
 

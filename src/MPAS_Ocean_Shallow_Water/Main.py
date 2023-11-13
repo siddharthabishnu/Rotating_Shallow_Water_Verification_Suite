@@ -17,8 +17,8 @@ with io.capture_output() as captured:
     import TimeSteppingMethods as TSM
 
 
-def FormatSimulationTime(time,non_integral_seconds=False,display_time=False,
-                         ProblemType_PlanetaryTopographicRossbyWave=False,ProblemType_NoExactSolution=False):
+def FormatSimulationTime(time,non_integral_seconds=False,display_time=False,ProblemType_ManufacturedRossbyWave=False,
+                         ProblemType_RossbyWave=False):
     years = np.floor(time/(86400.0*365.0))
     remainingtime = np.mod(time,86400.0*365.0)
     days = np.floor(remainingtime/86400.0)
@@ -47,7 +47,7 @@ def FormatSimulationTime(time,non_integral_seconds=False,display_time=False,
         seconds_string = 'Second'
     else:
         seconds_string = 'Seconds'
-    if ProblemType_PlanetaryTopographicRossbyWave or ProblemType_NoExactSolution:
+    if ProblemType_ManufacturedRossbyWave or ProblemType_RossbyWave:
         if time >= 86400.0*365.0:
             SimulationTime = ('%d %s %d %s %2d %s %2d %s' 
                               %(years,years_string,days,days_string,hours,hours_string,minutes,minutes_string))
@@ -101,7 +101,8 @@ def DetermineCourantNumberForGivenTimeStep(ProblemType,PrintPhaseSpeedOfWaveMode
                                            Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
                                            nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
                                            MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,dt,
-                                           PrintCourantNumber=False):
+                                           ComputeCourantNumber_Diffusion=False,PrintCourantNumber_Advection=False,
+                                           PrintCourantNumber_Diffusion=False):
     myMPASOceanShallowWater = MPASOceanShallowWaterClass.MPASOceanShallowWater(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
@@ -115,10 +116,17 @@ def DetermineCourantNumberForGivenTimeStep(ProblemType,PrintPhaseSpeedOfWaveMode
     cY2 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.cY2
     abs_cX = max(abs(cX1),abs(cX2))
     abs_cY = max(abs(cY1),abs(cY2))
-    CourantNumber = dt*(abs_cX/dx + abs_cY/dy)
-    if PrintCourantNumber:
-        print('The Courant number is %.6f.' %CourantNumber)
-    return CourantNumber
+    CourantNumber_Advection = dt*(abs_cX/dx + abs_cY/dy)
+    if ComputeCourantNumber_Diffusion:
+        nu = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.nu
+        CourantNumber_Diffusion = nu*dt*(1.0/dx**2.0 + 1.0/dy**2.0)
+    else:
+        CourantNumber_Diffusion = 0.0
+    if PrintCourantNumber_Advection:
+        print('The Courant number for advection is %.6f.' %CourantNumber_Advection)
+    if PrintCourantNumber_Diffusion:
+        print('The Courant number for diffusion is %.6f.' %CourantNumber_Diffusion)
+    return CourantNumber_Advection, CourantNumber_Diffusion
 
 
 def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
@@ -135,15 +143,18 @@ def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
     PrintOutput = False
     UseAveragedQuantities = False
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     MeshDirectory, BaseMeshFileName, MeshFileName = (
-    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave))
+    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave))
     if ProblemType == 'Plane_Gaussian_Wave':
-        dt = 3.27*10.0**(-3.0)
+        dt = 16.0
     elif ProblemType == 'Coastal_Kelvin_Wave':
         dt = 216.0
     elif ProblemType == 'Inertia_Gravity_Wave':
         dt = 111.0
-    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave' or ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         dt = 230100.0
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         dt = 873.0
@@ -155,19 +166,29 @@ def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
         dt = 285.0
     elif ProblemType == 'Barotropic_Tide':
         dt = 12.3
+    elif ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+        dt = 750.0
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        dt = 5.0*10.0**(-3.0)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         dt = 162.0
-    CourantNumber = DetermineCourantNumberForGivenTimeStep(
+    if (ProblemType == 'Diffusion_Equation' or ProblemType == 'Advection_Diffusion_Equation' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
+        ComputeCourantNumber_Diffusion = True
+    else:
+        ComputeCourantNumber_Diffusion = False
+    CourantNumber_Advection, CourantNumber_Diffusion = DetermineCourantNumberForGivenTimeStep(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
-    UseAveragedQuantities,dt,PrintCourantNumber=True)
+    UseAveragedQuantities,dt,ComputeCourantNumber_Diffusion=ComputeCourantNumber_Diffusion,
+    PrintCourantNumber_Advection=True,PrintCourantNumber_Diffusion=True)
     myMPASOceanShallowWater = MPASOceanShallowWaterClass.MPASOceanShallowWater(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
-    UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep=True)
-    if ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'Planetary_Rossby_Wave':
+    UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep=True)
+    if ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'Manufactured_Planetary_Rossby_Wave':
         beta0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.beta0
         c0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.c0
         f0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.f0
@@ -188,6 +209,8 @@ def DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType):
             
 def DetermineNumberOfTimeStepsForSimulation(ProblemType):
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     PrintPhaseSpeedOfWaveModes = True
     PrintAmplitudesOfWaveModes = True
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -201,29 +224,44 @@ def DetermineNumberOfTimeStepsForSimulation(ProblemType):
     PrintOutput = False
     UseAveragedQuantities = False
     MeshDirectory, BaseMeshFileName, MeshFileName = (
-    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave))
+    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave))
     myMPASOceanShallowWater = MPASOceanShallowWaterClass.MPASOceanShallowWater(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
     UseAveragedQuantities)
-    dt = myMPASOceanShallowWater.myNameList.dt 
+    dt = myMPASOceanShallowWater.myNameList.dt
     lX = myMPASOceanShallowWater.myNameList.lX
     lY = myMPASOceanShallowWater.myNameList.lY
     cX1 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.cX1
     cX2 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.cX2
     cY1 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.cY1
     cY2 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.cY2
+    kappa1 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.kappa1
     abs_cX = max(abs(cX1),abs(cX2))
     abs_cY = max(abs(cY1),abs(cY2))
-    if abs_cX != 0.0:
-        SimulationTime = lX/abs_cX 
+    if ProblemType == 'Diffusion_Equation':
+        FinalAmplitudeToInitialAmplitudeRatio = 0.75
+        SimulationTime = np.log(1.0/FinalAmplitudeToInitialAmplitudeRatio)/kappa1
     else:
-        SimulationTime = lY/abs_cY
-    # Note that for all two-dimensional dispersive waves, 
-    # SimulationTime = lX/abs_cX = lX*kX/abs(omega) = lY*kY/abs(omega) = lY/abs_cY
-    # where kX and kY are the zonal and meridional wavenumbers of the fast wave mode with omega being its angular 
-    # frequency.
+        if abs_cX != 0.0:
+            SimulationTime = lX/abs_cX 
+        else:
+            SimulationTime = lY/abs_cY
+            # Note that for all two-dimensional dispersive waves, 
+            # SimulationTime = lX/abs_cX = lX*kX/abs(omega) = lY*kY/abs(omega) = lY/abs_cY
+            # where kX and kY are the zonal and meridional wavenumbers of the fast wave mode with omega being its 
+            # angular frequency.
+        if ProblemType == 'Advection_Diffusion_Equation':
+            SimulationTime *= 0.5
+        elif ProblemType == 'Viscous_Burgers_Equation':
+            s = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.s
+            SimulationTime *= 0.5*abs_cX/s
+            # We want the simulation time to be the time taken by the shock to traverse half the zonal extent of the 
+            # domain. Since the simulation time was initially defined as the time taken to traverse the entire zonal 
+            # extent of the domain at the speed of abs_cX or uL, we redefine the simulation time by multiplying it with 
+            # 0.5 times abs_cX/s.
     if ProblemType == 'Plane_Gaussian_Wave':
         print('The time taken by the wave to traverse half the diagonal extent of the domain is %.3g.' %SimulationTime)
     elif ProblemType == 'Coastal_Kelvin_Wave':
@@ -234,6 +272,12 @@ def DetermineNumberOfTimeStepsForSimulation(ProblemType):
               %SimulationTime)
     elif ProblemType == 'Barotropic_Tide':
         print('The time taken by either component of the first standing wave mode to traverse the zonal extent of the '
+              + 'domain is %.3g.' %SimulationTime)
+    elif ProblemType == 'Diffusion_Equation':
+        print('The time taken by the zonal velocity to decay to %.2f of its initial magnitude is %.3g.'
+              %(FinalAmplitudeToInitialAmplitudeRatio,SimulationTime))
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        print('The time taken by the center of mass of the circular patch to traverse half the diagonal extent of the '
               + 'domain is %.3g.' %SimulationTime)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         print('The time taken by the wave to traverse half the diagonal extent of the domain is %.3g.' %SimulationTime)
@@ -255,9 +299,11 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
     UseAveragedQuantities)
     ProblemType_EquatorialWave = myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave
-    ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
+    ProblemType_ManufacturedRossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_ManufacturedRossbyWave
+    ProblemType_RossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave
     UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
-    nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,ProblemType_NoExactSolution)
+    nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                    ProblemType_RossbyWave,ProblemType_EquatorialWave)
     dt = myMPASOceanShallowWater.myNameList.dt
     ExactZonalVelocityLimits = myMPASOceanShallowWater.myNameList.ExactZonalVelocityLimits
     ExactMeridionalVelocityLimits = myMPASOceanShallowWater.myNameList.ExactMeridionalVelocityLimits
@@ -274,11 +320,8 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
     dt = myMPASOceanShallowWater.myNameList.dt
     nDumpFrequency = myMPASOceanShallowWater.myNameList.nDumpFrequency
     nTime = myMPASOceanShallowWater.myNameList.nTime
-    if ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
-        ProblemType_PlanetaryTopographicRossbyWave = True
+    if ProblemType_ManufacturedRossbyWave:
         ExactSurfaceElevationMaximumMagnitude = ExactSurfaceElevationLimits[1]
-    else:
-        ProblemType_PlanetaryTopographicRossbyWave = False
     if myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
         yMaximumAmplitude, HermiteFunctionMaximumAmplitude = (
         ESST.DetermineHermiteFunctionMaximumAmplitudeWithMeridionalLocation(ProblemType))
@@ -311,16 +354,16 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                     ExactZonalVelocities = myMPASOceanShallowWater.mySolution.uExact[:]
                     ExactMeridionalVelocities = myMPASOceanShallowWater.mySolution.vExact[:]
                     ExactSurfaceElevations = myMPASOceanShallowWater.mySolution.sshExact[:]
+                    if ProblemType == 'NonLinear_Manufactured_Solution':
+                        SurfaceElevationSourceTerms = myMPASOceanShallowWater.mySolution.sshSourceTerm[:]
                     if PlotFigures:                    
-                        if not(ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Coastal_Kelvin_Wave' 
-                               or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-                               or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
+                        if not(myMPASOceanShallowWater.myNameList.ProblemType_SpecifyExactSolutionLimits):
                             if iTime == 0:
                                 ExactZonalVelocityMinimum = np.min(ExactZonalVelocities)
                                 ExactZonalVelocityMaximum = np.max(ExactZonalVelocities)
                                 ExactMeridionalVelocityMinimum = np.min(ExactMeridionalVelocities)
                                 ExactMeridionalVelocityMaximum = np.max(ExactMeridionalVelocities)
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMinimum = np.min(ExactSurfaceElevations)
                                     ExactSurfaceElevationMaximum = np.max(ExactSurfaceElevations)
                             else:
@@ -330,7 +373,7 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                                 min(ExactMeridionalVelocityMinimum,np.min(ExactMeridionalVelocities)))
                                 ExactMeridionalVelocityMaximum = (
                                 max(ExactMeridionalVelocityMaximum,np.max(ExactMeridionalVelocities)))    
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMinimum = min(ExactSurfaceElevationMinimum,
                                                                        np.min(ExactSurfaceElevations))
                                     ExactSurfaceElevationMaximum = max(ExactSurfaceElevationMaximum,
@@ -342,7 +385,7 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                                        and not(ProblemType == 'Equatorial_Kelvin_Wave')):
                                     ExactMeridionalVelocityMaximumMagnitude = (
                                     max(abs(ExactMeridionalVelocityMinimum),abs(ExactMeridionalVelocityMaximum)))
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMaximumMagnitude = max(abs(ExactSurfaceElevationMinimum),
                                                                                 abs(ExactSurfaceElevationMaximum))
                                 ExactZonalVelocityLimits = [-ExactZonalVelocityMaximumMagnitude,
@@ -350,7 +393,24 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                                 ExactMeridionalVelocityLimits = [-ExactMeridionalVelocityMaximumMagnitude,
                                                                  ExactMeridionalVelocityMaximumMagnitude]
                                 ExactSurfaceElevationLimits = [-ExactSurfaceElevationMaximumMagnitude,
-                                                               ExactSurfaceElevationMaximumMagnitude]
+                                                               ExactSurfaceElevationMaximumMagnitude]                                
+                        if ProblemType == 'NonLinear_Manufactured_Solution': 
+                            if iTime == 0:
+                                SurfaceElevationSourceTermMinimum = np.min(SurfaceElevationSourceTerms)
+                                SurfaceElevationSourceTermMaximum = np.max(SurfaceElevationSourceTerms)
+                            else:
+                                SurfaceElevationSourceTermMinimum = min(SurfaceElevationSourceTermMinimum,
+                                                                        np.min(SurfaceElevationSourceTerms))
+                                SurfaceElevationSourceTermMaximum = max(SurfaceElevationSourceTermMaximum,
+                                                                        np.max(SurfaceElevationSourceTerms))
+                            if iTime == nTime - 1:
+                                SurfaceElevationSourceTermMaximumMagnitude = (
+                                max(abs(SurfaceElevationSourceTermMinimum),abs(SurfaceElevationSourceTermMaximum)))
+                                SurfaceElevationSourceTermLimits = [-SurfaceElevationSourceTermMaximumMagnitude,
+                                                                    SurfaceElevationSourceTermMaximumMagnitude]
+                                FileName = ProblemType_FileName + '_SurfaceElevationSourceTermLimits'
+                                CR.WriteStateVariableLimitsToFile(myMPASOceanShallowWater.OutputDirectory,
+                                                                  SurfaceElevationSourceTermLimits,FileName)                                
                         FileName = ProblemType_FileName + '_ExactSolution_%3.3d' %iTime
                         MPASOceanShallowWaterClass.WriteStateMPASOceanShallowWater(myMPASOceanShallowWater,FileName,
                                                                                    ComputeOnlyExactSolution)
@@ -374,14 +434,14 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                 else: # if iCounter == 1:
                     if PlotFigures:
                         FileName = ProblemType_FileName + '_ExactSolution_%3.3d' %iTime + '.tec'
-                        if ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Barotropic_Tide':
+                        if ProblemType == 'Barotropic_Tide' or ProblemType == 'Advection_Diffusion_Equation':
                             non_integral_seconds = True
                         else:
                             non_integral_seconds = False
                         DisplayTime = FormatSimulationTime(myMPASOceanShallowWater.time,
                                                            non_integral_seconds=non_integral_seconds,
-                                                           display_time=False,ProblemType_PlanetaryTopographicRossbyWave
-                                                           =ProblemType_PlanetaryTopographicRossbyWave)
+                                                           display_time=False,ProblemType_ManufacturedRossbyWave
+                                                           =ProblemType_ManufacturedRossbyWave)
                         UseGivenColorBarLimits = True
                         MPASOceanShallowWaterClass.PythonPlotStateMPASOceanShallowWater(
                         myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,ComputeOnlyExactSolution)
@@ -393,6 +453,17 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                             StateVariableLimitsAlongSection = (
                             ESST.SpecifyStateVariableLimitsAlongSection(ExactMeridionalVelocityLimits,
                                                                         ToleranceAsPercentage))
+                        elif ProblemType == 'Advection_Diffusion_Equation':
+                            StateVariableLimitsAlongSection = (
+                            ESST.SpecifyStateVariableLimitsAlongSection(4.0*ExactSurfaceElevationLimits,
+                                                                        ToleranceAsPercentage))
+                        elif ProblemType == 'Diffusion_Equation':
+                            StateVariableLimitsAlongSection = (
+                            ESST.SpecifyStateVariableLimitsAlongSection(np.array([0.0,ExactZonalVelocityLimits[1]]),
+                                                                        ToleranceAsPercentage))
+                        elif ProblemType == 'Viscous_Burgers_Equation':
+                            StateVariableLimitsAlongSection = (
+                            ESST.SpecifyStateVariableLimitsAlongSection(ExactZonalVelocityLimits,ToleranceAsPercentage))
                         else:
                             StateVariableLimitsAlongSection = (
                             ESST.SpecifyStateVariableLimitsAlongSection(ExactSurfaceElevationLimits,
@@ -419,7 +490,8 @@ def DetermineNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmpl
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
     UseAveragedQuantities)
     ProblemType_EquatorialWave = myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave
-    ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
+    ProblemType_ManufacturedRossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_ManufacturedRossbyWave
+    ProblemType_RossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave
     myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
     UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
     nEdges = myMPASOceanShallowWater.myMesh.nEdges
@@ -428,8 +500,8 @@ def DetermineNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmpl
     myQuadratureOnHexagon = myMPASOceanShallowWater.myMesh.myQuadratureOnHexagon
     HexagonLength = myMPASOceanShallowWater.myMesh.HexagonLength
     if not(SpecifyNumberOfTimeStepsManually):
-        nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,
-                                                        ProblemType_NoExactSolution)
+        nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave)
     dt = myMPASOceanShallowWater.myNameList.dt
     for iTime in range(0,nTime):
         myMPASOceanShallowWater.iTime = iTime
@@ -476,9 +548,11 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
     UseAveragedQuantities)
     ProblemType_EquatorialWave = myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave
-    ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
+    ProblemType_ManufacturedRossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_ManufacturedRossbyWave
+    ProblemType_RossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave
     UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
-    nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_EquatorialWave,ProblemType_NoExactSolution)
+    nTime = Initialization.SpecifyNumberOfTimeSteps(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                    ProblemType_RossbyWave,ProblemType_EquatorialWave)
     dt = myMPASOceanShallowWater.myNameList.dt
     ExactZonalVelocityLimits = myMPASOceanShallowWater.myNameList.ExactZonalVelocityLimits
     ExactMeridionalVelocityLimits = myMPASOceanShallowWater.myNameList.ExactMeridionalVelocityLimits
@@ -496,11 +570,8 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
     nDumpFrequency = myMPASOceanShallowWater.myNameList.nDumpFrequency
     nRestartFrequency = myMPASOceanShallowWater.myNameList.nRestartFrequency
     nTime = myMPASOceanShallowWater.myNameList.nTime
-    if ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
-        ProblemType_PlanetaryTopographicRossbyWave = True
+    if ProblemType_ManufacturedRossbyWave:
         ExactSurfaceElevationMaximumMagnitude = ExactSurfaceElevationLimits[1]
-    else:
-        ProblemType_PlanetaryTopographicRossbyWave = False
     if myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
         HermiteFunctionMaximumAmplitude = (
         ESST.DetermineHermiteFunctionMaximumAmplitudeWithMeridionalLocation(ProblemType,ReturnMeridionalLocation=False))
@@ -523,8 +594,8 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
         for iTime in range(iTime_Start,nTime):
             myMPASOceanShallowWater.iTime = iTime
             myMPASOceanShallowWater.time = float(iTime)*dt
-            if iCounter == 0 and DisplayProgress:
-                print('Displaying Progress: iTime = %3d.' %iTime)
+            if (iCounter == 0 or (iCounter == 1 and np.mod(iTime,nDumpFrequency) == 0.0)) and DisplayProgress:
+                print('Displaying Progress: iCounter = %1d and iTime = %3d.' %(iCounter,iTime))
             if iCounter == 0: 
                 if np.mod(iTime,nDumpFrequency) == 0.0:
                     MPASOceanShallowWaterClass.DetermineExactSolutions(myMPASOceanShallowWater,
@@ -548,15 +619,13 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                         MeridionalVelocityError = myMPASOceanShallowWater.mySolution.vError[:]
                         SurfaceElevationError = myMPASOceanShallowWater.mySolution.sshError[:]
                     if PlotFigures:                    
-                        if not(ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Coastal_Kelvin_Wave' 
-                               or ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
-                               or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
+                        if not(myMPASOceanShallowWater.myNameList.ProblemType_SpecifyExactSolutionLimits):
                             if iTime == iTime_Start:
                                 ExactZonalVelocityMinimum = np.min(ExactZonalVelocities)
                                 ExactZonalVelocityMaximum = np.max(ExactZonalVelocities)
                                 ExactMeridionalVelocityMinimum = np.min(ExactMeridionalVelocities)
                                 ExactMeridionalVelocityMaximum = np.max(ExactMeridionalVelocities)
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMinimum = np.min(ExactSurfaceElevations)
                                     ExactSurfaceElevationMaximum = np.max(ExactSurfaceElevations)
                             else:
@@ -566,7 +635,7 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                                                      np.min(ExactMeridionalVelocities))
                                 ExactMeridionalVelocityMaximum = max(ExactMeridionalVelocityMaximum,
                                                                      np.max(ExactMeridionalVelocities)) 
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMinimum = min(ExactSurfaceElevationMinimum,
                                                                        np.min(ExactSurfaceElevations))
                                     ExactSurfaceElevationMaximum = max(ExactSurfaceElevationMaximum,
@@ -578,10 +647,10 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                        and not(ProblemType == 'Equatorial_Kelvin_Wave')):
                                     ExactMeridionalVelocityMaximumMagnitude = max(abs(ExactMeridionalVelocityMinimum),
                                                                                   abs(ExactMeridionalVelocityMaximum))
-                                if not(ProblemType_PlanetaryTopographicRossbyWave):
+                                if not(ProblemType_ManufacturedRossbyWave):
                                     ExactSurfaceElevationMaximumMagnitude = max(abs(ExactSurfaceElevationMinimum),
                                                                                 abs(ExactSurfaceElevationMaximum))   
-                                if ProblemType_NoExactSolution:
+                                if ProblemType_RossbyWave:
                                     ExactZonalVelocityLimits = [ExactZonalVelocityMinimum,ExactZonalVelocityMaximum]
                                     ExactMeridionalVelocityLimits = [ExactMeridionalVelocityMinimum,
                                                                      ExactMeridionalVelocityMaximum]
@@ -601,7 +670,7 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                 MeridionalVelocityErrorMinimum = np.min(MeridionalVelocityError)
                                 MeridionalVelocityErrorMaximum = np.max(MeridionalVelocityError)
                                 SurfaceElevationErrorMinimum = np.min(SurfaceElevationError)
-                                SurfaceElevationErrorMaximum = np.max(SurfaceElevationError)
+                                SurfaceElevationErrorMaximum = np.max(SurfaceElevationError) 
                             else:
                                 ZonalVelocityErrorMinimum = min(ZonalVelocityErrorMinimum,
                                                                 np.min(ZonalVelocityError))
@@ -622,7 +691,7 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                                                                               MeridionalVelocityErrorMaximum)
                                 SurfaceElevationErrorMaximumMagnitude = max(abs(SurfaceElevationErrorMinimum),
                                                                             SurfaceElevationErrorMaximum)
-                                if ProblemType_NoExactSolution:
+                                if ProblemType_RossbyWave:
                                     ZonalVelocityErrorLimits = [ZonalVelocityErrorMinimum,ZonalVelocityErrorMaximum]
                                     MeridionalVelocityErrorLimits = [MeridionalVelocityErrorMinimum,
                                                                      MeridionalVelocityErrorMaximum]
@@ -689,15 +758,15 @@ def DetermineExactAndNumericalSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,P
                         else:
                             FileName = (ProblemType_FileName + '_' + TimeIntegratorShortForm + '_State_' 
                                         + iTimeFormat %iTime + '.tec')
-                        if ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Barotropic_Tide':
+                        if ProblemType == 'Barotropic_Tide' or ProblemType == 'Advection_Diffusion_Equation':
                             non_integral_seconds = True
                         else:
                             non_integral_seconds = False
                         DisplayTime = FormatSimulationTime(myMPASOceanShallowWater.time,
                                                            non_integral_seconds=non_integral_seconds,
-                                                           display_time=False,ProblemType_PlanetaryTopographicRossbyWave
-                                                           =ProblemType_PlanetaryTopographicRossbyWave,
-                                                           ProblemType_NoExactSolution=ProblemType_NoExactSolution)
+                                                           display_time=False,ProblemType_ManufacturedRossbyWave
+                                                           =ProblemType_ManufacturedRossbyWave,
+                                                           ProblemType_RossbyWave=ProblemType_RossbyWave)
                         UseGivenColorBarLimits = True
                         MPASOceanShallowWaterClass.PythonPlotStateMPASOceanShallowWater(
                         myMPASOceanShallowWater,FileName,DisplayTime,UseGivenColorBarLimits,ComputeOnlyExactSolution,

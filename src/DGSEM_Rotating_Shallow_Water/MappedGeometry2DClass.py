@@ -14,7 +14,8 @@ with io.capture_output() as captured:
 
 class MappedGeometry2D:
     
-    def __init__(myMappedGeometry2D,myDGNodalStorage2D,BoundaryCurve):
+    def __init__(myMappedGeometry2D,myDGNodalStorage2D,BoundaryCurve,QuadElementType='CurvedSidedQuadrilateral',
+                 xCoordinate=np.zeros(4),yCoordinate=np.zeros(4)):
         nXi = myDGNodalStorage2D.nXi
         nEta = myDGNodalStorage2D.nEta
         myMappedGeometry2D.nXi = nXi
@@ -28,36 +29,76 @@ class MappedGeometry2D:
         myMappedGeometry2D.dYdXi = np.zeros((nXi+1,nEta+1))
         myMappedGeometry2D.dYdEta = np.zeros((nXi+1,nEta+1))
         myMappedGeometry2D.Jacobian = np.zeros((nXi+1,nEta+1))
+        myMappedGeometry2D.dXdXiBoundary = np.zeros((max(nXi+1,nEta+1),4))
+        myMappedGeometry2D.dXdEtaBoundary = np.zeros((max(nXi+1,nEta+1),4))
+        myMappedGeometry2D.dYdXiBoundary = np.zeros((max(nXi+1,nEta+1),4))
+        myMappedGeometry2D.dYdEtaBoundary = np.zeros((max(nXi+1,nEta+1),4))
+        myMappedGeometry2D.JacobianBoundary = np.zeros((max(nXi+1,nEta+1),4))
         myMappedGeometry2D.ScalingFactors = np.zeros((max(nXi+1,nEta+1),4))
         myMappedGeometry2D.nHat = np.empty((max(nXi+1,nEta+1),4),dtype=VectorClass.Vector)        
         xi = myDGNodalStorage2D.myLegendreGaussQuadrature1DX.x
         eta = myDGNodalStorage2D.myLegendreGaussQuadrature1DY.x        
         for iXi in range(0,nXi+1):
             for iEta in range(0,nEta+1):
-                myMappedGeometry2D.x[iXi,iEta],myMappedGeometry2D.y[iXi,iEta] = (
-                GB2D.TransfiniteQuadMap(xi[iXi],eta[iEta],BoundaryCurve))
-                (myMappedGeometry2D.dXdXi[iXi,iEta],myMappedGeometry2D.dXdEta[iXi,iEta],
-                 myMappedGeometry2D.dYdXi[iXi,iEta],myMappedGeometry2D.dYdEta[iXi,iEta]) = (
-                GB2D.TransfiniteQuadMetrics(xi[iXi],eta[iEta],BoundaryCurve))
+                if QuadElementType == 'StraightSidedQuadrilateral':
+                    myMappedGeometry2D.x[iXi,iEta],myMappedGeometry2D.y[iXi,iEta] = (
+                    GB2D.TransfiniteQuadMap_StraightSidedQuadrilateral(xi[iXi],eta[iEta],xCoordinate,yCoordinate))
+                elif QuadElementType == 'CurvedSidedQuadrilateral':
+                    myMappedGeometry2D.x[iXi,iEta],myMappedGeometry2D.y[iXi,iEta] = (
+                    GB2D.TransfiniteQuadMap(xi[iXi],eta[iEta],BoundaryCurve))
+                if QuadElementType == 'StraightSidedQuadrilateral':
+                    (myMappedGeometry2D.dXdXi[iXi,iEta],myMappedGeometry2D.dXdEta[iXi,iEta],
+                     myMappedGeometry2D.dYdXi[iXi,iEta],myMappedGeometry2D.dYdEta[iXi,iEta]) = (
+                    GB2D.TransfiniteQuadMetrics_StraightSidedQuadrilateral(xi[iXi],eta[iEta],BoundaryCurve))
+                elif QuadElementType == 'CurvedSidedQuadrilateral':
+                    (myMappedGeometry2D.dXdXi[iXi,iEta],myMappedGeometry2D.dXdEta[iXi,iEta],
+                     myMappedGeometry2D.dYdXi[iXi,iEta],myMappedGeometry2D.dYdEta[iXi,iEta]) = (
+                    GB2D.TransfiniteQuadMetrics(xi[iXi],eta[iEta],BoundaryCurve))
                 myMappedGeometry2D.Jacobian[iXi,iEta] = (
                 (myMappedGeometry2D.dXdXi[iXi,iEta]*myMappedGeometry2D.dYdEta[iXi,iEta] 
                  - myMappedGeometry2D.dYdXi[iXi,iEta]*myMappedGeometry2D.dXdEta[iXi,iEta]))
         # Construct the unit normal vectors on the south and north boundaries.
         for iXi in range(0,nXi+1):
-            myMappedGeometry2D.xBoundary[iXi,0],myMappedGeometry2D.yBoundary[iXi,0] = (
-            GB2D.TransfiniteQuadMap(xi[iXi],-1.0,BoundaryCurve))
-            dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(xi[iXi],-1.0,BoundaryCurve)
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iXi,0],myMappedGeometry2D.yBoundary[iXi,0] = (
+                GB2D.TransfiniteQuadMap_StraightSidedQuadrilateral(xi[iXi],-1.0,xCoordinate,yCoordinate))
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iXi,0],myMappedGeometry2D.yBoundary[iXi,0] = (
+                GB2D.TransfiniteQuadMap(xi[iXi],-1.0,BoundaryCurve))
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics_StraightSidedQuadrilateral(xi[iXi],-1.0,
+                                                                                                      BoundaryCurve)
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(xi[iXi],-1.0,BoundaryCurve)
             Jacobian = dXdXi*dYdEta - dYdXi*dXdEta
+            myMappedGeometry2D.dXdXiBoundary[iXi,0] = dXdXi
+            myMappedGeometry2D.dXdEtaBoundary[iXi,0] = dXdEta
+            myMappedGeometry2D.dYdXiBoundary[iXi,0] = dYdXi
+            myMappedGeometry2D.dYdEtaBoundary[iXi,0] = dYdEta
+            myMappedGeometry2D.JacobianBoundary[iXi,0] = Jacobian
             Components = np.zeros(2)
             Components[0] = np.sign(Jacobian)*dYdXi
             Components[1] = -np.sign(Jacobian)*dXdXi
             myMappedGeometry2D.nHat[iXi,0] = VectorClass.Vector(Components)
             myMappedGeometry2D.ScalingFactors[iXi,0] = myMappedGeometry2D.nHat[iXi,0].Length
             myMappedGeometry2D.nHat[iXi,0].NormalizeVector()
-            myMappedGeometry2D.xBoundary[iXi,2],myMappedGeometry2D.yBoundary[iXi,2] = (
-            GB2D.TransfiniteQuadMap(xi[iXi],1.0,BoundaryCurve))
-            dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(xi[iXi],1.0,BoundaryCurve)
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iXi,2],myMappedGeometry2D.yBoundary[iXi,2] = (
+                GB2D.TransfiniteQuadMap_StraightSidedQuadrilateral(xi[iXi],1.0,xCoordinate,yCoordinate))
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iXi,2],myMappedGeometry2D.yBoundary[iXi,2] = (
+                GB2D.TransfiniteQuadMap(xi[iXi],1.0,BoundaryCurve))
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics_StraightSidedQuadrilateral(xi[iXi],1.0,
+                                                                                                      BoundaryCurve)
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(xi[iXi],1.0,BoundaryCurve)
             Jacobian = dXdXi*dYdEta - dYdXi*dXdEta
+            myMappedGeometry2D.dXdXiBoundary[iXi,2] = dXdXi
+            myMappedGeometry2D.dXdEtaBoundary[iXi,2] = dXdEta
+            myMappedGeometry2D.dYdXiBoundary[iXi,2] = dYdXi
+            myMappedGeometry2D.dYdEtaBoundary[iXi,2] = dYdEta
+            myMappedGeometry2D.JacobianBoundary[iXi,2] = Jacobian
             Components = np.zeros(2)
             Components[0] = -np.sign(Jacobian)*dYdXi
             Components[1] = np.sign(Jacobian)*dXdXi              
@@ -66,49 +107,52 @@ class MappedGeometry2D:
             myMappedGeometry2D.nHat[iXi,2].NormalizeVector()
         # Construct the unit normal vectors on the east and west boundaries.
         for iEta in range(0,nEta+1):
-            myMappedGeometry2D.xBoundary[iEta,1],myMappedGeometry2D.yBoundary[iEta,1] = (
-            GB2D.TransfiniteQuadMap(1.0,eta[iEta],BoundaryCurve))
-            dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(1.0,eta[iEta],BoundaryCurve)
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iEta,1],myMappedGeometry2D.yBoundary[iEta,1] = (
+                GB2D.TransfiniteQuadMap_StraightSidedQuadrilateral(1.0,eta[iEta],xCoordinate,yCoordinate))
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iEta,1],myMappedGeometry2D.yBoundary[iEta,1] = (
+                GB2D.TransfiniteQuadMap(1.0,eta[iEta],BoundaryCurve))
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics_StraightSidedQuadrilateral(1.0,eta[iEta],
+                                                                                                      BoundaryCurve)
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(1.0,eta[iEta],BoundaryCurve)
             Jacobian = dXdXi*dYdEta - dYdXi*dXdEta
+            myMappedGeometry2D.dXdXiBoundary[iEta,1] = dXdXi
+            myMappedGeometry2D.dXdEtaBoundary[iEta,1] = dXdEta
+            myMappedGeometry2D.dYdXiBoundary[iEta,1] = dYdXi
+            myMappedGeometry2D.dYdEtaBoundary[iEta,1] = dYdEta
+            myMappedGeometry2D.JacobianBoundary[iEta,1] = Jacobian
             Components = np.zeros(2)
             Components[0] = np.sign(Jacobian)*dYdEta
             Components[1] = -np.sign(Jacobian)*dXdEta            
             myMappedGeometry2D.nHat[iEta,1] = VectorClass.Vector(Components)
             myMappedGeometry2D.ScalingFactors[iEta,1] = myMappedGeometry2D.nHat[iEta,1].Length
             myMappedGeometry2D.nHat[iEta,1].NormalizeVector()
-            myMappedGeometry2D.xBoundary[iEta,3],myMappedGeometry2D.yBoundary[iEta,3] = (
-            GB2D.TransfiniteQuadMap(-1.0,eta[iEta],BoundaryCurve)) 
-            dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(-1.0,eta[iEta],BoundaryCurve)
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iEta,3],myMappedGeometry2D.yBoundary[iEta,3] = (
+                GB2D.TransfiniteQuadMap_StraightSidedQuadrilateral(-1.0,eta[iEta],xCoordinate,yCoordinate)) 
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                myMappedGeometry2D.xBoundary[iEta,3],myMappedGeometry2D.yBoundary[iEta,3] = (
+                GB2D.TransfiniteQuadMap(-1.0,eta[iEta],BoundaryCurve)) 
+            if QuadElementType == 'StraightSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics_StraightSidedQuadrilateral(-1.0,eta[iEta],
+                                                                                                      BoundaryCurve)
+            elif QuadElementType == 'CurvedSidedQuadrilateral':
+                dXdXi, dXdEta, dYdXi, dYdEta = GB2D.TransfiniteQuadMetrics(-1.0,eta[iEta],BoundaryCurve)
             Jacobian = dXdXi*dYdEta - dYdXi*dXdEta
+            myMappedGeometry2D.dXdXiBoundary[iEta,3] = dXdXi
+            myMappedGeometry2D.dXdEtaBoundary[iEta,3] = dXdEta
+            myMappedGeometry2D.dYdXiBoundary[iEta,3] = dYdXi
+            myMappedGeometry2D.dYdEtaBoundary[iEta,3] = dYdEta
+            myMappedGeometry2D.JacobianBoundary[iEta,3] = Jacobian
             Components = np.zeros(2)
             Components[0] = -np.sign(Jacobian)*dYdEta
             Components[1] = np.sign(Jacobian)*dXdEta             
             myMappedGeometry2D.nHat[iEta,3] = VectorClass.Vector(Components)
             myMappedGeometry2D.ScalingFactors[iEta,3] = myMappedGeometry2D.nHat[iEta,3].Length
             myMappedGeometry2D.nHat[iEta,3].NormalizeVector()
-        myMappedGeometry2D.f = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.H = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.c = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.HBoundary = np.zeros((max(nXi+1,nEta+1),4))
-        myMappedGeometry2D.cBoundary = np.zeros((max(nXi+1,nEta+1),4))
-        
-    def ConstructEmptyMappedGeometry2D(myMappedGeometry2D,nXi,nEta):
-        myMappedGeometry2D.nXi = nXi
-        myMappedGeometry2D.nEta = nEta
-        myMappedGeometry2D.x = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.y = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.xBoundary = np.zeros((max(nXi+1,nEta+1),4))
-        myMappedGeometry2D.yBoundary = np.zeros((max(nXi+1,nEta+1),4))
-        myMappedGeometry2D.dXdXi = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.dXdEta = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.dYdXi = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.dYdEta = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.Jacobian = np.zeros((nXi+1,nEta+1))
-        myMappedGeometry2D.ScalingFactors = np.zeros((max(nXi+1,nEta+1),4))
-        myMappedGeometry2D.nHat = np.empty((max(nXi+1,nEta+1),4),dtype=VectorClass.Vector)
-        for iXi in range(0,max(nXi+1,nEta+1)):
-            for iSide in range(0,4):
-                myMappedGeometry2D.nHat[iXi,iSide] = VectorClass.Vector(np.array([0.0,0.0]))
         myMappedGeometry2D.f = np.zeros((nXi+1,nEta+1))
         myMappedGeometry2D.H = np.zeros((nXi+1,nEta+1))
         myMappedGeometry2D.c = np.zeros((nXi+1,nEta+1))

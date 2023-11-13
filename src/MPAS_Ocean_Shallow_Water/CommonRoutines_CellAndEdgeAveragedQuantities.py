@@ -60,7 +60,7 @@ class LegendreGaussQuadrature1D:
                     L_nX_plus_1, L_nX_plus_1_prime = (
                     LegendrePolynomialAndDerivative(nX+1,myLegendreGaussQuadrature1D.x[jX]))
                     Delta = -L_nX_plus_1/L_nX_plus_1_prime
-                    myLegendreGaussQuadrature1D.x[jX] = myLegendreGaussQuadrature1D.x[jX] + Delta
+                    myLegendreGaussQuadrature1D.x[jX] += Delta
                     if abs(Delta) <= tolerance*abs(myLegendreGaussQuadrature1D.x[jX]):
                         break
                 L_nX_plus_1, L_nX_plus_1_prime = (
@@ -102,7 +102,7 @@ class QuadratureOnHexagon():
         myQuadratureOnHexagon.x[1] = 0.7483314773547883
         myQuadratureOnHexagon.y[1] = 0.0000000000000000
         myQuadratureOnHexagon.w[1] = 0.7440476190476190/6.0
-        for i in range(2,7):
+        for i in range(2,myQuadratureOnHexagon.n):
             myQuadratureOnHexagon.x[i] = (
             np.cos(np.pi/3.0)*myQuadratureOnHexagon.x[i-1] - np.sin(np.pi/3.0)*myQuadratureOnHexagon.y[i-1])
             myQuadratureOnHexagon.y[i] = (

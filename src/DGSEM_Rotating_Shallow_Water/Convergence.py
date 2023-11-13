@@ -110,16 +110,17 @@ def ObtainNumericalSolutionFromSELFOutputData(myDGSEM2D,TimeIntegratorShortForm)
 
 
 def DetermineNumericalSolutionAndError(
-ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,TimeIntegrator,
-LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
-nElementsX,nElementsY,nXi,nEta,nXiPlot,nEtaPlot,dt,nTime,PerformInterpolation=True,isCoarsestMesh=True,
-myDGNodalStorage2DOnCoarsestMesh=[],myCoarsestMesh=[],EntityToBeInterpolated='Error',ReadFromSELFOutputData=False,
-TimeIntegratorShortForm='RK3'):
+ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber_Advection,
+CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
+Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,nEtaPlot,dt,nTime,
+PerformInterpolation=True,isCoarsestMesh=True,myDGNodalStorage2DOnCoarsestMesh=[],myCoarsestMesh=[],
+EntityToBeInterpolated='Error',ReadFromSELFOutputData=False,TimeIntegratorShortForm='RK3'):
     UseCourantNumberToDetermineTimeStep = False 
     myDGSEM2D = DGSEM2DClass.DGSEM2D(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                      LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                      Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,
-                                     nEtaPlot,CourantNumber,UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData)
+                                     nEtaPlot,CourantNumber_Advection,CourantNumber_Diffusion,
+                                     UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData)
     myDGSEM2D.myNameList.dt = dt
     myDGSEM2D.myNameList.nTime = nTime
     print('The number of time steps for the %3d x %3d mesh is %3d.' %(nElementsX,nElementsY,nTime))
@@ -141,7 +142,7 @@ TimeIntegratorShortForm='RK3'):
             if ReadFromSELFOutputData:
                 ObtainNumericalSolutionFromSELFOutputData(myDGSEM2D,TimeIntegratorShortForm)
             print('The final time for the %3d x %3d mesh is %.6f seconds.' %(nElementsX,nElementsY,myDGSEM2D.time))
-            if not(myDGSEM2D.myDGSEM2DParameters.ProblemType_NoExactSolution):
+            if not(myDGSEM2D.myDGSEM2DParameters.ProblemType_RossbyWave):
                 DGSEM2DClass.ComputeError(myDGSEM2D)
             if ConvergenceType == 'Space' or ConvergenceType == 'Time':
                 if EntityToBeInterpolated == 'Solution':
@@ -329,37 +330,38 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
     nXiPlot = 10
     nEtaPlot = 10
     if ConvergenceType == 'Time':
-        CourantNumber = 0.5
+        CourantNumber_Advection = 0.5
     else:
-        CourantNumber = 0.25
+        CourantNumber_Advection = 0.25
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     myDGSEM2D = DGSEM2DClass.DGSEM2D(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                      LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                      Generalized_FB_with_AB3_AM4_Step_Type,max(nElementsX),max(nElementsY),nXi,nEta,
-                                     nXiPlot,nEtaPlot,CourantNumber,UseCourantNumberToDetermineTimeStep,
-                                     ReadFromSELFOutputData)
-    ProblemType_NoExactSolution = myDGSEM2D.myDGSEM2DParameters.ProblemType_NoExactSolution
+                                     nXiPlot,nEtaPlot,CourantNumber_Advection,CourantNumber_Diffusion,
+                                     UseCourantNumberToDetermineTimeStep,ReadFromSELFOutputData)
+    ProblemType_RossbyWave = myDGSEM2D.myDGSEM2DParameters.ProblemType_RossbyWave
     dx = myDGSEM2D.myNameList.lX/nElementsX
-    if ProblemType_NoExactSolution and ReadFromSELFOutputData:
+    if ProblemType_RossbyWave and ReadFromSELFOutputData:
         dt, nTime, FinalTime = SpecifyTimeStepAndNumberOfTimeStepsForRossbyWaves(ConvergenceType,TimeIntegrator)
     else:
         dt = np.zeros(nCases)
         nTime = np.zeros(nCases,dtype=int)
         nTime_Minimum = 50
         if ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space':
-            if ProblemType_NoExactSolution:
+            if ProblemType_RossbyWave:
                 dt_Minimum = 0.12
             else:
                 dt_Minimum = myDGSEM2D.myNameList.dt
             if TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
                 dt_Minimum *= 0.5
             elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
-                if ProblemType_NoExactSolution:
+                if ProblemType_RossbyWave:
                     dt_Minimum *= 0.5
                 else:
                     dt_Minimum *= 0.25
             elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-                if ProblemType_NoExactSolution:
+                if ProblemType_RossbyWave:
                     dt_Minimum *= 0.5
                 else:
                     dt_Minimum *= 0.125
@@ -371,7 +373,7 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             if ConvergenceType == 'Space':
                 dt[:] = dt_Minimum
         else: # if ConvergenceType == 'Time':
-            if ProblemType_NoExactSolution:
+            if ProblemType_RossbyWave:
                 dt[0] = 1.92
             else:
                 dt[0] = myDGSEM2D.myNameList.dt
@@ -381,12 +383,12 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             elif TimeIntegrator == 'SecondOrderAdamsBashforthMethod':
                 dt[0] *= 0.5
             elif TimeIntegrator == 'ThirdOrderAdamsBashforthMethod':
-                if ProblemType_NoExactSolution:
+                if ProblemType_RossbyWave:
                     dt[0] *= 0.5
                 else:
                     dt[0] *= 0.25
             elif TimeIntegrator == 'FourthOrderAdamsBashforthMethod':
-                if ProblemType_NoExactSolution:
+                if ProblemType_RossbyWave:
                     dt[0] *= 0.5
                 elif ProblemType == 'NonLinear_Manufactured_Solution':
                     dt[0] *= 0.25
@@ -412,36 +414,37 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
             if PerformInterpolation and isCoarsestMesh:
                 myDGNodalStorage2DOnCoarsestMesh, myCoarsestMesh, L2ErrorNorm[:,iCase] = (
                 DetermineNumericalSolutionAndError(
-                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,
-                dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh))
+                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],
+                nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh))
             else: # if not(PerformInterpolation) or (PerformInterpolation and not(isCoarsestMesh)):
                 if not(PerformInterpolation):
                     myDGNodalStorage2DOnCoarsestMesh = []
                     myCoarsestMesh = []
                 L2ErrorNorm[:,iCase] = DetermineNumericalSolutionAndError(
-                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,
-                dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,myDGNodalStorage2DOnCoarsestMesh,
-                myCoarsestMesh,EntityToBeInterpolated)
+                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],
+                nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,
+                myDGNodalStorage2DOnCoarsestMesh,myCoarsestMesh,EntityToBeInterpolated)
         elif ConvergenceType == 'Space':
             if isCoarsestMesh:
                 myDGNodalStorage2DOnCoarsestMesh, myCoarsestMesh, myDGSolution2DOnCoarsestMesh[:,:,:,:,iCase] = (
                 DetermineNumericalSolutionAndError(
-                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,
-                dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,
+                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],
+                nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,
                 ReadFromSELFOutputData=ReadFromSELFOutputData,TimeIntegratorShortForm=TimeIntegratorShortForm))
             else:
                 myDGSolution2DOnCoarsestMesh[:,:,:,:,iCase] = DetermineNumericalSolutionAndError(
-                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-                TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,
-                dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,myDGNodalStorage2DOnCoarsestMesh,
-                myCoarsestMesh,EntityToBeInterpolated,ReadFromSELFOutputData,TimeIntegratorShortForm)
+                ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+                CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+                Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],
+                nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,dt[iCase],nTime[iCase],PerformInterpolation,isCoarsestMesh,
+                myDGNodalStorage2DOnCoarsestMesh,myCoarsestMesh,EntityToBeInterpolated,ReadFromSELFOutputData,
+                TimeIntegratorShortForm)
                 myDGSolution2DOnCoarsestMeshDifference = (myDGSolution2DOnCoarsestMesh[:,:,:,:,iCase] 
                                                           - myDGSolution2DOnCoarsestMesh[:,:,:,:,iCase-1])
                 L2ErrorNorm[:,iCase] = (
@@ -449,11 +452,12 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
                                                             myDGSolution2DOnCoarsestMeshDifference))
         elif ConvergenceType == 'Time':
             myDGSolution2D[:,:,:,:,iCase] = DetermineNumericalSolutionAndError(
-            ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,CourantNumber,
-            TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-            Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,
-            dt[iCase],nTime[iCase],EntityToBeInterpolated=EntityToBeInterpolated,
-            ReadFromSELFOutputData=ReadFromSELFOutputData,TimeIntegratorShortForm=TimeIntegratorShortForm)
+            ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
+            CourantNumber_Advection,CourantNumber_Diffusion,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
+            Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,nElementsX[iCase],
+            nElementsY[iCase],nXi,nEta,nXiPlot,nEtaPlot,dt[iCase],nTime[iCase],
+            EntityToBeInterpolated=EntityToBeInterpolated,ReadFromSELFOutputData=ReadFromSELFOutputData,
+            TimeIntegratorShortForm=TimeIntegratorShortForm)
             if not(isCoarsestMesh):
                 myDGSolution2DDifference = myDGSolution2D[:,:,:,:,iCase] - myDGSolution2D[:,:,:,:,iCase-1]
                 L2ErrorNorm[:,iCase] = DGSEM2DClass.ComputeErrorNorm(myDGSEM2D,True,myDGSolution2DDifference)
@@ -473,8 +477,21 @@ def ConvergenceStudy(ConvergenceType,ProblemType,PrintPhaseSpeedOfWaveModes,Prin
         L2ErrorNorm = L2ErrorNorm[:,1:]
     WriteL2ErrorNorm(myDGSEM2D.OutputDirectory,nIntervals,Intervals,L2ErrorNorm,FileName)
     
-    
-def SetOfTimeIntegrators():
+
+def SpecifyProblemTypes(ConvergenceType):
+    if ConvergenceType == 'SpaceAndTime':
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Equatorial_Kelvin_Wave','Equatorial_Yanai_Wave',
+                        'Equatorial_Rossby_Wave','Equatorial_Inertia_Gravity_Wave','Barotropic_Tide',
+                        'NonLinear_Manufactured_Solution','Viscous_Burgers_Equation']
+    elif ConvergenceType == 'Space' or ConvergenceType == 'Time':
+        ProblemTypes = ['Coastal_Kelvin_Wave','Inertia_Gravity_Wave','Planetary_Rossby_Wave','Topographic_Rossby_Wave',
+                        'Equatorial_Kelvin_Wave','Equatorial_Yanai_Wave','Equatorial_Rossby_Wave',
+                        'Equatorial_Inertia_Gravity_Wave','Barotropic_Tide','NonLinear_Manufactured_Solution',
+                        'Viscous_Burgers_Equation']
+    return ProblemTypes
+
+
+def SpecifyTimeIntegrators():
     TimeIntegrators = ['ExplicitMidpointMethod','SecondOrderAdamsBashforthMethod',
                        'WilliamsonLowStorageThirdOrderRungeKuttaMethod','ThirdOrderAdamsBashforthMethod',
                        'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod','FourthOrderAdamsBashforthMethod']
@@ -548,7 +565,7 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
     ProblemType_Title, ProblemType_FileName = Initialization.SpecifyTitleAndFileNamePrefixes(ProblemType)
     OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/' + ProblemType
     if ReadFromSELFOutputData:
-        OutputDirectory += '_SELFOutputData'
+        OutputDirectory += '_SELF_Output_Data'
     linewidth = 2.0
     linewidths = [2.0,2.0]
     linestyle = '-'
@@ -597,7 +614,7 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
     # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
     # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SetOfTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     if SingleTimeIntegrator:
         iTimeIntegratorLowerLimit = SingleTimeIntegratorIndex
         iTimeIntegratorUpperLimit = SingleTimeIntegratorIndex + 1
@@ -748,7 +765,7 @@ def SpecifyShadowAndFrameAlpha():
     return shadow, framealpha
                 
                 
-def SetOfLegends(slopes):
+def SpecifyLegends(slopes):
     legends = ['RK2','AB2','RK3','AB3','RK4','AB4']            
     for i_legend in range(0,len(legends)):
         legends[i_legend] += ': s = %.2f' %slopes[i_legend]
@@ -763,7 +780,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
     ProblemType_Title, ProblemType_FileName = Initialization.SpecifyTitleAndFileNamePrefixes(ProblemType)
     OutputDirectory = '../../output/DGSEM_Rotating_Shallow_Water_Output/' + ProblemType
     if ReadFromSELFOutputData:
-        OutputDirectory += '_SELFOutputData'
+        OutputDirectory += '_SELF_Output_Data'
     PlotConvergenceData_LogicalArray = np.ones(3,dtype=bool)
     if PlotOnlySurfaceElevationConvergenceData:
         PlotConvergenceData_LogicalArray[0:2] = False
@@ -771,7 +788,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
     # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
     # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SetOfTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     nTimeIntegrators = len(TimeIntegrators)
     TimeIntegrator = TimeIntegrators[0]
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = LF_TR_and_LF_AM3_with_FB_Feedback_Types[0]
@@ -882,8 +899,8 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
                 SurfaceElevationL2ErrorNorm[iTimeIntegrator,:])
                 SurfaceElevationL2ErrorNormWithBestFitLine[iTimeIntegrator,1,:] = y
     linewidths = 2.0*np.ones(nTimeIntegrators)
-    if (ConvergenceType == 'Space' and (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-                                        or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+    if (ConvergenceType == 'Space' 
+        and (ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave')):
         linestyles  = ['-','-','--','--',':',':']
     else:
         linestyles  = ['-','-','-','-','-','-']
@@ -920,7 +937,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of zonal velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mZonalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mZonalVelocity)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -961,7 +978,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of meridional velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mMeridionalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mMeridionalVelocity)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -1000,7 +1017,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of SSH'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SetOfLegends(mSurfaceElevation)
+        legends, legendfontsize, legendpads = SpecifyLegends(mSurfaceElevation)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection)
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):

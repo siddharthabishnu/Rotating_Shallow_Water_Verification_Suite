@@ -144,7 +144,7 @@ def TestQuadratureOnHexagon():
     print('\nf(x,y) = 1')
     print('Computing quadrature of f(x,y) over a regular hexagon of length 10.0 centered at [10.0,10.0]:')
     f = 1.0
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
     NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.ones(myQuadratureOnHexagon.n))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %myQuadratureOnHexagon.a)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
@@ -156,7 +156,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon.x**2.0)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x 
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon_x**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = ((x - x0)/l)**2')
@@ -166,8 +167,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon.x - x0)/l)**2.0)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x     
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon_x - x0)/l)**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = y**2')
@@ -178,7 +180,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon.y**2.0)
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y 
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon_y**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = ((y - y0)/l)**2')
@@ -188,8 +191,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon.y - y0)/l)**2.0)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y     
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon_y - y0)/l)**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = x**2*y**2')
@@ -200,8 +204,10 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x 
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y  
     NumericalIntegral = (
-    myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon.x**2.0*myQuadratureOnHexagon.y**2.0))
+    myQuadratureOnHexagon.DetermineQuadrature(myQuadratureOnHexagon_x**2.0*myQuadratureOnHexagon_y**2.0))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = ((x - x0)/l)**2*((y - y0)/l)**2')
@@ -211,10 +217,12 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x 
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y      
     NumericalIntegral = (
-    myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon.x - x0)/l)**2.0
-                                              *((myQuadratureOnHexagon.y - y0)/l)**2.0))
+    myQuadratureOnHexagon.DetermineQuadrature(((myQuadratureOnHexagon_x - x0)/l)**2.0
+                                              *((myQuadratureOnHexagon_y - y0)/l)**2.0))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = (sin x)**2')
@@ -225,7 +233,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin(myQuadratureOnHexagon.x))**2.0)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin(myQuadratureOnHexagon_x))**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = (sin ((x - x0)/l))**2')
@@ -235,8 +244,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin((myQuadratureOnHexagon.x - x0)/l))**2.0)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x 
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin((myQuadratureOnHexagon_x - x0)/l))**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = (sin y)**2')
@@ -247,7 +257,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin(myQuadratureOnHexagon.y))**2.0)
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y     
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin(myQuadratureOnHexagon_y))**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = (sin ((y - y0)/l))**2')
@@ -257,8 +268,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin((myQuadratureOnHexagon.y - y0)/l))**2.0)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature((np.sin((myQuadratureOnHexagon_y - y0)/l))**2.0)
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-x)')
@@ -269,7 +281,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon.x))
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon_x))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-(x - x0)/l)')
@@ -279,8 +292,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon.x - x0)/l))
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon_x - x0)/l))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-y)')
@@ -291,7 +305,8 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon.y))
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon_y))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-(y - y0)/l)')
@@ -301,8 +316,9 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
-    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon.y - y0)/l))
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y
+    NumericalIntegral = myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon_y - y0)/l))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-x)*exp(-y)')
@@ -313,8 +329,10 @@ def TestQuadratureOnHexagon():
     A3 = sp.integrate(f,(x,-np.sqrt(3.0)*(1.0 + y),np.sqrt(3.0)*(1.0 + y)),(y,-1.0,-0.5))
     A = A1 + A2 + A3
     myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon()
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x    
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y  
     NumericalIntegral = (
-    myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon.x)*np.exp(-myQuadratureOnHexagon.y)))
+    myQuadratureOnHexagon.DetermineQuadrature(np.exp(-myQuadratureOnHexagon_x)*np.exp(-myQuadratureOnHexagon_y)))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     print('\nf(x,y) = exp(-(x - x0)/l)*exp(-(y - y0)/l)')
@@ -324,10 +342,12 @@ def TestQuadratureOnHexagon():
     A2 = sp.integrate(f,(x,x0-np.sqrt(3.0)/2.0*l,x0+np.sqrt(3.0)/2.0*l),(y,y0-0.5*l,y0+0.5*l))
     A3 = sp.integrate(f,(x,x0-np.sqrt(3.0)*(y-y0+l),x0+np.sqrt(3.0)*(y-y0+l)),(y,y0-l,y0-0.5*l))
     A = A1 + A2 + A3
-    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=[x0,y0],l=l)
+    myQuadratureOnHexagon = CR_CEAQ.QuadratureOnHexagon(origin=np.array([x0,y0]),l=l)
+    myQuadratureOnHexagon_x = myQuadratureOnHexagon.x    
+    myQuadratureOnHexagon_y = myQuadratureOnHexagon.y  
     NumericalIntegral = (
-    myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon.x - x0)/l)
-                                              *np.exp(-(myQuadratureOnHexagon.y - y0)/l)))
+    myQuadratureOnHexagon.DetermineQuadrature(np.exp(-(myQuadratureOnHexagon_x - x0)/l)
+                                              *np.exp(-(myQuadratureOnHexagon_y - y0)/l)))
     print('The exact integral of f(x,y) over the hexagon is %.15f.' %A)
     print('The quadrature i.e. the numerical integral of f(x,y) over the hexagon is %.15f.' %NumericalIntegral)
     

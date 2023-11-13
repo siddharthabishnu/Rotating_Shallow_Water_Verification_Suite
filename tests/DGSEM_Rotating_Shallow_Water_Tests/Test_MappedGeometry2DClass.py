@@ -28,7 +28,6 @@ def TestMappedGeometry2D():
     BoundaryCurve[3] = GB2D.CurveInterpolant2D(np.array([-1.0,1.0]),np.array([0.0,0.0]),np.array([0.0,1.0]))
     # Note that the boundary curves should always be parameterized in the increasing directions of xi and eta.
     myMappedGeometry2D = MG2D.MappedGeometry2D(myDGNodalStorage2D,BoundaryCurve)
-    myMappedGeometry2D = MG2D.MappedGeometry2D.ConstructEmptyMappedGeometry2D(myDGNodalStorage2D,nXi,nEta)
 
 
 do_TestMappedGeometry2D = False

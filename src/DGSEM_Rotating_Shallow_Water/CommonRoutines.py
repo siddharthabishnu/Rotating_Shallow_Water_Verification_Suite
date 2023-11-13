@@ -7,6 +7,7 @@ Details: This script contains customized functions for writing output to text fi
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
 import os
 
 
@@ -450,8 +451,8 @@ def PythonFilledContourPlot2DSaveAsPDF(output_directory,x,y,phi,nContours,labels
         FCP = plt.tricontourf(x,y,phi,nContours,vmin=cbar_min,vmax=cbar_max,cmap=colormap)
     # FCP stands for filled contour plot.
     plt.title(title,fontsize=titlefontsize,fontweight='bold',y=1.035)
-    cbarShrinkRatio = 0.825
-    cbar = plt.colorbar(shrink=cbarShrinkRatio) # Draw colorbar.
+    cbarShrinkRatio = 0.8075
+    cbar = plt.colorbar(ScalarMappable(norm=FCP.norm, cmap=FCP.cmap),shrink=cbarShrinkRatio) # Draw colorbar.
     cbar.set_ticks(cbarlabels)
     cbar.set_ticklabels(cbarlabels)
     cbarlabels_final = cbar.get_ticks()

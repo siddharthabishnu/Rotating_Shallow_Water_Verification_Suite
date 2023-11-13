@@ -56,6 +56,14 @@ def TransfiniteQuadMap(xi,eta,BoundaryCurve):
     return x, y
 
 
+def TransfiniteQuadMap_StraightSidedQuadrilateral(xi,eta,xCoordinate,yCoordinate):
+    x = 0.25*((1.0 - xi)*(1.0 - eta)*xCoordinate[0] + (1.0 + xi)*(1.0 - eta)*xCoordinate[1] 
+              + (1.0 + xi)*(1.0 + eta)*xCoordinate[2] + (1.0 - xi)*(1.0 + eta)*xCoordinate[3])
+    y = 0.25*((1.0 - xi)*(1.0 - eta)*yCoordinate[0] + (1.0 + xi)*(1.0 - eta)*yCoordinate[1] 
+              + (1.0 + xi)*(1.0 + eta)*yCoordinate[2] + (1.0 - xi)*(1.0 + eta)*yCoordinate[3])
+    return x, y
+
+
 def TransfiniteQuadMetrics(xi,eta,BoundaryCurve):
     SouthWestCorner = BoundaryCurve[0].EvaluateCurve(-1.0)
     SouthEastCorner = BoundaryCurve[0].EvaluateCurve(1.0)
@@ -85,4 +93,20 @@ def TransfiniteQuadMetrics(xi,eta,BoundaryCurve):
                    + BoundaryCurve3[1] - BoundaryCurve1[1]) 
               - 0.25*((1.0 - xi)*(NorthWestCorner[1] - SouthWestCorner[1]) 
                       + (1.0 + xi)*(NorthEastCorner[1] - SouthEastCorner[1])))
+    return dXdXi, dXdEta, dYdXi, dYdEta
+
+
+def TransfiniteQuadMetrics_StraightSidedQuadrilateral(xi,eta,BoundaryCurve):
+    SouthWestCorner = BoundaryCurve[0].EvaluateCurve(-1.0)
+    SouthEastCorner = BoundaryCurve[0].EvaluateCurve(1.0)
+    NorthEastCorner = BoundaryCurve[2].EvaluateCurve(1.0)
+    NorthWestCorner = BoundaryCurve[2].EvaluateCurve(-1.0)
+    dXdXi = 0.25*((1.0 - eta)*(SouthEastCorner[0] - SouthWestCorner[0]) 
+                  + (1.0 + eta)*(NorthEastCorner[0] - NorthWestCorner[0]))
+    dYdXi = 0.25*((1.0 - eta)*(SouthEastCorner[1] - SouthWestCorner[1])
+                  + (1.0 + eta)*(NorthEastCorner[1] - NorthWestCorner[1]))
+    dXdEta = 0.25*((1.0 - xi)*(NorthWestCorner[0] - SouthWestCorner[0])
+                   + (1.0 + xi)*(NorthEastCorner[0] - SouthEastCorner[0]))
+    dYdEta = 0.25*((1.0 - xi)*(NorthWestCorner[1] - SouthWestCorner[1])
+                   + (1.0 + xi)*(NorthEastCorner[1] - SouthEastCorner[1]))
     return dXdXi, dXdEta, dYdXi, dYdEta

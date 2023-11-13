@@ -25,14 +25,13 @@ with io.capture_output() as captured:
 class DiagnosticVariablesToCompute:
     
     def __init__(myDiagnosticVariablesToCompute):
-        myDiagnosticVariablesToCompute.LayerThickness = False
-        myDiagnosticVariablesToCompute.LayerThicknessEdge = False
-        myDiagnosticVariablesToCompute.RelativeVorticityCell = False
-        myDiagnosticVariablesToCompute.DivergenceKineticEnergyCell = False
         myDiagnosticVariablesToCompute.TangentialVelocity = False
-        myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityVertex = False
-        myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityEdge = False
-        myDiagnosticVariablesToCompute.NormalizedRelativeVorticityCell = False
+        myDiagnosticVariablesToCompute.LayerThickness = False
+        myDiagnosticVariablesToCompute.KineticEnergy = False
+        myDiagnosticVariablesToCompute.VelocityDivergence = False
+        myDiagnosticVariablesToCompute.Vorticity = False 
+        # Here vorticity includes both relative and planetary vorticity.
+        myDiagnosticVariablesToCompute.NormalizedVorticity = False
 
 
 class MPASOceanShallowWater:
@@ -40,14 +39,15 @@ class MPASOceanShallowWater:
     def __init__(myMPASOceanShallowWater,ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
                  TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                  Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,
-                 BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber=0.5,
-                 UseCourantNumberToDetermineTimeStep=False,SpecifyBoundaryCondition=False,BoundaryCondition='Periodic',
-                 ReadDomainExtentsfromMeshFile=False,DebugVersion=False):
+                 BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,
+                 CourantNumber_Advection=0.5,CourantNumber_Diffusion=0.5,UseCourantNumberToDetermineTimeStep=False,
+                 SpecifyBoundaryCondition=False,BoundaryCondition='Periodic',ReadDomainExtentsfromMeshFile=False,
+                 DebugVersion=False):
         myMPASOceanShallowWater.myNameList = (
         Initialization.NameList(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                 LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
-                                Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber,
-                                UseCourantNumberToDetermineTimeStep))
+                                Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,CourantNumber_Advection,
+                                CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep))
         myMPASOceanShallowWater.myMesh = MeshClass.Mesh(myMPASOceanShallowWater.myNameList,PrintBasicGeometry,
                                                         MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,
                                                         PrintOutput,UseAveragedQuantities,SpecifyBoundaryCondition,
@@ -58,12 +58,13 @@ class MPASOceanShallowWater:
             dx = myMPASOceanShallowWater.myMesh.dx
             dy = myMPASOceanShallowWater.myMesh.dy
             myMPASOceanShallowWater.myNameList.ModifyNameList(PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,
-                                                              CourantNumber,UseCourantNumberToDetermineTimeStep,
-                                                              BoundaryCondition,lX,lY,dx,dy)
+                                                              CourantNumber_Advection,CourantNumber_Diffusion,
+                                                              UseCourantNumberToDetermineTimeStep,BoundaryCondition,lX,
+                                                              lY,dx,dy)
         nCells = myMPASOceanShallowWater.myMesh.nCells
         nEdges = myMPASOceanShallowWater.myMesh.nEdges
         nVertices = myMPASOceanShallowWater.myMesh.nVertices
-        myMPASOceanShallowWater.mySolution = SolutionClass.Solution(nCells,nEdges,nVertices,TimeIntegrator)
+        myMPASOceanShallowWater.mySolution = SolutionClass.Solution(ProblemType,TimeIntegrator,nCells,nEdges,nVertices)
         myMPASOceanShallowWater.DetermineCoriolisParameterAndBottomDepth()
         myMPASOceanShallowWater.RootOutputDirectory, myMPASOceanShallowWater.OutputDirectory = (
         MakeOutputDirectories(ProblemType))
@@ -75,8 +76,8 @@ class MPASOceanShallowWater:
         beta0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.beta0
         f0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.f0
         H0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.H0
-        if (myMPASOceanShallowWater.myNameList.ProblemType == 'Planetary_Rossby_Wave' 
-            or myMPASOceanShallowWater.myNameList.ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
+        if (myMPASOceanShallowWater.myNameList.ProblemType == 'Manufactured_Planetary_Rossby_Wave' 
+            or myMPASOceanShallowWater.myNameList.ProblemType == 'Planetary_Rossby_Wave'
             or myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave):
             if myMPASOceanShallowWater.myMesh.UseAveragedQuantities:
                 for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
@@ -95,9 +96,8 @@ class MPASOceanShallowWater:
         else:
             myMPASOceanShallowWater.myMesh.fEdge[:] = f0
             myMPASOceanShallowWater.myMesh.fVertex[:] = f0
-        if (myMPASOceanShallowWater.myNameList.ProblemType == 'Topographic_Rossby_Wave'
-            or (myMPASOceanShallowWater.myNameList.ProblemType 
-                == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave')):
+        if (myMPASOceanShallowWater.myNameList.ProblemType == 'Manufactured_Topographic_Rossby_Wave'
+            or myMPASOceanShallowWater.myNameList.ProblemType == 'Topographic_Rossby_Wave'):
             if myMPASOceanShallowWater.myMesh.UseAveragedQuantities:
                 for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
                     yQP = (myMPASOceanShallowWater.myMesh.yCell[iCell] 
@@ -123,170 +123,272 @@ class MPASOceanShallowWater:
             myMPASOceanShallowWater.myMesh.bottomDepth[:] = H0
             myMPASOceanShallowWater.myMesh.bottomDepthEdge[:] = H0
                     
-    def ComputeRelativeVorticityAndCirculation(myMPASOceanShallowWater,NormalVelocity):
+    def ComputeRelativeVorticityAndCirculation(myMPASOceanShallowWater,NormalVelocity,time):
+        ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
         for iVertex in range(0,myMPASOceanShallowWater.myMesh.nVertices):
             myMPASOceanShallowWater.mySolution.circulation[iVertex] = 0.0
-            myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex] = 0.0
-            InverseAreaTriangle = 1.0/myMPASOceanShallowWater.myMesh.areaTriangle[iVertex]
-            for iVertexDegree in range(0,myMPASOceanShallowWater.myMesh.vertexDegree):
-                EdgeID = myMPASOceanShallowWater.myMesh.edgesOnVertex[iVertex,iVertexDegree]
-                iEdge = EdgeID - 1
-                r_tmp = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]*NormalVelocity[iEdge]
-                myMPASOceanShallowWater.mySolution.circulation[iVertex] += (
-                myMPASOceanShallowWater.myMesh.edgeSignOnVertex[iVertex,iVertexDegree]*r_tmp)
-                myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex] += (
-                myMPASOceanShallowWater.myMesh.edgeSignOnVertex[iVertex,iVertexDegree]*r_tmp*InverseAreaTriangle)
-                    
-    def DiagnosticSolve(myMPASOceanShallowWater,NormalVelocity,SurfaceElevation,myDiagnosticVariablesToCompute,
-                        NormalVelocityTendencyComputation=False):
-        if (myDiagnosticVariablesToCompute.LayerThickness or myDiagnosticVariablesToCompute.LayerThicknessEdge 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityVertex):
-            for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
-                myMPASOceanShallowWater.mySolution.layerThickness[iCell] = (
-                SurfaceElevation[iCell] + myMPASOceanShallowWater.myMesh.bottomDepth[iCell])    
-        if myDiagnosticVariablesToCompute.LayerThicknessEdge:
-            if (not(myMPASOceanShallowWater.myNameList.UseWettingDrying) 
-                or (myMPASOceanShallowWater.myNameList.UseWettingDrying 
-                    and myMPASOceanShallowWater.myNameList.ThicknessFluxType == 'centered')):
-                for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
-                    CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
-                    iCell1 = CellID1 - 1
-                    CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
-                    iCell2 = CellID2 - 1
-                    # Centered difference
-                    myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
-                    (0.5*(SurfaceElevation[iCell1] + SurfaceElevation[iCell2]) 
-                     + myMPASOceanShallowWater.myMesh.bottomDepthEdge[iEdge]))
+            AreaTriangle = myMPASOceanShallowWater.myMesh.areaTriangle[iVertex]
+            if myMPASOceanShallowWater.myMesh.boundaryVertex[iVertex] == 1.0:
+                xVertex = myMPASOceanShallowWater.myMesh.xVertex[iVertex]
+                yVertex = myMPASOceanShallowWater.myMesh.yVertex[iVertex]
+                myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex] = (
+                ESST.DetermineExactRelativeVorticity(ProblemType,myExactSolutionParameters,xVertex,yVertex,time))
+                myMPASOceanShallowWater.mySolution.circulation[iVertex] = (
+                myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex]*AreaTriangle)
             else:
-                if (myMPASOceanShallowWater.myNameList.UseWettingDrying
-                    and myMPASOceanShallowWater.myNameList.ThicknessFluxType != 'centered'):
-                    if myMPASOceanShallowWater.myNameList.ThicknessFluxType == 'upwind':
-                        for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
-                            CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
-                            iCell1 = CellID1 - 1
-                            CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
-                            iCell2 = CellID2 - 1
-                            # Upwind
-                            if NormalVelocity[iEdge] > 0.0:
-                                myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
-                                myMPASOceanShallowWater.mySolution.layerThickness[iCell1])
-                            elif NormalVelocity[iEdge] < 0.0:
-                                myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
-                                myMPASOceanShallowWater.mySolution.layerThickness[iCell2])
-                            else:
-                                myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
-                                max(myMPASOceanShallowWater.mySolution.layerThickness[iCell1],
-                                    myMPASOceanShallowWater.mySolution.layerThickness[iCell2]))
-                else:
-                    print('Thickness flux option %s is not known!' 
-                          %(myMPASOceanShallowWater.myNameList.ThicknessFluxType))
-                    sys.exit()
-        if (myDiagnosticVariablesToCompute.RelativeVorticityCell 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityVertex 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityEdge 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeVorticityCell):
-            myMPASOceanShallowWater.ComputeRelativeVorticityAndCirculation(NormalVelocity)
-        if myDiagnosticVariablesToCompute.RelativeVorticityCell:
-            for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
-                myMPASOceanShallowWater.mySolution.relativeVorticityCell[iCell] = 0.0
-                InverseAreaCell = 1.0/myMPASOceanShallowWater.myMesh.areaCell[iCell]
-                for iEdgeOnCell in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnCell[iCell]):
-                    jID = myMPASOceanShallowWater.myMesh.kiteIndexOnCell[iCell,iEdgeOnCell]
-                    j = jID - 1
-                    VertexID = myMPASOceanShallowWater.myMesh.verticesOnCell[iCell,iEdgeOnCell]
-                    iVertex = VertexID - 1
-                    myMPASOceanShallowWater.mySolution.relativeVorticityCell[iCell] += (
-                    (myMPASOceanShallowWater.myMesh.kiteAreasOnVertex[iVertex,j]
-                     *myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex]*InverseAreaCell))
-        if myDiagnosticVariablesToCompute.DivergenceKineticEnergyCell:
-            for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
-                myMPASOceanShallowWater.mySolution.divergence[iCell] = 0.0
-                myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell] = 0.0
-                InverseAreaCell = 1.0/myMPASOceanShallowWater.myMesh.areaCell[iCell]
-                for iEdgeOnCell in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnCell[iCell]):
-                    EdgeID = myMPASOceanShallowWater.myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                for iVertexDegree in range(0,myMPASOceanShallowWater.myMesh.vertexDegree):
+                    EdgeID = myMPASOceanShallowWater.myMesh.edgesOnVertex[iVertex,iVertexDegree]
                     iEdge = EdgeID - 1
-                    edgeSignOnCell_temp = myMPASOceanShallowWater.myMesh.edgeSignOnCell[iCell,iEdgeOnCell]
-                    dcEdge_temp = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
-                    dvEdge_temp = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
-                    r_tmp = dvEdge_temp*NormalVelocity[iEdge]*InverseAreaCell
-                    myMPASOceanShallowWater.mySolution.divergence[iCell] -= edgeSignOnCell_temp*r_tmp
-                    myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell] += (
-                    0.25*r_tmp*dcEdge_temp*NormalVelocity[iEdge])
+                    normalVelocity_times_dcEdge = NormalVelocity[iEdge]*myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
+                    myMPASOceanShallowWater.mySolution.circulation[iVertex] += (
+                    myMPASOceanShallowWater.myMesh.edgeSignOnVertex[iVertex,iVertexDegree]*normalVelocity_times_dcEdge)
+                myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex] = (
+                myMPASOceanShallowWater.mySolution.circulation[iVertex]/AreaTriangle)
+            
+    def ComputeLayerThickness(myMPASOceanShallowWater,SurfaceElevation,time):
+        # Compute layer thickness at cell centers. Note that for the linear test cases, layerthickness and 
+        # layerThicknessEdge are never used.
+        ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
+        UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
+        myQuadratureOnEdge = myMPASOceanShallowWater.myMesh.myQuadratureOnEdge
+        for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
+            if myMPASOceanShallowWater.myNameList.ProblemType == 'Viscous_Burgers_Equation':
+                myMPASOceanShallowWater.mySolution.layerThickness[iCell] = (
+                myMPASOceanShallowWater.myMesh.bottomDepth[iCell])
+            else:
+                myMPASOceanShallowWater.mySolution.layerThickness[iCell] = (
+                SurfaceElevation[iCell] + myMPASOceanShallowWater.myMesh.bottomDepth[iCell])              
+        # Compute ssh and layer thickness at edges.
+        for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
+            CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
+            iCell1 = CellID1 - 1
+            CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
+            iCell2 = CellID2 - 1
+            if myMPASOceanShallowWater.myNameList.ProblemType == 'Viscous_Burgers_Equation':
+                myMPASOceanShallowWater.mySolution.sshEdge[iEdge] = 0.0
+                myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
+                myMPASOceanShallowWater.myMesh.bottomDepthEdge[iEdge])
+            else:
+                if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
+                    xEdge = myMPASOceanShallowWater.myMesh.xEdge[iEdge]
+                    yEdge = myMPASOceanShallowWater.myMesh.yEdge[iEdge]
+                    dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+                    angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
+                    myMPASOceanShallowWater.mySolution.sshEdge[iEdge] = (
+                    ESST.DetermineExactSurfaceElevationAtEdge(ProblemType,myExactSolutionParameters,xEdge,yEdge,time,
+                                                              UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                              angleEdge))
+                else:
+                    myMPASOceanShallowWater.mySolution.sshEdge[iEdge] = (
+                    0.5*(SurfaceElevation[iCell1] + SurfaceElevation[iCell2])) 
+                myMPASOceanShallowWater.mySolution.layerThicknessEdge[iEdge] = (
+                (myMPASOceanShallowWater.mySolution.sshEdge[iEdge] 
+                 + myMPASOceanShallowWater.myMesh.bottomDepthEdge[iEdge]))
+
+    def DiagnosticSolve(myMPASOceanShallowWater,NormalVelocity,SurfaceElevation,time,myDiagnosticVariablesToCompute):
+        ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
+        UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
+        myQuadratureOnEdge = myMPASOceanShallowWater.myMesh.myQuadratureOnEdge
         if myDiagnosticVariablesToCompute.TangentialVelocity:
+            myMPASOceanShallowWater.mySolution.tangentialVelocity[:] = 0.0
             for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
-                if ((NormalVelocityTendencyComputation and myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0)
-                    or not(NormalVelocityTendencyComputation)): 
-                    # i.e. if the edge is an interior one in case of normal velocity tendency computation
-                    myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge] = 0.0
-                    # Compute tangential velocities.
+                if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
+                    xEdge = myMPASOceanShallowWater.myMesh.xEdge[iEdge]
+                    yEdge = myMPASOceanShallowWater.myMesh.yEdge[iEdge]
+                    dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+                    angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
+                    myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge] = (
+                    ESST.DetermineExactTangentialVelocity(ProblemType,myExactSolutionParameters,xEdge,yEdge,time,
+                                                          UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                else: # if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0: 
                     for iEdgeOnEdge in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnEdge[iEdge]):
                         eoeID = myMPASOceanShallowWater.myMesh.edgesOnEdge[iEdge,iEdgeOnEdge]
                         eoe = eoeID - 1
                         edgeWeight = myMPASOceanShallowWater.myMesh.weightsOnEdge[iEdge,iEdgeOnEdge]
                         myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge] += edgeWeight*NormalVelocity[eoe]
-        if (myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityVertex 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityEdge 
-            or myDiagnosticVariablesToCompute.NormalizedRelativeVorticityCell):
-            for iVertex in range(0,myMPASOceanShallowWater.myMesh.nVertices):
-                InverseAreaTriangle = 1.0/myMPASOceanShallowWater.myMesh.areaTriangle[iVertex]
-                layerThicknessVertex = 0.0
-                for iVertexDegree in range(0,myMPASOceanShallowWater.myMesh.vertexDegree):
-                    CellID = myMPASOceanShallowWater.myMesh.cellsOnVertex[iVertex,iVertexDegree]
-                    iCell = CellID - 1
-                    layerThicknessVertex += (myMPASOceanShallowWater.mySolution.layerThickness[iCell]
-                                             *myMPASOceanShallowWater.myMesh.kiteAreasOnVertex[iVertex,iVertexDegree])
-                layerThicknessVertex *= InverseAreaTriangle   
-                myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityVertex[iVertex] = (
-                myMPASOceanShallowWater.mySolution.relativeVorticity[iVertex]/layerThicknessVertex)
-                myMPASOceanShallowWater.mySolution.normalizedPlanetaryVorticityVertex[iVertex] = (
-                myMPASOceanShallowWater.myMesh.fVertex[iVertex]/layerThicknessVertex)   
-        if myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityEdge:
-            for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
-                myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[iEdge] = 0.0
-                myMPASOceanShallowWater.mySolution.normalizedPlanetaryVorticityEdge[iEdge] = 0.0
-                VertexID1 = myMPASOceanShallowWater.myMesh.verticesOnEdge[iEdge,0]
-                iVertex1 = VertexID1 - 1
-                VertexID2 = myMPASOceanShallowWater.myMesh.verticesOnEdge[iEdge,1]
-                iVertex2 = VertexID2 - 1
-                myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[iEdge] = (
-                0.5*(myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityVertex[iVertex1]
-                     + myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityVertex[iVertex2]))
-                myMPASOceanShallowWater.mySolution.normalizedPlanetaryVorticityEdge[iEdge] = (
-                0.5*(myMPASOceanShallowWater.mySolution.normalizedPlanetaryVorticityVertex[iVertex1] 
-                     + myMPASOceanShallowWater.mySolution.normalizedPlanetaryVorticityVertex[iVertex2]))
-        if myDiagnosticVariablesToCompute.NormalizedRelativeVorticityCell:
+        if myDiagnosticVariablesToCompute.LayerThickness or myDiagnosticVariablesToCompute.NormalizedVorticity:
+            myMPASOceanShallowWater.ComputeLayerThickness(SurfaceElevation,time)
+        if myDiagnosticVariablesToCompute.Vorticity or myDiagnosticVariablesToCompute.NormalizedVorticity:
+            myMPASOceanShallowWater.ComputeRelativeVorticityAndCirculation(NormalVelocity,time)
+            myMPASOceanShallowWater.mySolution.relativeVorticityCell = (
+            myMPASOceanShallowWater.myMesh.InterpolateSolutionFromVerticesToCellCenters(
+            myMPASOceanShallowWater.mySolution.relativeVorticity))
+            myMPASOceanShallowWater.mySolution.relativeVorticityEdge = (
+            myMPASOceanShallowWater.myMesh.InterpolateSolutionFromVerticesToEdges(
+            myMPASOceanShallowWater.mySolution.relativeVorticity,
+            myMPASOceanShallowWater.mySolution.relativeVorticityEdge,InterpolateToBoundaryEdges=True))
+        if myDiagnosticVariablesToCompute.KineticEnergy or myDiagnosticVariablesToCompute.VelocityDivergence:
             for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
-                myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityCell[iCell] = 0.0
-                InverseAreaCell = 1.0/myMPASOceanShallowWater.myMesh.areaCell[iCell]
+                myMPASOceanShallowWater.mySolution.velocityDivergence[iCell] = 0.0
+                myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell] = 0.0
+                AreaCell = myMPASOceanShallowWater.myMesh.areaCell[iCell]
                 for iEdgeOnCell in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnCell[iCell]):
-                    jID = myMPASOceanShallowWater.myMesh.kiteIndexOnCell[iCell,iEdgeOnCell]
-                    j = jID - 1
-                    VertexID = myMPASOceanShallowWater.myMesh.verticesOnCell[iCell,iEdgeOnCell]
-                    iVertex = VertexID - 1
-                    myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityCell[iCell] += (
-                    (myMPASOceanShallowWater.myMesh.kiteAreasOnVertex[iVertex,j]
-                     *myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityVertex[iVertex]*InverseAreaCell))
-                    
-    def ComputeNormalVelocityTendencies(myMPASOceanShallowWater,time):
+                    EdgeID = myMPASOceanShallowWater.myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                    iEdge = EdgeID - 1
+                    dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+                    if myDiagnosticVariablesToCompute.KineticEnergy:
+                        dcEdge = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
+                        myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell] += (
+                        dcEdge*dvEdge*(NormalVelocity[iEdge])**2.0)
+                    if myDiagnosticVariablesToCompute.VelocityDivergence:
+                        edgeSignOnCell = myMPASOceanShallowWater.myMesh.edgeSignOnCell[iCell,iEdgeOnCell]
+                        myMPASOceanShallowWater.mySolution.velocityDivergence[iCell] -= (
+                        edgeSignOnCell*dvEdge*NormalVelocity[iEdge])         
+                if myDiagnosticVariablesToCompute.KineticEnergy:
+                    myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell] *= 0.25/AreaCell        
+                if myDiagnosticVariablesToCompute.VelocityDivergence:
+                    myMPASOceanShallowWater.mySolution.velocityDivergence[iCell] /= AreaCell      
+        if myDiagnosticVariablesToCompute.NormalizedVorticity:
+            # Compute layer thickness at vertices. First, interpolate relative vorticity from vertices to edges and then 
+            # normalize it (i.e. divide it by the layer thickness at the edge).
+            myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge = (
+            (myMPASOceanShallowWater.mySolution.relativeVorticityEdge[:]
+             /myMPASOceanShallowWater.mySolution.layerThicknessEdge[:]))
+        if myDiagnosticVariablesToCompute.Vorticity:
+            # Interpolate the relative vorticity from the cell centers back to the vertices. We perform this opertion to 
+            # ensure these quantities are now second-order accurate, which would also render the tangential gradient of 
+            # the vorticity and the Laplacian of the normal velocity at the edges to be second-order accurate.
+            myMPASOceanShallowWater.mySolution.relativeVorticity = (
+            myMPASOceanShallowWater.myMesh.InterpolateSolutionFromCellCentersToVertices(
+            myMPASOceanShallowWater.mySolution.relativeVorticityCell,
+            myMPASOceanShallowWater.mySolution.relativeVorticity))
+            
+    def ComputeNormalVelocityLaplacianAtEdges_1(myMPASOceanShallowWater,time):
         ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
         myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
         UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
         myQuadratureOnEdge = myMPASOceanShallowWater.myMesh.myQuadratureOnEdge
-        g = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.g
-        if not(myMPASOceanShallowWater.myNameList.Problem_is_Linear):
-            myDiagnosticVariablesToCompute = DiagnosticVariablesToCompute()
-            myDiagnosticVariablesToCompute.LayerThickness = True
-            myDiagnosticVariablesToCompute.LayerThicknessEdge = True
-            myDiagnosticVariablesToCompute.DivergenceKineticEnergyCell = True
-            myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityVertex = True
-            myDiagnosticVariablesToCompute.NormalizedRelativeAndPlanetaryVorticityEdge = True
-            myMPASOceanShallowWater.DiagnosticSolve(myMPASOceanShallowWater.mySolution.normalVelocity,
-                                                    myMPASOceanShallowWater.mySolution.ssh,
-                                                    myDiagnosticVariablesToCompute,
-                                                    NormalVelocityTendencyComputation=True)
+        uEdge = ESST.DetermineZonalComponentsFromNormalAndTangentialComponents(
+        myMPASOceanShallowWater.mySolution.normalVelocity,myMPASOceanShallowWater.mySolution.tangentialVelocity,
+        myMPASOceanShallowWater.myMesh.angleEdge)
+        vEdge = ESST.DetermineMeridionalComponentsFromNormalAndTangentialComponents(
+        myMPASOceanShallowWater.mySolution.normalVelocity,myMPASOceanShallowWater.mySolution.tangentialVelocity,
+        myMPASOceanShallowWater.myMesh.angleEdge)
+        myMPASOceanShallowWater.mySolution.u = (
+        myMPASOceanShallowWater.myMesh.InterpolateSolutionFromEdgesToCellCenters(uEdge))
+        myMPASOceanShallowWater.mySolution.v = (
+        myMPASOceanShallowWater.myMesh.InterpolateSolutionFromEdgesToCellCenters(vEdge))
+        uGradientNormalToEdge = np.zeros(myMPASOceanShallowWater.myMesh.nEdges)
+        vGradientNormalToEdge = np.zeros(myMPASOceanShallowWater.myMesh.nEdges)
         for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
-            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0: # i.e. if the edge is an interior one
+            xEdge = myMPASOceanShallowWater.myMesh.xEdge[iEdge]
+            yEdge = myMPASOceanShallowWater.myMesh.yEdge[iEdge]
+            dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+            angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
+            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0: # i.e. if the edge is a boundary edge
+                uEdge_x = ESST.DetermineExactZonalVelocityZonalGradient(ProblemType,myExactSolutionParameters,xEdge,
+                                                                        yEdge,time,UseAveragedQuantities,
+                                                                        myQuadratureOnEdge,dvEdge,angleEdge)
+                uEdge_y = ESST.DetermineExactZonalVelocityMeridionalGradient(ProblemType,myExactSolutionParameters,
+                                                                             xEdge,yEdge,time,UseAveragedQuantities,
+                                                                             myQuadratureOnEdge,dvEdge,angleEdge)
+                uGradientNormalToEdge[iEdge] = uEdge_x*np.cos(angleEdge) + uEdge_y*np.sin(angleEdge)
+                vEdge_x = ESST.DetermineExactMeridionalVelocityZonalGradient(ProblemType,myExactSolutionParameters,
+                                                                             xEdge,yEdge,time,UseAveragedQuantities,
+                                                                             myQuadratureOnEdge,dvEdge,angleEdge)
+                vEdge_y = (
+                ESST.DetermineExactMeridionalVelocityMeridionalGradient(ProblemType,myExactSolutionParameters,xEdge,
+                                                                        yEdge,time,UseAveragedQuantities,
+                                                                        myQuadratureOnEdge,dvEdge,angleEdge))
+                vGradientNormalToEdge[iEdge] = vEdge_x*np.cos(angleEdge) + vEdge_y*np.sin(angleEdge)
+            else: # if the edge is an interior edge
+                CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
+                iCell1 = CellID1 - 1
+                CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
+                iCell2 = CellID2 - 1
+                dcEdge = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
+                uGradientNormalToEdge[iEdge] = (
+                myMPASOceanShallowWater.mySolution.u[iCell2] - myMPASOceanShallowWater.mySolution.u[iCell1])/dcEdge
+                vGradientNormalToEdge[iEdge] = (
+                myMPASOceanShallowWater.mySolution.v[iCell2] - myMPASOceanShallowWater.mySolution.v[iCell1])/dcEdge
+        uLaplacian = np.zeros(myMPASOceanShallowWater.myMesh.nCells)
+        vLaplacian = np.zeros(myMPASOceanShallowWater.myMesh.nCells)
+        for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
+            for iEdgeOnCell in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnCell[iCell]):
+                iEdgeID = myMPASOceanShallowWater.myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                iEdge = iEdgeID - 1
+                uLaplacian[iCell] += (myMPASOceanShallowWater.myMesh.edgeSignOnCell[iCell,iEdgeOnCell]
+                                      *uGradientNormalToEdge[iEdge]*myMPASOceanShallowWater.myMesh.dvEdge[iEdge])
+                vLaplacian[iCell] += (myMPASOceanShallowWater.myMesh.edgeSignOnCell[iCell,iEdgeOnCell]
+                                      *vGradientNormalToEdge[iEdge]*myMPASOceanShallowWater.myMesh.dvEdge[iEdge])
+            uLaplacian[iCell] /= myMPASOceanShallowWater.myMesh.areaCell[iCell]        
+            vLaplacian[iCell] /= myMPASOceanShallowWater.myMesh.areaCell[iCell]
+        for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
+            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0:
+                CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
+                iCell1 = CellID1 - 1
+                CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
+                iCell2 = CellID2 - 1
+                uLaplacianEdge = 0.5*(uLaplacian[iCell1] + uLaplacian[iCell2])
+                vLaplacianEdge = 0.5*(vLaplacian[iCell1] + vLaplacian[iCell2])
+                myMPASOceanShallowWater.mySolution.normalVelocityLaplacianAtEdge[iEdge] = (
+                uLaplacianEdge*np.cos(angleEdge) + vLaplacianEdge*np.sin(angleEdge))
+                
+    def ComputeNormalVelocityLaplacianAtEdges_2(myMPASOceanShallowWater):
+        nEdges = myMPASOceanShallowWater.myMesh.nEdges
+        VelocityDivergence = myMPASOceanShallowWater.mySolution.velocityDivergence
+        VelocityCurl = myMPASOceanShallowWater.mySolution.relativeVorticity
+        for iEdge in range(0,nEdges):
+            dcEdge = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
+            dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0:
+                cellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
+                cell1 = cellID1 - 1
+                cellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
+                cell2 = cellID2 - 1
+                GradientOfVelocityDivergenceAtEdge_NormalComponent = (VelocityDivergence[cell2] 
+                                                                      - VelocityDivergence[cell1])/dcEdge
+                VertexID1 = myMPASOceanShallowWater.myMesh.verticesOnEdge[iEdge,0]
+                VertexID2 = myMPASOceanShallowWater.myMesh.verticesOnEdge[iEdge,1]
+                iVertex1 = VertexID1 - 1
+                iVertex2 = VertexID2 - 1
+                GradientOfVelocityCurlAtEdge_TangentialComponent = (VelocityCurl[iVertex2] 
+                                                                    - VelocityCurl[iVertex1])/dvEdge
+                myMPASOceanShallowWater.mySolution.normalVelocityLaplacianAtEdge[iEdge] = (
+                GradientOfVelocityDivergenceAtEdge_NormalComponent - GradientOfVelocityCurlAtEdge_TangentialComponent)
+                
+    def ComputeNormalVelocityLaplacianAtEdges(myMPASOceanShallowWater,time):
+        Option = 2 # Choose Option to be 1 or 2.
+        if Option == 1:
+            myMPASOceanShallowWater.ComputeNormalVelocityLaplacianAtEdges_1(time)
+        elif Option == 2:
+            myMPASOceanShallowWater.ComputeNormalVelocityLaplacianAtEdges_2()
+        else:
+            print('Invalid option!')
+            sys.exit()
+        
+    def ComputeNormalVelocityTendencies(myMPASOceanShallowWater,time):
+        ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        if ProblemType == 'Advection_Diffusion_Equation':
+            myMPASOceanShallowWater.mySolution.normalVelocityTendency[:] = 0.0
+            return
+        myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
+        UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
+        myQuadratureOnEdge = myMPASOceanShallowWater.myMesh.myQuadratureOnEdge
+        g = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.g
+        nu = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.nu
+        myDiagnosticVariablesToCompute = DiagnosticVariablesToCompute()
+        myDiagnosticVariablesToCompute.TangentialVelocity = True
+        if not(myMPASOceanShallowWater.myNameList.Problem_is_Linear) or ProblemType == 'Diffusion_Equation':
+            if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+                myDiagnosticVariablesToCompute.VelocityDivergence = True
+                myDiagnosticVariablesToCompute.Vorticity = True
+                # For the viscous Burgers equation, the vorticity computation at the vertices is necessary for obtaining 
+                # its tangential gradient along the edges, which is one component of the Laplacian of the normal 
+                # velocity at the edges.
+            myDiagnosticVariablesToCompute.LayerThickness = True
+            myDiagnosticVariablesToCompute.KineticEnergy = True
+            myDiagnosticVariablesToCompute.NormalizedVorticity = True
+        myMPASOceanShallowWater.DiagnosticSolve(myMPASOceanShallowWater.mySolution.normalVelocity,
+                                                myMPASOceanShallowWater.mySolution.ssh,time,
+                                                myDiagnosticVariablesToCompute)
+        if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+            myMPASOceanShallowWater.ComputeNormalVelocityLaplacianAtEdges(time)
+        for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
+            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 0.0: # i.e. if the edge is an interior edge
                 if myMPASOceanShallowWater.myNameList.NonTrivialSourceTerms:
                     xEdge = myMPASOceanShallowWater.myMesh.xEdge[iEdge]
                     yEdge = myMPASOceanShallowWater.myMesh.yEdge[iEdge]
@@ -295,54 +397,94 @@ class MPASOceanShallowWater:
                     normalVelocitySourceTerm = (
                     ESST.DetermineNormalVelocitySourceTerm(ProblemType,myExactSolutionParameters,xEdge,yEdge,time,
                                                            UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
-                else:
+                else: # if the edge is a boundary edge
                     normalVelocitySourceTerm = 0.0
                 CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
                 iCell1 = CellID1 - 1
                 CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
                 iCell2 = CellID2 - 1
                 dcEdge = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
-                qArr = 0.0
-                CoriolisTerm = 0.0
-                for iEdgeOnEdge in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnEdge[iEdge]):
-                    eoeID = myMPASOceanShallowWater.myMesh.edgesOnEdge[iEdge,iEdgeOnEdge]
-                    eoe = eoeID - 1
-                    edgeWeight = myMPASOceanShallowWater.myMesh.weightsOnEdge[iEdge,iEdgeOnEdge]
-                    if not(myMPASOceanShallowWater.myNameList.Problem_is_Linear):
-                        workVorticity = 0.5*(myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[iEdge] 
-                                             + myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[eoe])
-                        qArr += (edgeWeight*myMPASOceanShallowWater.mySolution.normalVelocity[eoe]*workVorticity
-                                 *myMPASOceanShallowWater.mySolution.layerThicknessEdge[eoe])
-                    CoriolisTerm += (edgeWeight*myMPASOceanShallowWater.mySolution.normalVelocity[eoe]
-                                     *myMPASOceanShallowWater.myMesh.fEdge[eoe])
+                CoriolisTerm = (myMPASOceanShallowWater.myMesh.fEdge[iEdge]
+                                *myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge])
+                SurfaceElevationGradient = (myMPASOceanShallowWater.mySolution.ssh[iCell2]
+                                            - myMPASOceanShallowWater.mySolution.ssh[iCell1])/dcEdge
+                myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge] = (
+                CoriolisTerm - g*SurfaceElevationGradient + normalVelocitySourceTerm)
                 if not(myMPASOceanShallowWater.myNameList.Problem_is_Linear):
-                    myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge] = (
-                    (CoriolisTerm 
-                     - g*(myMPASOceanShallowWater.mySolution.ssh[iCell2] 
-                          - myMPASOceanShallowWater.mySolution.ssh[iCell1])/dcEdge
-                     + qArr - (myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell2] 
-                               - myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell1])/dcEdge
-                     + normalVelocitySourceTerm))            
-                else:
-                    myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge] = (
-                    (CoriolisTerm - g*(myMPASOceanShallowWater.mySolution.ssh[iCell2] 
-                                       - myMPASOceanShallowWater.mySolution.ssh[iCell1])/dcEdge 
-                     + normalVelocitySourceTerm))
+                    VorticityTerm = 0.0
+                    for iEdgeOnEdge in range(0,myMPASOceanShallowWater.myMesh.nEdgesOnEdge[iEdge]):
+                        eoeID = myMPASOceanShallowWater.myMesh.edgesOnEdge[iEdge,iEdgeOnEdge]
+                        eoe = eoeID - 1
+                        edgeWeight = myMPASOceanShallowWater.myMesh.weightsOnEdge[iEdge,iEdgeOnEdge]
+                        thicknessFlux = (myMPASOceanShallowWater.mySolution.normalVelocity[eoe]
+                                         *myMPASOceanShallowWater.mySolution.layerThicknessEdge[eoe])
+                        normalizedRelativeVorticityAverage = (
+                        0.5*(myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[iEdge] 
+                             + myMPASOceanShallowWater.mySolution.normalizedRelativeVorticityEdge[eoe]))
+                        VorticityTerm += (edgeWeight*thicknessFlux*normalizedRelativeVorticityAverage)
+                    KineticEnergyGradient = (myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell2] 
+                                             - myMPASOceanShallowWater.mySolution.kineticEnergyCell[iCell1])/dcEdge
+                    myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge] += (VorticityTerm 
+                                                                                         - KineticEnergyGradient)
+                if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+                    myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge] += (
+                    nu*myMPASOceanShallowWater.mySolution.normalVelocityLaplacianAtEdge[iEdge])          
+
+    def ComputeSurfaceElevationGradientNormalToEdge(myMPASOceanShallowWater,time):
+        ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
+        UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
+        myQuadratureOnEdge = myMPASOceanShallowWater.myMesh.myQuadratureOnEdge
+        sshGradientAtEdgeX = np.zeros(myMPASOceanShallowWater.myMesh.nEdges)
+        sshGradientAtEdgeY = np.zeros(myMPASOceanShallowWater.myMesh.nEdges)
+        sshGradientNormalToEdge = np.zeros(myMPASOceanShallowWater.myMesh.nEdges)
+        for iEdge in range(0,myMPASOceanShallowWater.myMesh.nEdges):
+            xEdge = myMPASOceanShallowWater.myMesh.xEdge[iEdge]
+            yEdge = myMPASOceanShallowWater.myMesh.yEdge[iEdge]
+            dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
+            angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
+            if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0: # i.e. if the edge is a boundary edge
+                sshGradientAtEdgeX[iEdge] = (
+                ESST.DetermineExactSurfaceElevationZonalGradient(ProblemType,myExactSolutionParameters,xEdge,yEdge,time,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge))
+                sshGradientAtEdgeY[iEdge] = (
+                ESST.DetermineExactSurfaceElevationMeridionalGradient(ProblemType,myExactSolutionParameters,xEdge,yEdge,
+                                                                      time,UseAveragedQuantities,myQuadratureOnEdge,
+                                                                      dvEdge))
+                sshGradientNormalToEdge[iEdge] = (
+                sshGradientAtEdgeX[iEdge]*np.cos(angleEdge) + sshGradientAtEdgeY[iEdge]*np.sin(angleEdge))
+            else: # if the edge is an interior edge
+                CellID1 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,0]
+                iCell1 = CellID1 - 1
+                CellID2 = myMPASOceanShallowWater.myMesh.cellsOnEdge[iEdge,1]
+                iCell2 = CellID2 - 1
+                dcEdge = myMPASOceanShallowWater.myMesh.dcEdge[iEdge]
+                sshGradientNormalToEdge[iEdge] = (myMPASOceanShallowWater.mySolution.ssh[iCell2] 
+                                                  - myMPASOceanShallowWater.mySolution.ssh[iCell1])/dcEdge
+        return sshGradientNormalToEdge    
 
     def ComputeSurfaceElevationTendencies(myMPASOceanShallowWater,time):
         ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
+        if ProblemType == 'Diffusion_Equation':
+            myMPASOceanShallowWater.mySolution.sshTendency[:] = 0.0
+            return
         myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
         UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities
         myQuadratureOnHexagon = myMPASOceanShallowWater.myMesh.myQuadratureOnHexagon
         HexagonLength = myMPASOceanShallowWater.myMesh.HexagonLength
-        if not(myMPASOceanShallowWater.myNameList.Problem_is_Linear):
+        if ProblemType == 'Advection_Diffusion_Equation' or not(myMPASOceanShallowWater.myNameList.Problem_is_Linear):
             myDiagnosticVariablesToCompute = DiagnosticVariablesToCompute()
             myDiagnosticVariablesToCompute.LayerThickness = True
-            myDiagnosticVariablesToCompute.LayerThicknessEdge = True
             myMPASOceanShallowWater.DiagnosticSolve(myMPASOceanShallowWater.mySolution.normalVelocity,
-                                                    myMPASOceanShallowWater.mySolution.ssh,
+                                                    myMPASOceanShallowWater.mySolution.ssh,time,
                                                     myDiagnosticVariablesToCompute)
+        if ProblemType == 'Advection_Diffusion_Equation':
+            nu = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.nu
+            u0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.u0
+            v0 = myMPASOceanShallowWater.myNameList.myExactSolutionParameters.v0
+            sshGradientNormalToEdge = myMPASOceanShallowWater.ComputeSurfaceElevationGradientNormalToEdge(time)
         for iCell in range(0,myMPASOceanShallowWater.myMesh.nCells):
+            myMPASOceanShallowWater.mySolution.sshTendency[iCell] = 0.0
             if myMPASOceanShallowWater.myNameList.NonTrivialSourceTerms:
                 xCell = myMPASOceanShallowWater.myMesh.xCell[iCell]
                 yCell = myMPASOceanShallowWater.myMesh.yCell[iCell]
@@ -355,9 +497,15 @@ class MPASOceanShallowWater:
                 iEdgeID = myMPASOceanShallowWater.myMesh.edgesOnCell[iCell,iEdgeOnCell]
                 iEdge = iEdgeID - 1
                 if myMPASOceanShallowWater.myNameList.Problem_is_Linear:
-                    if myMPASOceanShallowWater.myNameList.ProblemType == 'Topographic_Rossby_Wave':
+                    if (ProblemType == 'Manufactured_Topographic_Rossby_Wave' 
+                        or ProblemType == 'Topographic_Rossby_Wave'):
                         flux = (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge]
                                 *myMPASOceanShallowWater.myMesh.bottomDepthEdge[iEdge])
+                    elif ProblemType == 'Advection_Diffusion_Equation':
+                        angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
+                        normalVelocity = u0*np.cos(angleEdge) + v0*np.sin(angleEdge)
+                        flux = (normalVelocity*myMPASOceanShallowWater.mySolution.sshEdge[iEdge] 
+                                - nu*sshGradientNormalToEdge[iEdge])
                     else:
                         flux = (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge]
                                 *myMPASOceanShallowWater.myNameList.myExactSolutionParameters.H0)
@@ -432,6 +580,10 @@ def DetermineExactSolutions(myMPASOceanShallowWater,InterpolateExactVelocitiesFr
         myMPASOceanShallowWater.mySolution.sshExact[iCell] = (
         ESST.DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,xCell,yCell,time,
                                             UseAveragedQuantities,myQuadratureOnHexagon,HexagonLength))
+        if ProblemType == 'NonLinear_Manufactured_Solution':
+            myMPASOceanShallowWater.mySolution.sshSourceTerm[iCell] = (
+            ESST.DetermineSurfaceElevationSourceTerm(ProblemType,myExactSolutionParameters,xCell,yCell,time,
+                                                     UseAveragedQuantities,myQuadratureOnHexagon,HexagonLength))                                             
         
 
 def SpecifyInitialConditions(myMPASOceanShallowWater):
@@ -494,8 +646,8 @@ def ComputeError(myMPASOceanShallowWater):
     myDiagnosticVariablesToCompute = DiagnosticVariablesToCompute()
     myDiagnosticVariablesToCompute.TangentialVelocity = True
     myMPASOceanShallowWater.DiagnosticSolve(myMPASOceanShallowWater.mySolution.normalVelocity,
-                                            myMPASOceanShallowWater.mySolution.ssh,
-                                            myDiagnosticVariablesToCompute,NormalVelocityTendencyComputation=False)
+                                            myMPASOceanShallowWater.mySolution.ssh,myMPASOceanShallowWater.time,
+                                            myDiagnosticVariablesToCompute)
     uEdge = ESST.DetermineZonalComponentsFromNormalAndTangentialComponents(
     myMPASOceanShallowWater.mySolution.normalVelocity,myMPASOceanShallowWater.mySolution.tangentialVelocity,
     myMPASOceanShallowWater.myMesh.angleEdge)
@@ -554,7 +706,7 @@ def WriteStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,ComputeOnly
     filename += '.tec'
     outputfile = open(filename,'w')
     if ComputeOnlyExactSolution:
-        outputfile.write('VARIABLES = "X", "Y", "uExact", "vExact", "sshExact"\n')       
+        outputfile.write('VARIABLES = "X", "Y", "uExact", "vExact", "sshExact", "sshSourceTerm"\n')       
     else:
         outputfile.write('VARIABLES = "X", "Y", "uExact", "vExact", "sshExact", "u", "v", "ssh", "uError", "vError", '
                          + '"sshError"\n')
@@ -564,6 +716,8 @@ def WriteStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,ComputeOnly
         uExact = myMPASOceanShallowWater.mySolution.uExact[iCell]
         vExact = myMPASOceanShallowWater.mySolution.vExact[iCell]
         sshExact = myMPASOceanShallowWater.mySolution.sshExact[iCell]
+        if ComputeOnlyExactSolution:
+            sshSourceTerm = myMPASOceanShallowWater.mySolution.sshSourceTerm[iCell]
         u = myMPASOceanShallowWater.mySolution.u[iCell]
         v = myMPASOceanShallowWater.mySolution.v[iCell]
         ssh = myMPASOceanShallowWater.mySolution.ssh[iCell]
@@ -573,7 +727,8 @@ def WriteStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,ComputeOnly
         ZoneIDString = 'Element' + '%7.7d' %(iCell + 1)
         outputfile.write('ZONE T="%s", I=1, J=1, F=BLOCK\n' %ZoneIDString)
         if ComputeOnlyExactSolution:
-            outputfile.write('%.15g %.15g %.15g %.15g %.15g\n' %(xCell,yCell,uExact,vExact,sshExact))
+            outputfile.write('%.15g %.15g %.15g %.15g %.15g %.15g\n' 
+                             %(xCell,yCell,uExact,vExact,sshExact,sshSourceTerm))
         else:
             outputfile.write('%.15g %.15g %.15g %.15g %.15g %.15g %.15g %.15g %.15g %.15g %.15g\n' 
                              %(xCell,yCell,uExact,vExact,sshExact,u,v,ssh,uError,vError,sshError))
@@ -721,7 +876,7 @@ def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useG
         yMax *= 0.5
     plt.axis([xMin,xMax,yMin,yMax])
     plt.title(title,fontsize=titlefontsize,fontweight='bold',y=1.035)
-    cbarShrinkRatio = 0.825
+    cbarShrinkRatio = 0.8075
     m = plt.cm.ScalarMappable(cmap=colormap)
     m.set_array(phi)
     m.set_clim(cbar_min,cbar_max)
@@ -736,9 +891,10 @@ def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useG
     plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
     plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
     plt.xticks(fontsize=tickfontsizes[0])
-    plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
     plt.yticks(fontsize=tickfontsizes[1])
-    plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
+    if not(ProblemType == 'Advection_Diffusion_Equation'):
+        plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+        plt.gca().get_yaxis().set_major_formatter(FuncFormatter(lambda y, p: format(int(y/1000.0), '')))
     if (ProblemType_EquatorialWave or ProblemType == 'Inertia_Gravity_Wave' 
         or ProblemType == 'NonLinear_Manufactured_Solution'):
         ax.xaxis.set_major_locator(plt.MaxNLocator(7))
@@ -759,7 +915,7 @@ def FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,phi,useG
 def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,DisplayTime,UseGivenColorBarLimits=True,
                                          ComputeOnlyExactSolution=False,PlotNumericalSolution=False,
                                          PlotOnMPASOceanMesh=True):
-    ProblemType_NoExactSolution = myMPASOceanShallowWater.myNameList.ProblemType_NoExactSolution
+    ProblemType_RossbyWave = myMPASOceanShallowWater.myNameList.ProblemType_RossbyWave
     ProblemType_EquatorialWave = myMPASOceanShallowWater.myNameList.ProblemType_EquatorialWave
     ProblemType = myMPASOceanShallowWater.myNameList.ProblemType
     PlotZonalVelocity = myMPASOceanShallowWater.myNameList.LogicalArrayPlot[0]
@@ -782,7 +938,9 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
     uExact = np.zeros(nCells)
     vExact = np.zeros(nCells)
     sshExact = np.zeros(nCells)
-    if not(ComputeOnlyExactSolution):
+    if ComputeOnlyExactSolution:
+        sshSourceTerm = np.zeros(nCells)
+    else:
         if PlotNumericalSolution:
             u = np.zeros(nCells)
             v = np.zeros(nCells)
@@ -796,7 +954,9 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
         uExact[iCell] = data[iCell,2]
         vExact[iCell] = data[iCell,3]
         sshExact[iCell] = data[iCell,4]
-        if not(ComputeOnlyExactSolution):
+        if ComputeOnlyExactSolution:
+            sshSourceTerm[iCell] = data[iCell,5]
+        else:
             if PlotNumericalSolution:
                 u[iCell] = data[iCell,5]
                 v[iCell] = data[iCell,6]
@@ -808,7 +968,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
     titleroot = myMPASOceanShallowWater.myNameList.ProblemType_Title
     PlotFileNameRoot = myMPASOceanShallowWater.myNameList.ProblemType_FileName
     TimeIntegratorShortForm = myMPASOceanShallowWater.myNameList.myTimeSteppingParameters.TimeIntegratorShortForm
-    if ProblemType == 'Plane_Gaussian_Wave':
+    if myMPASOceanShallowWater.myNameList.ProblemType == 'Advection_Diffusion_Equation':
         xlabel = 'Zonal Distance (m)'
         ylabel = 'Meridional Distance (m)'
     else:
@@ -826,7 +986,12 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
     SaveAsPDF = True
     Show = False
     DataType = 'Unstructured'
-    colormap = plt.cm.seismic
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Advection_Diffusion_Equation' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
+        colormap = plt.cm.YlOrRd
+    else:   
+        colormap = plt.cm.seismic
+    colormap_error = plt.cm.seismic
     colorbarfontsize = 15.0
     iTimeFormat = '%3.3d' 
     if ProblemType_EquatorialWave:
@@ -842,7 +1007,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                           FileName+'.curve')
         else:
             ExactZonalVelocityLimits = [0.0,0.0]
-        if not(ProblemType_NoExactSolution):
+        if not(ProblemType_RossbyWave):
             title = titleroot + ':\nExact Zonal Velocity after\n' + DisplayTime
             PlotFileName = PlotFileNameRoot + '_ExactZonalVelocity_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
@@ -876,7 +1041,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
                                                           Show,DataType=DataType,colormap=colormap,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
-            if not(ProblemType_NoExactSolution):
+            if not(ProblemType_RossbyWave):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
                                 + '_ZonalVelocityErrorLimits')
@@ -889,7 +1054,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                 + '_ZonalVelocityError_' + iTimeFormat %myMPASOceanShallowWater.iTime)
                 if PlotOnMPASOceanMesh:
                     FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,uError,UseGivenColorBarLimits,
-                                                                ZonalVelocityErrorLimits,nColorBarTicks,colormap,
+                                                                ZonalVelocityErrorLimits,nColorBarTicks,colormap_error,
                                                                 colorbarfontsize,labels,labelfontsizes,labelpads,
                                                                 tickfontsizes,title,titlefontsize,SaveAsPDF,
                                                                 PlotFileName,Show,specify_n_ticks=specify_n_ticks,
@@ -899,7 +1064,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,ZonalVelocityErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap,
+                                                          Show,DataType=DataType,colormap=colormap_error,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotMeridionalVelocity:
         if UseGivenColorBarLimits:
@@ -908,7 +1073,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                                FileName+'.curve')
         else:
             ExactMeridionalVelocityLimits = [0.0,0.0]
-        if not(ProblemType_NoExactSolution):
+        if not(ProblemType_RossbyWave):
             title = titleroot + ':\nExact Meridional Velocity after\n' + DisplayTime
             PlotFileName = PlotFileNameRoot + '_ExactMeridionalVelocity_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
@@ -943,7 +1108,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
                                                           Show,DataType=DataType,colormap=colormap,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
-            if not(ProblemType_NoExactSolution):
+            if not(ProblemType_RossbyWave):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
                                 + '_MeridionalVelocityErrorLimits')
@@ -956,9 +1121,9 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                 + '_MeridionalVelocityError_' + iTimeFormat %myMPASOceanShallowWater.iTime)
                 if PlotOnMPASOceanMesh:
                     FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,vError,UseGivenColorBarLimits,
-                                                                MeridionalVelocityErrorLimits,nColorBarTicks,colormap,
-                                                                colorbarfontsize,labels,labelfontsizes,labelpads,
-                                                                tickfontsizes,title,titlefontsize,SaveAsPDF,
+                                                                MeridionalVelocityErrorLimits,nColorBarTicks,
+                                                                colormap_error,colorbarfontsize,labels,labelfontsizes,
+                                                                labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,
                                                                 PlotFileName,Show,specify_n_ticks=specify_n_ticks,
                                                                 n_ticks=n_ticks)
                 else:
@@ -966,7 +1131,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,MeridionalVelocityErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap,
+                                                          Show,DataType=DataType,colormap=colormap_error,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
     if PlotSurfaceElevation:
         if UseGivenColorBarLimits:
@@ -975,7 +1140,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                                              FileName+'.curve')
         else:
             ExactSurfaceElevationLimits = [0.0,0.0]
-        if not(ProblemType_NoExactSolution):
+        if not(ProblemType_RossbyWave):
             title = titleroot + ':\nExact Surface Elevation after\n' + DisplayTime
             PlotFileName = PlotFileNameRoot + '_ExactSurfaceElevation_' + iTimeFormat %myMPASOceanShallowWater.iTime
             if PlotOnMPASOceanMesh:
@@ -991,6 +1156,23 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                       nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,Show,
                                                       DataType=DataType,colormap=colormap,
                                                       specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
+        if ComputeOnlyExactSolution and ProblemType == 'NonLinear_Manufactured_Solution':
+            if UseGivenColorBarLimits:
+                FileName = myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_SurfaceElevationSourceTermLimits'
+                SurfaceElevationSourceTermLimits = (
+                CR.ReadStateVariableLimitsFromFile(myMPASOceanShallowWater.OutputDirectory,FileName+'.curve'))
+            else:
+                SurfaceElevationSourceTermLimits = [0.0,0.0]
+            title = titleroot + ':\nSurface Elevation Source Term after\n' + DisplayTime
+            PlotFileName = (PlotFileNameRoot + '_SurfaceElevationSourceTerm_' + iTimeFormat 
+                            %myMPASOceanShallowWater.iTime)
+            if PlotOnMPASOceanMesh:
+                FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,sshSourceTerm,
+                                                            UseGivenColorBarLimits,SurfaceElevationSourceTermLimits,
+                                                            nColorBarTicks,colormap,colorbarfontsize,labels,
+                                                            labelfontsizes,labelpads,tickfontsizes,title,titlefontsize,
+                                                            SaveAsPDF,PlotFileName,Show,specify_n_ticks=specify_n_ticks,
+                                                            n_ticks=n_ticks)
         if not(ComputeOnlyExactSolution):
             if PlotNumericalSolution:
                 title = titleroot + ':\nNumerical Surface Elevation after\n' + DisplayTime
@@ -1010,7 +1192,7 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
                                                           Show,DataType=DataType,colormap=colormap,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)
-            if not(ProblemType_NoExactSolution):
+            if not(ProblemType_RossbyWave):
                 if UseGivenColorBarLimits:
                     FileName = (myMPASOceanShallowWater.myNameList.ProblemType_FileName + '_' + TimeIntegratorShortForm 
                                 + '_SurfaceElevationErrorLimits')
@@ -1023,9 +1205,9 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                 + '_SurfaceElevationError_' + iTimeFormat %myMPASOceanShallowWater.iTime)
                 if PlotOnMPASOceanMesh:
                     FilledContourPlot2DSaveAsPDFOnMPASOceanMesh(myMPASOceanShallowWater,sshError,UseGivenColorBarLimits,
-                                                                SurfaceElevationErrorLimits,nColorBarTicks,colormap,
-                                                                colorbarfontsize,labels,labelfontsizes,labelpads,
-                                                                tickfontsizes,title,titlefontsize,SaveAsPDF,
+                                                                SurfaceElevationErrorLimits,nColorBarTicks,
+                                                                colormap_error,colorbarfontsize,labels,labelfontsizes,
+                                                                labelpads,tickfontsizes,title,titlefontsize,SaveAsPDF,
                                                                 PlotFileName,Show,specify_n_ticks=specify_n_ticks,
                                                                 n_ticks=n_ticks)
                 else:
@@ -1033,5 +1215,5 @@ def PythonPlotStateMPASOceanShallowWater(myMPASOceanShallowWater,filename,Displa
                                                           nContours,labels,labelfontsizes,labelpads,tickfontsizes,
                                                           UseGivenColorBarLimits,SurfaceElevationErrorLimits,
                                                           nColorBarTicks,title,titlefontsize,SaveAsPDF,PlotFileName,
-                                                          Show,DataType=DataType,colormap=colormap,
+                                                          Show,DataType=DataType,colormap=colormap_error,
                                                           specify_n_ticks=specify_n_ticks,n_ticks=n_ticks)

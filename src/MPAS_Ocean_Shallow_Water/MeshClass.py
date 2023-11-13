@@ -48,9 +48,12 @@ class Mesh:
         myMesh.maxEdges = len(MeshFile.dimensions['maxEdges'])
         myMesh.maxEdges2 = len(MeshFile.dimensions['maxEdges2'])
         myMesh.vertexDegree = len(MeshFile.dimensions['vertexDegree'])
-        myMesh.nNonPeriodicBoundaryEdges = 0
-        myMesh.nNonPeriodicBoundaryVertices = 0
-        myMesh.nNonPeriodicBoundaryCells = 0
+        myMesh.nBoundaryEdges = 0
+        myMesh.nBoundaryVertices = 0
+        myMesh.nBoundaryCells = 0
+        myMesh.nInternalEdges = 0
+        myMesh.nInternalVertices = 0
+        myMesh.nInternalCells = 0
         nCells = myMesh.nCells
         nEdges = myMesh.nEdges
         nVertices = myMesh.nVertices
@@ -65,9 +68,9 @@ class Mesh:
         myMesh.xVertex = BaseMeshFile.variables['xVertex'][:]
         myMesh.yVertex = BaseMeshFile.variables['yVertex'][:]
         myMesh.nEdgesOnCell = BaseMeshFile.variables['nEdgesOnCell'][:]
-        # Choose myMeshFileName to be either BaseMeshFileName or MeshFileName
+        # Choose myMeshFileName to be either BaseMeshFileName or MeshFileName.
         myMeshFileName = MeshFileName
-        # Choose myMeshFile to be either BaseMeshFile or MeshFile
+        # Choose myMeshFile to be either BaseMeshFile or MeshFile.
         myMeshFile = MeshFile
         myMesh.areaCell = myMeshFile.variables['areaCell'][:]
         myMesh.dcEdge = myMeshFile.variables['dcEdge'][:]
@@ -107,7 +110,9 @@ class Mesh:
         myMesh.lY = lY
         myMesh.dx = dx
         myMesh.dy = dy
-        HexagonLength = dx/np.sqrt(3.0)
+        myMesh.dc = dx
+        myMesh.dv = dx/np.sqrt(3.0)
+        HexagonLength = myMesh.dv
         HexagonArea = 6.0*np.sqrt(3.0)/4.0*HexagonLength**2.0
         myMesh.areaCell[:] = HexagonArea
         myMesh.dcEdge[:] = dx
@@ -122,10 +127,6 @@ class Mesh:
             myMesh.yCell[:] -= dy
             myMesh.yVertex[:] -= dy
             myMesh.yEdge[:] -= dy
-        if myNameList.ProblemType == 'Plane_Gaussian_Wave':
-            myMesh.xCell[:] -= 0.5*lX
-            myMesh.xVertex[:] -= 0.5*lX
-            myMesh.xEdge[:] -= 0.5*lX
         if BoundaryCondition == 'Periodic' or BoundaryCondition == 'NonPeriodic_y':
             for iEdge in range(0,myMesh.nEdges):
                 if myMesh.xEdge[iEdge] > myMesh.lX:
@@ -134,7 +135,7 @@ class Mesh:
             for iEdge in range(0,myMesh.nEdges):
                 if myMesh.yEdge[iEdge] > myMesh.lY:
                     myMesh.yEdge[iEdge] -= myMesh.lY
-        if myNameList.ProblemType == 'Plane_Gaussian_Wave' or myNameList.ProblemType_EquatorialWave:
+        if myNameList.ProblemType_EquatorialWave:
             myMesh.yCell[:] -= 0.5*lY
             myMesh.yVertex[:] -= 0.5*lY
             myMesh.yEdge[:] -= 0.5*lY
@@ -146,9 +147,16 @@ class Mesh:
         myMesh.boundaryCell = np.zeros(nCells)
         myMesh.boundaryEdge = np.zeros(nEdges)
         myMesh.boundaryVertex = np.zeros(nVertices)
+        myMesh.nBoundaryEdgesOnCell = np.zeros(nCells,dtype=int)
+        myMesh.nBoundaryVerticesOnCell = np.zeros(nCells,dtype=int)
         myMesh.edgeSignOnCell = np.zeros((nCells,maxEdges))
         myMesh.edgeSignOnVertex = np.zeros((nVertices,maxEdges))
         myMesh.kiteIndexOnCell = np.zeros((nCells,maxEdges),dtype=int)
+        myMesh.kiteAreasOnCell = np.zeros((nCells,maxEdges))
+        myMesh.triangleAreasOnCell = np.zeros((nCells,maxEdges))
+        myMesh.localIndexOfEdgeOnCell = -np.ones((nEdges,2),dtype=int)
+        myMesh.diamondAreaOnEdge = np.zeros(nEdges)
+        myMesh.areaHexagonAtVertex = np.zeros(nVertices)
         os.chdir(cwd)
         if FixAngleEdge:
             if PrintOutput:
@@ -170,8 +178,13 @@ class Mesh:
                                                     OutputFileName='BoundaryCellsEdgesAndVertices')
         myMesh.SetUpSignAndIndexFields(DebugVersion=DebugVersion,OutputDirectory=MeshDirectory,
                                        OutputFileName='SignAndIndexFields')
-            
-            
+        myMesh.ComputeLocalIndexOfEdgesOnCells()
+        myMesh.ComputeKiteTriangleAndDiamondAreasOnCellsAndEdges(
+        DebugVersion=DebugVersion,OutputDirectory=MeshDirectory,
+        OutputFileName='KiteTriangleAndDiamondAreasOnCellsAndEdges')
+        myMesh.ComputeHexagonAreaAtVertices(DebugVersion=DebugVersion,OutputDirectory=MeshDirectory,
+                                            OutputFileName='HexagonAreaAtVertices')
+  
     def PlotMesh(myMesh,OutputDirectory,linewidth,linestyle,color,labels,labelfontsizes,labelpads,tickfontsizes,title,
                  titlefontsize,SaveAsPDF,FileName,Show,fig_size=[9.5,9.5],UseDefaultMethodToSpecifyTickFontSize=True,
                  PlotCellCenters=False,CellCenterMarkerType="s",CellCenterMarkerSize=7.5,PlotEdgeCenters=False,
@@ -186,12 +199,14 @@ class Mesh:
         ax = fig.add_subplot(111) # Create an axes object in the figure
         for iEdge in range(0,myMesh.nEdges):
             dvEdge = myMesh.dvEdge[iEdge]
-            vertexID1 = myMesh.verticesOnEdge[iEdge,0] - 1
-            vertexID2 = myMesh.verticesOnEdge[iEdge,1] - 1
-            x1 = myMesh.xVertex[vertexID1]
-            x2 = myMesh.xVertex[vertexID2]
-            y1 = myMesh.yVertex[vertexID1]
-            y2 = myMesh.yVertex[vertexID2]
+            vertexID1 = myMesh.verticesOnEdge[iEdge,0]
+            vertexID2 = myMesh.verticesOnEdge[iEdge,1]
+            iVertex1 = vertexID1 - 1
+            iVertex2 = vertexID2 - 1
+            x1 = myMesh.xVertex[iVertex1]
+            x2 = myMesh.xVertex[iVertex2]
+            y1 = myMesh.yVertex[iVertex1]
+            y2 = myMesh.yVertex[iVertex2]
             edgeLength = np.sqrt((x2 - x1)**2.0 + (y2 - y1)**2.0)
             dvEdgeTolerancePercentage = 1.0
             if edgeLength <= dvEdge*(100.0 + dvEdgeTolerancePercentage)/100.0:
@@ -235,38 +250,51 @@ class Mesh:
         
     def SpecifyBoundaryCellsEdgesAndVertices(myMesh,DebugVersion=False,OutputDirectory='',OutputFileName=''):
         for iEdge in range(0,myMesh.nEdges):
-            iCellID1 = myMesh.cellsOnEdge[iEdge,0]
-            iCell1 = iCellID1 - 1
-            iCellID2 = myMesh.cellsOnEdge[iEdge,1]
-            iCell2 = iCellID2 - 1 
-            if iCellID1 == 0 or iCellID2 == 0: # i.e. if the edge is along a non-periodic boundary of the domain
+            CellID1 = myMesh.cellsOnEdge[iEdge,0]
+            iCell1 = CellID1 - 1
+            CellID2 = myMesh.cellsOnEdge[iEdge,1]
+            iCell2 = CellID2 - 1 
+            if CellID1 == 0 or CellID2 == 0: # i.e. if the edge is along a non-periodic boundary of the domain
                 myMesh.boundaryEdge[iEdge] = 1.0
         # Find cells and vertices that have an edge on the boundary.
         for iEdge in range(0,myMesh.nEdges):
-            iCellID1 = myMesh.cellsOnEdge[iEdge,0]
-            iCell1 = iCellID1 - 1
-            iCellID2 = myMesh.cellsOnEdge[iEdge,1]
-            iCell2 = iCellID2 - 1   
+            CellID1 = myMesh.cellsOnEdge[iEdge,0]
+            iCell1 = CellID1 - 1
+            CellID2 = myMesh.cellsOnEdge[iEdge,1]
+            iCell2 = CellID2 - 1   
             iVertexID1 = myMesh.verticesOnEdge[iEdge,0]
             iVertex1 = iVertexID1 - 1
             iVertexID2 = myMesh.verticesOnEdge[iEdge,1]
             iVertex2 = iVertexID2 - 1                  
             if myMesh.boundaryEdge[iEdge] == 1.0:
-                if iCellID1 != 0:
+                if CellID1 != 0:
                     myMesh.boundaryCell[iCell1] = 1.0
-                if iCellID2 != 0:    
+                if CellID2 != 0:    
                     myMesh.boundaryCell[iCell2] = 1.0
                 myMesh.boundaryVertex[iVertex1] = 1.0
                 myMesh.boundaryVertex[iVertex2] = 1.0
         for iEdge in range(0,myMesh.nEdges):
             if myMesh.boundaryEdge[iEdge] == 1.0:
-                myMesh.nNonPeriodicBoundaryEdges += 1
+                myMesh.nBoundaryEdges += 1
+        myMesh.nInternalEdges = myMesh.nEdges - myMesh.nBoundaryEdges
         for iVertex in range(0,myMesh.nVertices):
             if myMesh.boundaryVertex[iVertex] == 1.0:
-                myMesh.nNonPeriodicBoundaryVertices += 1            
+                myMesh.nBoundaryVertices += 1       
+        myMesh.nInternalVertices = myMesh.nVertices - myMesh.nBoundaryVertices     
         for iCell in range(0,myMesh.nCells):
             if myMesh.boundaryCell[iCell] == 1.0:
-                myMesh.nNonPeriodicBoundaryCells += 1
+                myMesh.nBoundaryCells += 1
+            for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
+                EdgeID = myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                iEdge = EdgeID - 1
+                if myMesh.boundaryEdge[iEdge] == 1.0:
+                    myMesh.nBoundaryEdgesOnCell[iCell] += 1
+            for iVertexOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
+                iVertexID = myMesh.verticesOnCell[iCell,iVertexOnCell]
+                iVertex = iVertexID - 1
+                if myMesh.boundaryVertex[iVertex] == 1.0:
+                    myMesh.nBoundaryVerticesOnCell[iCell] += 1      
+        myMesh.nInternalCells = myMesh.nCells - myMesh.nBoundaryCells 
         if DebugVersion:
             cwd = os.getcwd()
             path = cwd + '/' + OutputDirectory + '/'
@@ -277,15 +305,13 @@ class Mesh:
             OutputFile = open(OutputFileName,'w')
             OutputFile.write('boundaryEdge is:\n\n')
             OutputFile.write(str(myMesh.boundaryEdge[:]))
-            OutputFile.write('\n\nThe number of non-periodic boundary edges is %d.' %(myMesh.nNonPeriodicBoundaryEdges))
+            OutputFile.write('\n\nThe number of non-periodic boundary edges is %d.' %(myMesh.nBoundaryEdges))
             OutputFile.write('\n\nboundaryVertex is:\n\n')
             OutputFile.write(str(myMesh.boundaryVertex[:]))
-            OutputFile.write('\n\nThe number of non-periodic boundary vertices is %d.' 
-                             %(myMesh.nNonPeriodicBoundaryVertices))
+            OutputFile.write('\n\nThe number of non-periodic boundary vertices is %d.' %(myMesh.nBoundaryVertices))
             OutputFile.write('\n\nboundaryCell is:\n\n')
             OutputFile.write(str(myMesh.boundaryCell[:]))
-            OutputFile.write('\n\nThe number of non-periodic boundary cells is %d.' 
-                             %(myMesh.nNonPeriodicBoundaryCells))   
+            OutputFile.write('\n\nThe number of non-periodic boundary cells is %d.' %(myMesh.nBoundaryCells))   
             OutputFile.close()
             os.chdir(cwd)   
             
@@ -298,40 +324,40 @@ class Mesh:
             os.chdir(path)
             OutputFileName += '.txt'
             OutputFile = open(OutputFileName,'w')
-            OutputFile.write('CellID iEdgeOnCell+1 iEdgeID boundaryEdge[iEdge] cellsOnEdge[iEdge,0] '
-                             + 'cellsOnEdge[iEdge,1] edgeSignOnCell[iCell,iEdgeOnCell] angleEdge[iEdge]\n\n')
+            OutputFile.write('CellID iEdgeOnCell+1 EdgeID boundaryEdge[iEdge] cellsOnEdge[iEdge,0] cellsOnEdge[iEdge,1]'
+                             + ' edgeSignOnCell[iCell,iEdgeOnCell] angleEdge[iEdge]\n\n')
         for iCell in range(0,myMesh.nCells):
-            iCellID = iCell + 1
+            CellID = iCell + 1
             for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
-                iEdgeID = myMesh.edgesOnCell[iCell,iEdgeOnCell]
-                iEdge = iEdgeID - 1
+                EdgeID = myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                iEdge = EdgeID - 1
                 boundaryEdge = myMesh.boundaryEdge[iEdge]
                 iVertexID = myMesh.verticesOnCell[iCell,iEdgeOnCell]
                 iVertex = iVertexID - 1
                 # Vector points from cell 1 to cell 2.
-                if myMesh.cellsOnEdge[iEdge,0] == iCellID:
+                if myMesh.cellsOnEdge[iEdge,0] == CellID:
                     myMesh.edgeSignOnCell[iCell,iEdgeOnCell] = -1.0
                 else:
                     myMesh.edgeSignOnCell[iCell,iEdgeOnCell] = 1.0
                 if DebugVersion:
                     OutputFile.write('%6d %1d %9d %d %6d %6d %+d %+.2f\n' 
-                                     %(iCellID,iEdgeOnCell+1,iEdgeID,boundaryEdge,myMesh.cellsOnEdge[iEdge,0],
+                                     %(CellID,iEdgeOnCell+1,EdgeID,boundaryEdge,myMesh.cellsOnEdge[iEdge,0],
                                        myMesh.cellsOnEdge[iEdge,1],myMesh.edgeSignOnCell[iCell,iEdgeOnCell],
                                        myMesh.angleEdge[iEdge]))
                 for iVertexDegree in range(0,myMesh.vertexDegree):
-                    if myMesh.cellsOnVertex[iVertex,iVertexDegree] == iCellID:
-                        myMesh.kiteIndexOnCell[iCell,iEdgeOnCell] = iVertexDegree + 1
+                    if myMesh.cellsOnVertex[iVertex,iVertexDegree] == CellID:
+                        myMesh.kiteIndexOnCell[iCell,iEdgeOnCell] = iVertexDegree + 1    
         if DebugVersion:
             OutputFile.write('\n')
             for iCell in range(0,myMesh.nCells):
                 for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
-                    OutputFile.write('On edge %d of cell %2d, kiteIndexOnCell is %d.\n' 
+                    OutputFile.write('On vertex %d of cell %2d, kiteIndexOnCell is %d.\n' 
                                      %(iEdgeOnCell,iCell,myMesh.kiteIndexOnCell[iCell,iEdgeOnCell]))
         for iVertex in range(0,myMesh.nVertices):
             iVertexID = iVertex + 1
             for iVertexDegree in range(0,myMesh.vertexDegree):
-                iEdgeID = myMesh.edgesOnVertex[iVertex,iVertexDegree]
-                iEdge = iEdgeID - 1
+                EdgeID = myMesh.edgesOnVertex[iVertex,iVertexDegree]
+                iEdge = EdgeID - 1
                 # Vector points from vertex 1 to vertex 2.
                 if myMesh.verticesOnEdge[iEdge,0] == iVertexID:
                     myMesh.edgeSignOnVertex[iVertex,iVertexDegree] = -1.0
@@ -340,7 +366,121 @@ class Mesh:
         if DebugVersion:
             OutputFile.close()
             os.chdir(cwd)
-        
+            
+    def ComputeLocalIndexOfEdgesOnCells(myMesh):
+        for iEdge in range(0,myMesh.nEdges):
+            EdgeID = iEdge + 1
+            CellID1 = myMesh.cellsOnEdge[iEdge,0]
+            CellID2 = myMesh.cellsOnEdge[iEdge,1]
+            iCell1 = CellID1 - 1
+            iCell2 = CellID2 - 1
+            if CellID1 != 0:
+                myMesh.localIndexOfEdgeOnCell[iEdge,0] = np.where(myMesh.edgesOnCell[iCell1,:] == EdgeID)[0]
+            if CellID2 != 0:
+                myMesh.localIndexOfEdgeOnCell[iEdge,1] = np.where(myMesh.edgesOnCell[iCell2,:] == EdgeID)[0]
+
+    def ComputeKiteTriangleAndDiamondAreasOnCellsAndEdges(myMesh,DebugVersion=False,OutputDirectory='',
+                                                          OutputFileName=''):
+        for iCell in range(0,myMesh.nCells):
+            for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
+                VertexID = myMesh.verticesOnCell[iCell,iEdgeOnCell]
+                iVertex = VertexID - 1
+                kiteIndexOnCell = myMesh.kiteIndexOnCell[iCell,iEdgeOnCell]
+                iKiteIndexOnCell = kiteIndexOnCell - 1
+                myMesh.kiteAreasOnCell[iCell,iEdgeOnCell] = myMesh.kiteAreasOnVertex[iVertex,iKiteIndexOnCell]
+        for iCell in range(0,myMesh.nCells):
+            for iVertexOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
+                iVertexOnCell1 = iVertexOnCell
+                if iVertexOnCell1 == myMesh.nEdgesOnCell[iCell] - 1:
+                    iVertexOnCell2 = 0
+                else:
+                    iVertexOnCell2 = iVertexOnCell1 + 1
+                vertexID1 = myMesh.verticesOnCell[iCell,iVertexOnCell1]
+                iVertex1 = vertexID1 - 1
+                vertexID2 = myMesh.verticesOnCell[iCell,iVertexOnCell2]
+                iVertex2 = vertexID2 - 1
+                kiteAreaOnVertex1 = myMesh.kiteAreasOnCell[iCell,iVertexOnCell1]
+                kiteAreaOnVertex2 = myMesh.kiteAreasOnCell[iCell,iVertexOnCell2]
+                edgeIDs = np.intersect1d(myMesh.edgesOnVertex[iVertex1,:],myMesh.edgesOnVertex[iVertex2,:])
+                for i in range(0,len(edgeIDs)):
+                    if edgeIDs[i] != 0:
+                        edgeID = edgeIDs[i]
+                iEdgeOnCell = np.where(myMesh.edgesOnCell[iCell,:] == edgeID)[0]
+                myMesh.triangleAreasOnCell[iCell,iEdgeOnCell] = 0.5*(kiteAreaOnVertex1 + kiteAreaOnVertex2)
+        for iEdge in range(0,myMesh.nEdges):
+            CellID1 = myMesh.cellsOnEdge[iEdge,0]
+            CellID2 = myMesh.cellsOnEdge[iEdge,1]
+            iCell1 = CellID1 - 1
+            iCell2 = CellID2 - 1
+            localIndexOfEdgeOnCell1 = myMesh.localIndexOfEdgeOnCell[iEdge,0]
+            localIndexOfEdgeOnCell2 = myMesh.localIndexOfEdgeOnCell[iEdge,1]
+            triangleAreaOnEdge_Cell1 = myMesh.triangleAreasOnCell[iCell1,localIndexOfEdgeOnCell1]
+            triangleAreaOnEdge_Cell2 = myMesh.triangleAreasOnCell[iCell2,localIndexOfEdgeOnCell2]
+            if myMesh.boundaryEdge[iEdge] == 1.0:
+                if CellID1 == 0:
+                    myMesh.diamondAreaOnEdge[iEdge] = 2.0*triangleAreaOnEdge_Cell2
+                elif CellID2 == 0:
+                    myMesh.diamondAreaOnEdge[iEdge] = 2.0*triangleAreaOnEdge_Cell1
+            else:
+                myMesh.diamondAreaOnEdge[iEdge] = triangleAreaOnEdge_Cell1 + triangleAreaOnEdge_Cell2
+        if DebugVersion:
+            cwd = os.getcwd()
+            path = cwd + '/' + OutputDirectory + '/'
+            if not os.path.exists(path):
+                os.mkdir(path) # os.makedir(path)
+            os.chdir(path)
+            OutputFileName += '.txt'
+            OutputFile = open(OutputFileName,'w')
+            OutputFile.write('\nCellID iEdgeOnCell VertexID kiteArea EdgeID triangleArea\n\n')
+            for iCell in range(0,myMesh.nCells):
+                CellID = iCell + 1
+                for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
+                    VertexID = myMesh.verticesOnCell[iCell,iEdgeOnCell]
+                    EdgeID = VertexID
+                    kiteArea = myMesh.kiteAreasOnCell[iCell,iEdgeOnCell]
+                    triangleArea = myMesh.triangleAreasOnCell[iCell,iEdgeOnCell]
+                    OutputFile.write('%6d %1d %9d %.3f %9d %.3f\n' %(CellID, iEdgeOnCell, VertexID, kiteArea, EdgeID, 
+                                                                     triangleArea))
+            OutputFile.write('\nEdgeID CellID1 CellID2 localIndexOfEdgeOnCell1 localIndexOfEdgeOnCell2 '
+                             + 'triangleAreaOnEdge_Cell1 triangleAreaOnEdge_Cell2 diamondAreaOnEdge\n\n')
+            for iEdge in range(0,myMesh.nEdges):
+                CellID1 = myMesh.cellsOnEdge[iEdge,0]
+                CellID2 = myMesh.cellsOnEdge[iEdge,1]
+                iCell1 = CellID1 - 1
+                iCell2 = CellID2 - 1
+                localIndexOfEdgeOnCell1 = myMesh.localIndexOfEdgeOnCell[iEdge,0]
+                localIndexOfEdgeOnCell2 = myMesh.localIndexOfEdgeOnCell[iEdge,1]
+                triangleAreaOnEdge_Cell1 = myMesh.triangleAreasOnCell[iCell1,localIndexOfEdgeOnCell1]
+                triangleAreaOnEdge_Cell2 = myMesh.triangleAreasOnCell[iCell2,localIndexOfEdgeOnCell2]
+                diamondAreaOnEdge = myMesh.diamondAreaOnEdge[iEdge]
+                OutputFile.write('%9d %6d %6d %+1d %+1d %.3f %.3f %.3f\n' 
+                                 %(iEdge+1, CellID1, CellID2, localIndexOfEdgeOnCell1, localIndexOfEdgeOnCell2, 
+                                   triangleAreaOnEdge_Cell1, triangleAreaOnEdge_Cell2, diamondAreaOnEdge))
+            OutputFile.close()
+            os.chdir(cwd)
+            
+    def ComputeHexagonAreaAtVertices(myMesh,DebugVersion=False,OutputDirectory='',OutputFileName=''):
+        if DebugVersion:
+            cwd = os.getcwd()
+            path = cwd + '/' + OutputDirectory + '/'
+            if not os.path.exists(path):
+                os.mkdir(path) # os.makedir(path)
+            os.chdir(path)
+            OutputFileName += '.txt'
+            OutputFile = open(OutputFileName,'w')
+            OutputFile.write('\nVertexID areaHexagonAtVertex\n\n')
+        for iVertex in range(0,myMesh.nVertices):
+            VertexID = iVertex + 1
+            for iVertexDegree in range(0,myMesh.vertexDegree):
+                EdgeID = myMesh.edgesOnVertex[iVertex,iVertexDegree]
+                iEdge = EdgeID - 1 
+                myMesh.areaHexagonAtVertex[iVertex] += myMesh.diamondAreaOnEdge[iEdge]
+            if DebugVersion:
+                OutputFile.write('%9d %.3f\n' %(VertexID, myMesh.areaHexagonAtVertex[iVertex]))
+        if DebugVersion:
+            OutputFile.close()
+            os.chdir(cwd)
+
     def GenerateRectilinearMPASOceanMesh(myMesh,BoundaryCondition):
         nCellsX = myMesh.nCellsX
         xCell = np.zeros(myMesh.nCells)
@@ -434,28 +574,114 @@ class Mesh:
         for iCell in range(0,myMesh.nCells):
             CellAreaInverse = 1.0/myMesh.areaCell[iCell]
             for iVertexOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
-                jID = myMesh.kiteIndexOnCell[iCell,iVertexOnCell]
-                j = jID - 1
-                iVertexID = myMesh.verticesOnCell[iCell,iVertexOnCell]
-                iVertex = iVertexID - 1
-                if myMesh.MeshType == 'uniform':
-                    SolutionAtCellCenters[iCell] += SolutionAtVertices[iVertex]/6.0
-                else:                
-                    SolutionAtCellCenters[iCell] += (
-                    myMesh.kiteAreasOnVertex[iVertex,j]*SolutionAtVertices[iVertex]*CellAreaInverse)
+                VertexID = myMesh.verticesOnCell[iCell,iVertexOnCell]
+                iVertex = VertexID - 1
+                kiteArea = myMesh.kiteAreasOnCell[iCell,iVertexOnCell]
+                SolutionAtCellCenters[iCell] += kiteArea*SolutionAtVertices[iVertex]
+            SolutionAtCellCenters[iCell] *= CellAreaInverse
         return SolutionAtCellCenters
-
+    
     def InterpolateSolutionFromEdgesToCellCenters(myMesh,SolutionAtEdges):
         SolutionAtCellCenters = np.zeros(myMesh.nCells)
         for iCell in range(0,myMesh.nCells):
+            CellAreaInverse = 1.0/myMesh.areaCell[iCell]
             for iEdgeOnCell in range(0,myMesh.nEdgesOnCell[iCell]):
-                iEdgeID = myMesh.edgesOnCell[iCell,iEdgeOnCell]
-                iEdge = iEdgeID - 1
-                if myMesh.MeshType == 'uniform':
-                    SolutionAtCellCenters[iCell] += SolutionAtEdges[iEdge]/6.0
+                EdgeID = myMesh.edgesOnCell[iCell,iEdgeOnCell]
+                iEdge = EdgeID - 1
+                triangleArea = myMesh.triangleAreasOnCell[iCell,iEdgeOnCell]
+                SolutionAtCellCenters[iCell] += triangleArea*SolutionAtEdges[iEdge]
+            SolutionAtCellCenters[iCell] *= CellAreaInverse
         return SolutionAtCellCenters
     
+    def InterpolateSolutionFromCellCentersToEdges(myMesh,SolutionAtCellCenters,SolutionAtEdges,
+                                                  InterpolateToBoundaryEdges=False):
+        if InterpolateToBoundaryEdges:
+            for iEdge in range(0,myMesh.nEdges):
+                CellID1 = myMesh.cellsOnEdge[iEdge,0]
+                iCell1 = CellID1 - 1
+                CellID2 = myMesh.cellsOnEdge[iEdge,1]
+                iCell2 = CellID2 - 1
+                SolutionAtEdges[iEdge] = 0.5*(SolutionAtCellCenters[iCell1] + SolutionAtCellCenters[iCell2])            
+        else:
+            for iEdge in range(0,myMesh.nEdges):
+                if myMesh.boundaryEdge[iEdge] == 0:
+                    CellID1 = myMesh.cellsOnEdge[iEdge,0]
+                    iCell1 = CellID1 - 1
+                    CellID2 = myMesh.cellsOnEdge[iEdge,1]
+                    iCell2 = CellID2 - 1
+                    SolutionAtEdges[iEdge] = 0.5*(SolutionAtCellCenters[iCell1] + SolutionAtCellCenters[iCell2])
+        return SolutionAtEdges
     
+    def InterpolateSolutionFromVerticesToEdges(myMesh,SolutionAtVertices,SolutionAtEdges,
+                                               InterpolateToBoundaryEdges=False):
+        if InterpolateToBoundaryEdges:
+            for iEdge in range(0,myMesh.nEdges):
+                VertexID1 = myMesh.verticesOnEdge[iEdge,0]
+                iVertex1 = VertexID1 - 1
+                VertexID2 = myMesh.verticesOnEdge[iEdge,1]
+                iVertex2 = VertexID2 - 1
+                SolutionAtEdges[iEdge] = 0.5*(SolutionAtVertices[iVertex1] + SolutionAtVertices[iVertex2])            
+        else:
+            for iEdge in range(0,myMesh.nEdges):
+                if myMesh.boundaryEdge[iEdge] == 0:
+                    VertexID1 = myMesh.verticesOnEdge[iEdge,0]
+                    iVertex1 = VertexID1 - 1
+                    VertexID2 = myMesh.verticesOnEdge[iEdge,1]
+                    iVertex2 = VertexID2 - 1
+                    SolutionAtEdges[iEdge] = 0.5*(SolutionAtVertices[iVertex1] + SolutionAtVertices[iVertex2])
+        return SolutionAtEdges
+    
+    def InterpolateSolutionFromCellCentersToVertices(myMesh,SolutionAtCellCenters,SolutionAtVertices,
+                                                     InterpolateToBoundaryVertices=False):
+        if InterpolateToBoundaryVertices:
+            for iVertex in range(0,myMesh.nVertices):
+                SolutionAtVertices[iVertex] = 0.0
+                InverseAreaTriangle = 1.0/myMesh.areaTriangle[iVertex]
+                for iVertexDegree in range(0,myMesh.vertexDegree):
+                    CellID = myMesh.cellsOnVertex[iVertex,iVertexDegree]
+                    iCell = CellID - 1
+                    SolutionAtVertices[iVertex] += (
+                    SolutionAtCellCenters[iCell]*myMesh.kiteAreasOnVertex[iVertex,iVertexDegree])
+                SolutionAtVertices[iVertex] *= InverseAreaTriangle            
+        else:
+            for iVertex in range(0,myMesh.nVertices):
+                if myMesh.boundaryVertex[iVertex] == 0:
+                    SolutionAtVertices[iVertex] = 0.0
+                    InverseAreaTriangle = 1.0/myMesh.areaTriangle[iVertex]
+                    for iVertexDegree in range(0,myMesh.vertexDegree):
+                        CellID = myMesh.cellsOnVertex[iVertex,iVertexDegree]
+                        iCell = CellID - 1
+                        SolutionAtVertices[iVertex] += (
+                        SolutionAtCellCenters[iCell]*myMesh.kiteAreasOnVertex[iVertex,iVertexDegree])
+                    SolutionAtVertices[iVertex] *= InverseAreaTriangle
+        return SolutionAtVertices
+    
+    def InterpolateSolutionFromEdgesToVertices(myMesh,SolutionAtEdges,SolutionAtVertices,
+                                               InterpolateToBoundaryVertices=False):
+        if InterpolateToBoundaryVertices:
+            for iVertex in range(0,myMesh.nVertices):
+                SolutionAtVertices[iVertex] = 0.0
+                InverseAreaHexagon = 1.0/myMesh.areaHexagonAtVertex[iVertex]
+                for iVertexDegree in range(0,myMesh.vertexDegree):
+                    EdgeID = myMesh.edgesOnVertex[iVertex,iVertexDegree]
+                    iEdge = EdgeID - 1
+                    SolutionAtVertices[iVertex] += (
+                    SolutionAtEdges[iEdge]*myMesh.diamondAreaOnEdge[iEdge])
+                SolutionAtVertices[iVertex] *= InverseAreaHexagon            
+        else:
+            for iVertex in range(0,myMesh.nVertices):
+                if myMesh.boundaryVertex[iVertex] == 0:
+                    SolutionAtVertices[iVertex] = 0.0
+                    InverseAreaHexagon = 1.0/myMesh.areaHexagonAtVertex[iVertex]
+                    for iVertexDegree in range(0,myMesh.vertexDegree):
+                        EdgeID = myMesh.edgesOnVertex[iVertex,iVertexDegree]
+                        iEdge = EdgeID - 1
+                        SolutionAtVertices[iVertex] += (
+                        SolutionAtEdges[iEdge]*myMesh.diamondAreaOnEdge[iEdge])
+                    SolutionAtVertices[iVertex] *= InverseAreaHexagon
+        return SolutionAtVertices
+
+
 def PlotMeshes(myCoarseMesh,myFineMesh,OutputDirectory,linewidths,linestyles,colors,labels,labelfontsizes,labelpads,
                tickfontsizes,title,titlefontsize,SaveAsPDF,FileName,Show,fig_size,
                UseDefaultMethodToSpecifyTickFontSize,CellCenterMarkerTypes,CellCenterMarkerSizes):
@@ -476,12 +702,14 @@ def PlotMeshes(myCoarseMesh,myFineMesh,OutputDirectory,linewidths,linestyles,col
         CellCenterMarkerSize = CellCenterMarkerSizes[iMesh]
         for iEdge in range(0,myMesh.nEdges):
             dvEdge = myMesh.dvEdge[iEdge]
-            vertexID1 = myMesh.verticesOnEdge[iEdge,0] - 1
-            vertexID2 = myMesh.verticesOnEdge[iEdge,1] - 1
-            x1 = myMesh.xVertex[vertexID1]
-            x2 = myMesh.xVertex[vertexID2]
-            y1 = myMesh.yVertex[vertexID1]
-            y2 = myMesh.yVertex[vertexID2]
+            vertexID1 = myMesh.verticesOnEdge[iEdge,0]
+            vertexID2 = myMesh.verticesOnEdge[iEdge,1]
+            iVertex1 = vertexID1 - 1
+            iVertex2 = vertexID2 - 1
+            x1 = myMesh.xVertex[iVertex1]
+            x2 = myMesh.xVertex[iVertex2]
+            y1 = myMesh.yVertex[iVertex1]
+            y2 = myMesh.yVertex[iVertex2]
             edgeLength = np.sqrt((x2 - x1)**2.0 + (y2 - y1)**2.0)
             dvEdgeTolerancePercentage = 1.0
             if edgeLength <= dvEdge*(100.0 + dvEdgeTolerancePercentage)/100.0:

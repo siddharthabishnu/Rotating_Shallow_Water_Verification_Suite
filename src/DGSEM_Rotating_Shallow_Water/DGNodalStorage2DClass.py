@@ -37,19 +37,21 @@ class DGNodalStorage2D:
         myDGNodalStorage2D.LagrangePolynomialsAlongNorthBoundary = (
         (myDGNodalStorage2D.myLagrangeInterpolation2D.myLagrangeInterpolation1DY
          .EvaluateLagrangeInterpolatingPolynomialsAtPoint1D(1.0)))
-        LagrangePolynomialDerivativeMatrixX = (myDGNodalStorage2D.myLagrangeInterpolation2D.myLagrangeInterpolation1DX
-                                               .EvaluateLagrangePolynomialDerivativeMatrix1D())
-        LagrangePolynomialDerivativeMatrixY = (myDGNodalStorage2D.myLagrangeInterpolation2D.myLagrangeInterpolation1DY
-                                               .EvaluateLagrangePolynomialDerivativeMatrix1D())
+        myDGNodalStorage2D.LagrangePolynomialDerivativeMatrixX = (
+        (myDGNodalStorage2D.myLagrangeInterpolation2D.myLagrangeInterpolation1DX
+         .EvaluateLagrangePolynomialDerivativeMatrix1D()))
+        myDGNodalStorage2D.LagrangePolynomialDerivativeMatrixY = (
+        (myDGNodalStorage2D.myLagrangeInterpolation2D.myLagrangeInterpolation1DY
+         .EvaluateLagrangePolynomialDerivativeMatrix1D()))
         myDGNodalStorage2D.DGDerivativeMatrixX = np.zeros((nXi+1,nXi+1))
         myDGNodalStorage2D.DGDerivativeMatrixY = np.zeros((nEta+1,nEta+1))
         for jXi in range(0,nXi+1):
             for iXi in range(0,nXi+1):
                 myDGNodalStorage2D.DGDerivativeMatrixX[iXi,jXi] = (
-                -(LagrangePolynomialDerivativeMatrixX[jXi,iXi]
+                -(myDGNodalStorage2D.LagrangePolynomialDerivativeMatrixX[jXi,iXi]
                   *myDGNodalStorage2D.myGaussQuadratureWeightX[jXi]/myDGNodalStorage2D.myGaussQuadratureWeightX[iXi]))
         for jEta in range(0,nEta+1):
             for iEta in range(0,nEta+1):
                 myDGNodalStorage2D.DGDerivativeMatrixY[iEta,jEta] = (
-                -(LagrangePolynomialDerivativeMatrixY[jEta,iEta]
+                -(myDGNodalStorage2D.LagrangePolynomialDerivativeMatrixY[jEta,iEta]
                   *myDGNodalStorage2D.myGaussQuadratureWeightY[jEta]/myDGNodalStorage2D.myGaussQuadratureWeightY[iEta]))

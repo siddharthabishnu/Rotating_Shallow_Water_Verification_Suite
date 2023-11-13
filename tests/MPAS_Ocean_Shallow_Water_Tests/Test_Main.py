@@ -29,7 +29,7 @@ def Test_FormatSimulationTime():
         print('The unformatted simulation time is %.1f seconds.'%time)
         SimulationTime = Main.FormatSimulationTime(time,display_time=True)
              
-             
+            
 do_Test_FormatSimulationTime = False
 if do_Test_FormatSimulationTime:
     Test_FormatSimulationTime()
@@ -38,9 +38,10 @@ if do_Test_FormatSimulationTime:
 def Test_DetermineCourantNumberForGivenTimeStepAndCheckItsValue():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     Main.DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType)
             
             
@@ -52,9 +53,10 @@ if do_Test_DetermineCourantNumberForGivenTimeStepAndCheckItsValue:
 def Test_DetermineNumberOfTimeStepsForSimulation():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     Main.DetermineNumberOfTimeStepsForSimulation(ProblemType)
             
             
@@ -66,10 +68,13 @@ if do_Test_DetermineNumberOfTimeStepsForSimulation:
 def Test_DetermineExactSolutions():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     PrintPhaseSpeedOfWaveModes = False
     PrintAmplitudesOfWaveModes = False
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -83,7 +88,8 @@ def Test_DetermineExactSolutions():
     PrintOutput = False
     UseAveragedQuantities = False
     MeshDirectory, BaseMeshFileName, MeshFileName = (
-    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave))
+    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave))
     CheckStateVariableLimits = False
     PlotFigures = True
     Main.DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
@@ -101,11 +107,13 @@ if do_Test_DetermineExactSolutions:
 def Test_DetermineNumericalSolutions():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-    # or 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave'
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Planetary_Rossby_Wave' 
+    # or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' 
+    # or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' or 'Diffusion_Equation' 
+    # or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' or 'Viscous_Burgers_Equation'.
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     PrintPhaseSpeedOfWaveModes = False
     PrintAmplitudesOfWaveModes = False
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -121,7 +129,8 @@ def Test_DetermineNumericalSolutions():
     SpecifyNumberOfTimeStepsManually = True
     nTime = 10
     MeshDirectory, BaseMeshFileName, MeshFileName = (
-    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave))
+    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave))
     nRuns = 10
     elapsed_time = np.zeros(nRuns)
     for iRun in range(0,nRuns):
@@ -144,11 +153,13 @@ if do_Test_DetermineNumericalSolutions:
 def Test_DetermineExactAndNumericalSolutions():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-    # or 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave'
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Planetary_Rossby_Wave' 
+    # or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' 
+    # or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' or 'Diffusion_Equation' 
+    # or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' or 'Viscous_Burgers_Equation'.
     ProblemType_EquatorialWave = Initialization.isEquatorialWave(ProblemType)
+    ProblemType_ManufacturedRossbyWave = Initialization.Specify_ProblemType_ManufacturedRossbyWave(ProblemType)
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     PrintPhaseSpeedOfWaveModes = False
     PrintAmplitudesOfWaveModes = False
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -162,25 +173,27 @@ def Test_DetermineExactAndNumericalSolutions():
     PrintOutput = False
     UseAveragedQuantities = False
     MeshDirectory, BaseMeshFileName, MeshFileName = (
-    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_EquatorialWave))
+    Initialization.SpecifyMeshDirectoryAndMeshFileNames(ProblemType,ProblemType_ManufacturedRossbyWave,
+                                                        ProblemType_RossbyWave,ProblemType_EquatorialWave))
     CheckStateVariableLimits = False
     PlotFigures = True
     ComputeOnlyExactSolution = False
-    if (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-        or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    if ProblemType_RossbyWave:
         PlotNumericalSolution = True
     else:
         PlotNumericalSolution = False
     Restart = False
     Restart_iTime = 0
-    Restart_FileName = ''
+    Restart_FileName_NormalVelocity = ''
+    Restart_FileName_SurfaceElevation = ''
     InterpolateExactVelocitiesFromEdgesToCellCenters = True
     Main.DetermineExactAndNumericalSolutions(
     ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
     LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,
     nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,FixAngleEdge,PrintOutput,
-    UseAveragedQuantities,CheckStateVariableLimits,PlotFigures,ComputeOnlyExactSolution,PlotNumericalSolution,Restart,
-    Restart_iTime,Restart_FileName,InterpolateExactVelocitiesFromEdgesToCellCenters)
+    UseAveragedQuantities,CheckStateVariableLimits,PlotFigures,InterpolateExactVelocitiesFromEdgesToCellCenters,
+    ComputeOnlyExactSolution,PlotNumericalSolution,Restart,Restart_iTime,Restart_FileName_NormalVelocity,
+    Restart_FileName_SurfaceElevation)
     
     
 do_Test_DetermineExactAndNumericalSolutions = False

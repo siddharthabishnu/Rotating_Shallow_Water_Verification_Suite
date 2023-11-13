@@ -40,8 +40,7 @@ def TestMPASOceanShallowWater():
                                                      Generalized_FB_with_AB2_AM3_Step_Type,
                                                      Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,
                                                      PrintBasicGeometry,MeshDirectory,BaseMeshFileName,MeshFileName,
-                                                     FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber=0.5,
-                                                     UseCourantNumberToDetermineTimeStep=False))
+                                                     FixAngleEdge,PrintOutput,UseAveragedQuantities))
     myMPASOceanShallowWater.DetermineCoriolisParameterAndBottomDepth()
     myExactSolutionParameters = myMPASOceanShallowWater.myNameList.myExactSolutionParameters
     UseAveragedQuantities = myMPASOceanShallowWater.myMesh.UseAveragedQuantities

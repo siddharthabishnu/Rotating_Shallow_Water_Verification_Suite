@@ -86,78 +86,80 @@ def DetermineInertiaGravityWavesExactMeridionalVelocity(etaHat,f0,g,kX,kY,omega,
     return v
 
 
-def DeterminePlanetaryRossbyWaveExactSurfaceElevation(etaHat,kX,kY,omega,x,y,time):
+def DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat,kX,kY,omega,x,y,time):
     eta = etaHat*np.sin(kX*x + kY*y - omega*time)
     return eta
 
 
-def DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
     u = -etaHat*g*(kY*(f0 - beta0*y)*np.cos(kX*x + kY*y - omega*time) 
                    + kX*omega*np.sin(kX*x + kY*y - omega*time))/f0**2.0
     return u
 
 
-def DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
     v = etaHat*g*(kX*(f0 - beta0*y)*np.cos(kX*x + kY*y - omega*time) 
                   - kY*omega*np.sin(kX*x + kY*y - omega*time))/f0**2.0
     return v
 
 
-def DeterminePlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedPlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
     uSourceTerm = etaHat*g*(2.0*kY*omega*beta0*y*np.sin(kX*x + kY*y - omega*time)
                             + kX*(omega**2.0 + (beta0*y)**2.0)*np.cos(kX*x + kY*y - omega*time))/f0**2.0
     return uSourceTerm
 
 
-def DeterminePlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedPlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat,f0,g,kX,kY,omega,x,y,time):
     vSourceTerm = etaHat*g*(-2.0*kX*omega*beta0*y*np.sin(kX*x + kY*y - omega*time)
                             + kY*(omega**2.0 + (beta0*y)**2.0)*np.cos(kX*x + kY*y - omega*time))/f0**2.0
     return vSourceTerm
 
 
-def DetermineTopographicRossbyWaveExactSurfaceElevation(etaHat,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat,kX,kY,omega,x,y,time):
     eta = etaHat*np.sin(kX*x + kY*y - omega*time)
     return eta
 
 
-def DetermineTopographicRossbyWaveExactZonalVelocity(etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat,f0,g,kX,kY,omega,x,y,time):
     u = -etaHat*g*(f0*kY*np.cos(kX*x + kY*y - omega*time) + omega*kX*np.sin(kX*x + kY*y - omega*time))/f0**2.0
     return u
 
 
-def DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat,f0,g,kX,kY,omega,x,y,time):
     v = etaHat*g*(f0*kX*np.cos(kX*x + kY*y - omega*time) - omega*kY*np.sin(kX*x + kY*y - omega*time))/f0**2.0
     return v
 
 
-def DetermineTopographicRossbyWaveZonalVelocitySourceTerm(etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveZonalVelocitySourceTerm(etaHat,f0,g,kX,kY,omega,x,y,time):
     uSourceTerm = etaHat*g*kX*omega**2.0*np.cos(kX*x + kY*y - omega*time)/f0**2.0
     return uSourceTerm
 
 
-def DetermineTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat,f0,g,kX,kY,omega,x,y,time):
     vSourceTerm = etaHat*g*kY*omega**2.0*np.cos(kX*x + kY*y - omega*time)/f0**2.0
     return vSourceTerm
 
 
-def DetermineTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat,f0,g,kX,kY,omega,x,y,time):
+def DetermineManufacturedTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat,f0,g,kX,kY,omega,x,y,time):
     etaSourceTerm = -etaHat*g*alpha0*(kY*omega*np.sin(kX*x + kY*y - omega*time) 
                                       + (kX*f0 + (kX**2.0 + kY**2.0)*omega*y)*np.cos(kX*x + kY*y - omega*time))/f0**2.0
     return etaSourceTerm
 
 
-def DetermineCoastalKelvinInertiaGravityRossbyWaveInitialSurfaceElevation(etaHat,R0x,R0y,x0,y0,x,y):
+def DetermineRossbyWaveInitialSurfaceElevation(etaHat,R0x,R0y,x0,y0,x,y):
     eta = etaHat*np.exp(-((x - x0)**2.0/(2.0*R0x**2.0) + (y - y0)**2.0/(2.0*R0y**2.0)))
     return eta
 
 
-def DetermineCoastalKelvinInertiaGravityRossbyWaveInitialZonalVelocity(etaHat,f0,g,R0x,R0y,x0,y0,x,y):
-    u = g/(f0*R0y**2.0)*(y - y0)*etaHat*np.exp(-((x - x0)**2.0/(2.0*R0x**2.0) + (y - y0)**2.0/(2.0*R0y**2.0)))
+def DetermineRossbyWaveInitialZonalVelocity(etaHat,f0_MidLatitude,g,R0x,R0y,x0,y0,x,y):
+    u = g/(f0_MidLatitude*R0y**2.0)*(y - y0)*etaHat*np.exp(-((x - x0)**2.0/(2.0*R0x**2.0) 
+                                                             + (y - y0)**2.0/(2.0*R0y**2.0)))
     return u
 
 
-def DetermineCoastalKelvinInertiaGravityRossbyWaveInitialMeridionalVelocity(etaHat,f0,g,R0x,R0y,x0,y0,x,y):
-    v = -g/(f0*R0x**2.0)*(x - x0)*etaHat*np.exp(-((x - x0)**2.0/(2.0*R0x**2.0) + (y - y0)**2.0/(2.0*R0y**2.0)))
+def DetermineRossbyWaveInitialMeridionalVelocity(etaHat,f0_MidLatitude,g,R0x,R0y,x0,y0,x,y):
+    v = -g/(f0_MidLatitude*R0x**2.0)*(x - x0)*etaHat*np.exp(-((x - x0)**2.0/(2.0*R0x**2.0) 
+                                                              + (y - y0)**2.0/(2.0*R0y**2.0)))
     return v
 
 
@@ -403,6 +405,40 @@ def DetermineBarotropicTideExactMeridionalVelocity(etaHat,f0,g,kX,omega,x,time):
     return v
 
 
+def DetermineDiffusionEquationExactZonalVelocity(kappa,kX,kY,x,y,time):
+    u = np.sin(kX*x)*np.sin(kY*y)*np.exp(-kappa*time)
+    return u
+    
+    
+def DetermineDiffusionEquationExactZonalVelocityZonalGradient(kappa,kX,kY,x,y,time):
+    u_x = kX*np.cos(kX*x)*np.sin(kY*y)*np.exp(-kappa*time)
+    return u_x
+    
+    
+def DetermineDiffusionEquationExactZonalVelocityMeridionalGradient(kappa,kX,kY,x,y,time):
+    u_y = kY*np.sin(kX*x)*np.cos(kY*y)*np.exp(-kappa*time)
+    return u_y
+
+
+def DetermineAdvectionDiffusionEquationExactSurfaceElevation(nu,u0,v0,x0,y0,x,y,time):
+    eta = (np.exp(-((x - u0*time - x0)**2.0 + (y - v0*time - y0)**2.0)/(nu*(4.0*time + 1.0))))/(4.0*time + 1.0)
+    return eta
+
+
+def DetermineAdvectionDiffusionEquationExactSurfaceElevationZonalGradient(nu,u0,v0,x0,y0,x,y,time):
+    eta_x = (-(2.0*(x - u0*time - x0)
+               *np.exp(-((x - u0*time - x0)**2.0 + (y - v0*time - y0)**2.0)/(nu*(4.0*time + 1.0))))
+             /(nu*(4.0*time + 1.0)**2.0))
+    return eta_x
+
+
+def DetermineAdvectionDiffusionEquationExactSurfaceElevationMeridionalGradient(nu,u0,v0,x0,y0,x,y,time):
+    eta_y = (-(2.0*(y - v0*time - y0) 
+               *np.exp(-((x - u0*time - x0)**2.0 + (y - v0*time - y0)**2.0)/(nu*(4.0*time + 1.0))))
+             /(nu*(4.0*time + 1.0)**2.0))
+    return eta_y
+
+
 def DetermineNonLinearManufacturedSolutionExactSurfaceElevation(etaHat,kX,kY,omega,x,y,time):
     eta = etaHat*np.sin(kX*x + kY*y - omega*time)
     return eta
@@ -416,6 +452,13 @@ def DetermineNonLinearManufacturedSolutionExactZonalVelocity(etaHat,kX,kY,omega,
 def DetermineNonLinearManufacturedSolutionExactMeridionalVelocity(etaHat,kX,kY,omega,x,y,time):
     v = etaHat*np.cos(kX*x + kY*y - omega*time)
     return v
+
+
+def DetermineNonLinearManufacturedSolutionExactRelativeVorticity(etaHat,kX,kY,omega,x,y,time):
+    v_x = -kX*etaHat*np.sin(kX*x + kY*y - omega*time)
+    u_y = -kY*etaHat*np.sin(kX*x + kY*y - omega*time)
+    zeta = v_x - u_y
+    return zeta
 
 
 def DetermineNonLinearManufacturedSolutionSurfaceElevationSourceTerm(etaHat,H0,kX,kY,omega,x,y,time):
@@ -437,6 +480,16 @@ def DetermineNonLinearManufacturedSolutionMeridionalVelocitySourceTerm(etaHat,f0
     return vSourceTerm
 
 
+def DetermineViscousBurgersEquationExactZonalVelocity(nu,s,uL,uR,x0,x,time):
+    u = s - 0.5*(uL - uR)*np.tanh((x - x0 - s*time)*(uL - uR)/(4.0*nu))
+    return u
+
+
+def DetermineViscousBurgersEquationExactZonalVelocityZonalGradient(nu,s,uL,uR,x0,x,time):
+    u_x = -1.0/(8.0*nu)*(uL - uR)**2.0/(np.cosh((x - x0 - s*time)*(uL - uR)/(4.0*nu)))**2.0
+    return u_x
+
+
 def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
                                    myQuadratureOnHexagon=[],HexagonLength=1.0):
     c0 = myExactSolutionParameters.c0
@@ -450,6 +503,7 @@ def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,tim
     kY2 = myExactSolutionParameters.kY2
     # Note that kX1*lX = kY1*lY = 4.0*np.pi and kX2*lX = kY2*lY = 8.0*np.pi for the inertia-gravity wave and 
     # kX1*lX = kY1*lY = 2.0*np.pi and kX2*lX = kY2*lY = 4.0*np.pi for every other two-dimensional geophysical wave.
+    nu = myExactSolutionParameters.nu
     omega1 = myExactSolutionParameters.omega1
     omega2 = myExactSolutionParameters.omega2
     x0 = myExactSolutionParameters.x0
@@ -457,6 +511,11 @@ def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,tim
     R0 = myExactSolutionParameters.R0
     R0x = myExactSolutionParameters.R0x
     R0y = myExactSolutionParameters.R0y
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
+    u0 = myExactSolutionParameters.u0
+    v0 = myExactSolutionParameters.v0
     R = myExactSolutionParameters.R
     Req = myExactSolutionParameters.Req
     LengthScale = myExactSolutionParameters.LengthScale
@@ -473,17 +532,17 @@ def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,tim
     elif ProblemType == 'Inertia_Gravity_Wave':
         ExactSurfaceElevation = (DetermineInertiaGravityWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
                                  + DetermineInertiaGravityWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactSurfaceElevation = (DeterminePlanetaryRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
-                                 + DeterminePlanetaryRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactSurfaceElevation = (DetermineTopographicRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
-                                 + DetermineTopographicRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
-    elif (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-          or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactSurfaceElevation = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactSurfaceElevation = (
+        (DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         if time == 0.0:
-            ExactSurfaceElevation = (
-            DetermineCoastalKelvinInertiaGravityRossbyWaveInitialSurfaceElevation(etaHat1,R0x,R0y,x0,y0,x,y))
+            ExactSurfaceElevation = DetermineRossbyWaveInitialSurfaceElevation(etaHat1,R0x,R0y,x0,y0,x,y)
         else:
             ExactSurfaceElevation = 0.0
             return ExactSurfaceElevation
@@ -511,12 +570,150 @@ def DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,x,y,tim
     elif ProblemType == 'Barotropic_Tide':
         ExactSurfaceElevation = (DetermineBarotropicTideExactSurfaceElevation(etaHat1,kX1,omega1,x,time)
                                  + DetermineBarotropicTideExactSurfaceElevation(etaHat2,kX2,omega2,x,time))
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        ExactSurfaceElevation = DetermineAdvectionDiffusionEquationExactSurfaceElevation(nu,u0,v0,x0,y0,x,y,time)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ExactSurfaceElevation = (
         DetermineNonLinearManufacturedSolutionExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time))
+    else:
+        ExactSurfaceElevation = 0.0
     if UseAveragedQuantities:
         ExactSurfaceElevation = np.dot(ExactSurfaceElevation,myQuadratureOnHexagon.w)
     return ExactSurfaceElevation
+
+
+def DetermineExactSurfaceElevationAtEdge(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
+                                         myQuadratureOnEdge=[],dvEdge=1.0,angleEdge=0.0):
+    c0 = myExactSolutionParameters.c0
+    etaHat1 = myExactSolutionParameters.etaHat1
+    etaHat2 = myExactSolutionParameters.etaHat2
+    g = myExactSolutionParameters.g
+    H0 = myExactSolutionParameters.H0
+    kX1 = myExactSolutionParameters.kX1
+    kX2 = myExactSolutionParameters.kX2
+    kY1 = myExactSolutionParameters.kY1
+    kY2 = myExactSolutionParameters.kY2
+    # Note that kX1*lX = kY1*lY = 4.0*np.pi and kX2*lX = kY2*lY = 8.0*np.pi for the inertia-gravity wave and 
+    # kX1*lX = kY1*lY = 2.0*np.pi and kX2*lX = kY2*lY = 4.0*np.pi for every other two-dimensional geophysical wave.
+    nu = myExactSolutionParameters.nu
+    omega1 = myExactSolutionParameters.omega1
+    omega2 = myExactSolutionParameters.omega2
+    x0 = myExactSolutionParameters.x0
+    y0 = myExactSolutionParameters.y0
+    R0 = myExactSolutionParameters.R0
+    R0x = myExactSolutionParameters.R0x
+    R0y = myExactSolutionParameters.R0y
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
+    u0 = myExactSolutionParameters.u0
+    v0 = myExactSolutionParameters.v0
+    R = myExactSolutionParameters.R
+    Req = myExactSolutionParameters.Req
+    LengthScale = myExactSolutionParameters.LengthScale
+    TimeScale = myExactSolutionParameters.TimeScale
+    SurfaceElevationScale = myExactSolutionParameters.SurfaceElevationScale
+    if UseAveragedQuantities:
+        x += 0.5*dvEdge*np.cos(angleEdge)*myQuadratureOnEdge.x[:]
+        y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
+    if ProblemType == 'Plane_Gaussian_Wave':
+        ExactSurfaceElevation = DeterminePlaneGaussianWaveExactSurfaceElevation(c0,g,kX1,kY1,R0,x0,y0,x,y,time)
+    elif ProblemType == 'Coastal_Kelvin_Wave':
+        ExactSurfaceElevation = (DetermineCoastalKelvinWaveExactSurfaceElevation(c0,etaHat1,H0,kY1,R,x,y,time)
+                                 + DetermineCoastalKelvinWaveExactSurfaceElevation(c0,etaHat2,H0,kY2,R,x,y,time))
+    elif ProblemType == 'Inertia_Gravity_Wave':
+        ExactSurfaceElevation = (DetermineInertiaGravityWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
+                                 + DetermineInertiaGravityWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactSurfaceElevation = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactSurfaceElevation = (
+        (DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+        if time == 0.0:
+            ExactSurfaceElevation = DetermineRossbyWaveInitialSurfaceElevation(etaHat1,R0x,R0y,x0,y0,x,y)
+        else:
+            ExactSurfaceElevation = 0.0
+            return ExactSurfaceElevation
+    elif ProblemType == 'Equatorial_Kelvin_Wave':
+        ExactSurfaceElevation = (DetermineEquatorialKelvinWaveExactSurfaceElevation(c0,etaHat1,H0,kX1,Req,x,y,time)
+                                 + DetermineEquatorialKelvinWaveExactSurfaceElevation(c0,etaHat2,H0,kX2,Req,x,y,time))
+    elif ProblemType == 'Equatorial_Yanai_Wave':
+        ExactSurfaceElevation = (
+        (DetermineEquatorialYanaiWaveExactSurfaceElevation(etaHat1,kX1,omega1,LengthScale,TimeScale,
+                                                           SurfaceElevationScale,x,y,time)
+         + DetermineEquatorialYanaiWaveExactSurfaceElevation(etaHat2,kX2,omega2,LengthScale,TimeScale,
+                                                             SurfaceElevationScale,x,y,time)))
+    elif ProblemType == 'Equatorial_Rossby_Wave':
+        ExactSurfaceElevation = (
+        (DetermineEquatorialRossbyWaveExactSurfaceElevation(etaHat1,kX1,omega1,LengthScale,TimeScale,
+                                                            SurfaceElevationScale,x,y,time)
+         + DetermineEquatorialRossbyWaveExactSurfaceElevation(etaHat2,kX2,omega2,LengthScale,TimeScale,
+                                                              SurfaceElevationScale,x,y,time)))  
+    elif ProblemType == 'Equatorial_Inertia_Gravity_Wave':
+        ExactSurfaceElevation = (
+        (DetermineEquatorialInertiaGravityWaveExactSurfaceElevation(etaHat1,kX1,omega1,LengthScale,TimeScale,
+                                                                    SurfaceElevationScale,x,y,time)
+         + DetermineEquatorialInertiaGravityWaveExactSurfaceElevation(etaHat2,kX2,omega2,LengthScale,TimeScale,
+                                                                      SurfaceElevationScale,x,y,time)))  
+    elif ProblemType == 'Barotropic_Tide':
+        ExactSurfaceElevation = (DetermineBarotropicTideExactSurfaceElevation(etaHat1,kX1,omega1,x,time)
+                                 + DetermineBarotropicTideExactSurfaceElevation(etaHat2,kX2,omega2,x,time))
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        ExactSurfaceElevation = DetermineAdvectionDiffusionEquationExactSurfaceElevation(nu,u0,v0,x0,y0,x,y,time)
+    elif ProblemType == 'NonLinear_Manufactured_Solution':
+        ExactSurfaceElevation = (
+        DetermineNonLinearManufacturedSolutionExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time))
+    else:
+        ExactSurfaceElevation = 0.0
+    if UseAveragedQuantities:
+        ExactSurfaceElevation = np.dot(0.5*dvEdge*ExactSurfaceElevation,myQuadratureOnEdge.w)/dvEdge
+    return ExactSurfaceElevation
+
+
+def DetermineExactSurfaceElevationZonalGradient(ProblemType,myExactSolutionParameters,x,y,time,
+                                                UseAveragedQuantities=False,myQuadratureOnHexagon=[],HexagonLength=1.0):
+    nu = myExactSolutionParameters.nu
+    u0 = myExactSolutionParameters.u0
+    v0 = myExactSolutionParameters.v0
+    x0 = myExactSolutionParameters.x0
+    y0 = myExactSolutionParameters.y0
+    if UseAveragedQuantities:
+        x += myQuadratureOnHexagon.x[:]*HexagonLength
+        y += myQuadratureOnHexagon.y[:]*HexagonLength
+    if ProblemType == 'Advection_Diffusion_Equation':
+        ExactSurfaceElevationZonalGradient = (
+        DetermineAdvectionDiffusionEquationExactSurfaceElevationZonalGradient(nu,u0,v0,x0,y0,x,y,time))
+        if UseAveragedQuantities:
+            ExactSurfaceElevationZonalGradient = np.dot(ExactSurfaceElevationZonalGradient,myQuadratureOnHexagon.w)
+    else:
+        ExactSurfaceElevationZonalGradient = 0.0
+    return ExactSurfaceElevationZonalGradient       
+        
+        
+def DetermineExactSurfaceElevationMeridionalGradient(ProblemType,myExactSolutionParameters,x,y,time,
+                                                     UseAveragedQuantities=False,myQuadratureOnHexagon=[],
+                                                     HexagonLength=1.0):
+    nu = myExactSolutionParameters.nu
+    u0 = myExactSolutionParameters.u0
+    v0 = myExactSolutionParameters.v0
+    x0 = myExactSolutionParameters.x0
+    y0 = myExactSolutionParameters.y0
+    if UseAveragedQuantities:
+        x += myQuadratureOnHexagon.x[:]*HexagonLength
+        y += myQuadratureOnHexagon.y[:]*HexagonLength
+    if ProblemType == 'Advection_Diffusion_Equation':
+        ExactSurfaceElevationMeridionalGradient = (
+        DetermineAdvectionDiffusionEquationExactSurfaceElevationMeridionalGradient(nu,u0,v0,x0,y0,x,y,time))
+        if UseAveragedQuantities:
+            ExactSurfaceElevationMeridionalGradient = (
+            np.dot(ExactSurfaceElevationMeridionalGradient,myQuadratureOnHexagon.w))
+    else:
+        ExactSurfaceElevationMeridionalGradient = 0.0
+    return ExactSurfaceElevationMeridionalGradient       
 
 
 def DetermineExactSurfaceElevations(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
@@ -551,12 +748,16 @@ def DetermineExactSurfaceElevations(ProblemType,myExactSolutionParameters,x,y,ti
     elif ProblemType == 'Inertia_Gravity_Wave':
         ExactSurfaceElevation_1 = DetermineInertiaGravityWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
         ExactSurfaceElevation_2 = DetermineInertiaGravityWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactSurfaceElevation_1 = DeterminePlanetaryRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
-        ExactSurfaceElevation_2 = DeterminePlanetaryRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactSurfaceElevation_1 = DetermineTopographicRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time)
-        ExactSurfaceElevation_2 = DetermineTopographicRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time)
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactSurfaceElevation_1 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time))
+        ExactSurfaceElevation_2 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactSurfaceElevation_1 = (
+        DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat1,kX1,kY1,omega1,x,y,time))
+        ExactSurfaceElevation_2 = (
+        DetermineManufacturedTopographicRossbyWaveExactSurfaceElevation(etaHat2,kX2,kY2,omega2,x,y,time))
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         ExactSurfaceElevation_1 = DetermineEquatorialKelvinWaveExactSurfaceElevation(c0,etaHat1,H0,kX1,Req,x,y,time)
         ExactSurfaceElevation_2 = DetermineEquatorialKelvinWaveExactSurfaceElevation(c0,etaHat2,H0,kX2,Req,x,y,time)
@@ -623,14 +824,17 @@ def DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,U
     c0 = myExactSolutionParameters.c0
     etaHat1 = myExactSolutionParameters.etaHat1
     etaHat2 = myExactSolutionParameters.etaHat2
+    f0_MidLatitude = myExactSolutionParameters.f0_MidLatitude
     f0 = myExactSolutionParameters.f0
     g = myExactSolutionParameters.g
+    kappa1 = myExactSolutionParameters.kappa1
     kX1 = myExactSolutionParameters.kX1
     kX2 = myExactSolutionParameters.kX2 
     kY1 = myExactSolutionParameters.kY1
     kY2 = myExactSolutionParameters.kY2 
     # Note that kX1*lX = kY1*lY = 4.0*np.pi and kX2*lX = kY2*lY = 8.0*np.pi for the inertia-gravity wave and 
     # kX1*lX = kY1*lY = 2.0*np.pi and kX2*lX = kY2*lY = 4.0*np.pi for every other two-dimensional geophysical wave.
+    nu = myExactSolutionParameters.nu
     omega1 = myExactSolutionParameters.omega1
     omega2 = myExactSolutionParameters.omega2
     x0 = myExactSolutionParameters.x0
@@ -638,6 +842,9 @@ def DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,U
     R0 = myExactSolutionParameters.R0
     R0x = myExactSolutionParameters.R0x
     R0y = myExactSolutionParameters.R0y
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
     Req = myExactSolutionParameters.Req
     LengthScale = myExactSolutionParameters.LengthScale
     TimeScale = myExactSolutionParameters.TimeScale
@@ -647,24 +854,23 @@ def DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,U
         y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
     if ProblemType == 'Plane_Gaussian_Wave':
         ExactZonalVelocity = DeterminePlaneGaussianWaveExactZonalVelocity(c0,kX1,kY1,R0,x0,y0,x,y,time)
-    elif ProblemType == 'Coastal_Kelvin_Wave':
+    elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Advection_Diffusion_Equation':
         ExactZonalVelocity = 0.0
         return ExactZonalVelocity
     elif ProblemType == 'Inertia_Gravity_Wave':
         ExactZonalVelocity = (DetermineInertiaGravityWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
                               + DetermineInertiaGravityWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactZonalVelocity = (DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-                              + DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,
-                                                                               time))
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactZonalVelocity = (DetermineTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-                              + DetermineTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
-    elif (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-          or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactZonalVelocity = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactZonalVelocity = (
+        (DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         if time == 0.0:
-            ExactZonalVelocity = (
-            DetermineCoastalKelvinInertiaGravityRossbyWaveInitialZonalVelocity(etaHat1,f0,g,R0x,R0y,x0,y0,x,y))
+            ExactZonalVelocity = DetermineRossbyWaveInitialZonalVelocity(etaHat1,f0_MidLatitude,g,R0x,R0y,x0,y0,x,y)
         else:
             ExactZonalVelocity = 0.0
             return ExactZonalVelocity
@@ -690,11 +896,63 @@ def DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,U
     elif ProblemType == 'Barotropic_Tide':
         ExactZonalVelocity = (DetermineBarotropicTideExactZonalVelocity(etaHat1,f0,g,kX1,omega1,x,time)
                               + DetermineBarotropicTideExactZonalVelocity(etaHat2,f0,g,kX2,omega2,x,time))
+    elif ProblemType == 'Diffusion_Equation':
+        ExactZonalVelocity = DetermineDiffusionEquationExactZonalVelocity(kappa1,kX1,kY1,x,y,time)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ExactZonalVelocity = DetermineNonLinearManufacturedSolutionExactZonalVelocity(etaHat1,kX1,kY1,omega1,x,y,time)
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        ExactZonalVelocity = DetermineViscousBurgersEquationExactZonalVelocity(nu,s,uL,uR,x0,x,time)
     if UseAveragedQuantities:
         ExactZonalVelocity = np.dot(0.5*dvEdge*ExactZonalVelocity,myQuadratureOnEdge.w)/dvEdge
     return ExactZonalVelocity
+
+
+def DetermineExactZonalVelocityZonalGradient(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
+                                             myQuadratureOnEdge=[],dvEdge=1.0,angleEdge=0.0):
+    kappa1 = myExactSolutionParameters.kappa1
+    kX1 = myExactSolutionParameters.kX1
+    kY1 = myExactSolutionParameters.kY1
+    nu = myExactSolutionParameters.nu
+    x0 = myExactSolutionParameters.x0
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
+    if UseAveragedQuantities:
+        x += 0.5*dvEdge*np.cos(angleEdge)*myQuadratureOnEdge.x[:]
+        y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
+    if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+        if ProblemType == 'Diffusion_Equation':
+            ExactZonalVelocityZonalGradient = (
+            DetermineDiffusionEquationExactZonalVelocityZonalGradient(kappa1,kX1,kY1,x,y,time))
+        elif ProblemType == 'Viscous_Burgers_Equation':
+            ExactZonalVelocityZonalGradient = (
+            DetermineViscousBurgersEquationExactZonalVelocityZonalGradient(nu,s,uL,uR,x0,x,time))
+        if UseAveragedQuantities:
+            ExactZonalVelocityZonalGradient = np.dot(0.5*dvEdge*ExactZonalVelocityZonalGradient,
+                                                     myQuadratureOnEdge.w)/dvEdge
+    else:
+        ExactZonalVelocityZonalGradient = 0.0
+    return ExactZonalVelocityZonalGradient
+
+
+def DetermineExactZonalVelocityMeridionalGradient(ProblemType,myExactSolutionParameters,x,y,time,
+                                                  UseAveragedQuantities=False,myQuadratureOnEdge=[],dvEdge=1.0,
+                                                  angleEdge=0.0):
+    kappa1 = myExactSolutionParameters.kappa1
+    kX1 = myExactSolutionParameters.kX1
+    kY1 = myExactSolutionParameters.kY1
+    if UseAveragedQuantities:
+        x += 0.5*dvEdge*np.cos(angleEdge)*myQuadratureOnEdge.x[:]
+        y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
+    if ProblemType == 'Diffusion_Equation':
+        ExactZonalVelocityMeridionalGradient = (
+        DetermineDiffusionEquationExactZonalVelocityMeridionalGradient(kappa1,kX1,kY1,x,y,time))
+        if UseAveragedQuantities:
+            ExactZonalVelocityMeridionalGradient = np.dot(0.5*dvEdge*ExactZonalVelocityMeridionalGradient,
+                                                          myQuadratureOnEdge.w)/dvEdge
+    else:
+        ExactZonalVelocityMeridionalGradient = 0.0
+    return ExactZonalVelocityMeridionalGradient
 
 
 def DetermineExactZonalVelocities(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
@@ -726,14 +984,16 @@ def DetermineExactZonalVelocities(ProblemType,myExactSolutionParameters,x,y,time
     elif ProblemType == 'Inertia_Gravity_Wave':
         ExactZonalVelocity_1 = DetermineInertiaGravityWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
         ExactZonalVelocity_2 = DetermineInertiaGravityWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactZonalVelocity_1 = DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,
-                                                                              time)
-        ExactZonalVelocity_2 = DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,
-                                                                              time)
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactZonalVelocity_1 = DetermineTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-        ExactZonalVelocity_2 = DetermineTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactZonalVelocity_1 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
+        ExactZonalVelocity_2 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactZonalVelocity_1 = (
+        DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
+        ExactZonalVelocity_2 = (
+        DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         ExactZonalVelocity_1 = DetermineEquatorialKelvinWaveExactZonalVelocity(c0,etaHat1,kX1,Req,x,y,time)
         ExactZonalVelocity_2 = DetermineEquatorialKelvinWaveExactZonalVelocity(c0,etaHat2,kX2,Req,x,y,time)
@@ -774,14 +1034,17 @@ def DetermineExactZonalVelocityAtCellCenter(ProblemType,myExactSolutionParameter
     c0 = myExactSolutionParameters.c0
     etaHat1 = myExactSolutionParameters.etaHat1
     etaHat2 = myExactSolutionParameters.etaHat2
+    f0_MidLatitude = myExactSolutionParameters.f0_MidLatitude
     f0 = myExactSolutionParameters.f0
     g = myExactSolutionParameters.g
+    kappa1 = myExactSolutionParameters.kappa1
     kX1 = myExactSolutionParameters.kX1
     kX2 = myExactSolutionParameters.kX2 
     kY1 = myExactSolutionParameters.kY1
     kY2 = myExactSolutionParameters.kY2 
     # Note that kX1*lX = kY1*lY = 4.0*np.pi and kX2*lX = kY2*lY = 8.0*np.pi for the inertia-gravity wave and 
     # kX1*lX = kY1*lY = 2.0*np.pi and kX2*lX = kY2*lY = 4.0*np.pi for every other two-dimensional geophysical wave.
+    nu = myExactSolutionParameters.nu
     omega1 = myExactSolutionParameters.omega1
     omega2 = myExactSolutionParameters.omega2
     x0 = myExactSolutionParameters.x0
@@ -789,6 +1052,9 @@ def DetermineExactZonalVelocityAtCellCenter(ProblemType,myExactSolutionParameter
     R0 = myExactSolutionParameters.R0
     R0x = myExactSolutionParameters.R0x
     R0y = myExactSolutionParameters.R0y
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
     Req = myExactSolutionParameters.Req
     LengthScale = myExactSolutionParameters.LengthScale
     TimeScale = myExactSolutionParameters.TimeScale
@@ -798,24 +1064,23 @@ def DetermineExactZonalVelocityAtCellCenter(ProblemType,myExactSolutionParameter
         y += myQuadratureOnHexagon.y[:]*HexagonLength
     if ProblemType == 'Plane_Gaussian_Wave':
         ExactZonalVelocity = DeterminePlaneGaussianWaveExactZonalVelocity(c0,kX1,kY1,R0,x0,y0,x,y,time)
-    elif ProblemType == 'Coastal_Kelvin_Wave':
+    elif ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Advection_Diffusion_Equation':
         ExactZonalVelocity = 0.0
         return ExactZonalVelocity
     elif ProblemType == 'Inertia_Gravity_Wave':
         ExactZonalVelocity = (DetermineInertiaGravityWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
                               + DetermineInertiaGravityWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactZonalVelocity = (DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-                              + DeterminePlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,
-                                                                               time))
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactZonalVelocity = (DetermineTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-                              + DetermineTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
-    elif (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-          or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactZonalVelocity = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactZonalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactZonalVelocity = (
+        (DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactZonalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         if time == 0.0:
-            ExactZonalVelocity = (
-            DetermineCoastalKelvinInertiaGravityRossbyWaveInitialZonalVelocity(etaHat1,f0,g,R0x,R0y,x0,y0,x,y))
+            ExactZonalVelocity = DetermineRossbyWaveInitialZonalVelocity(etaHat1,f0_MidLatitude,g,R0x,R0y,x0,y0,x,y)
         else:
             ExactZonalVelocity = 0.0
             return ExactZonalVelocity
@@ -841,8 +1106,12 @@ def DetermineExactZonalVelocityAtCellCenter(ProblemType,myExactSolutionParameter
     elif ProblemType == 'Barotropic_Tide':
         ExactZonalVelocity = (DetermineBarotropicTideExactZonalVelocity(etaHat1,f0,g,kX1,omega1,x,time)
                               + DetermineBarotropicTideExactZonalVelocity(etaHat2,f0,g,kX2,omega2,x,time))
+    elif ProblemType == 'Diffusion_Equation':
+        ExactZonalVelocity = DetermineDiffusionEquationExactZonalVelocity(kappa1,kX1,kY1,x,y,time)
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ExactZonalVelocity = DetermineNonLinearManufacturedSolutionExactZonalVelocity(etaHat1,kX1,kY1,omega1,x,y,time)
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        ExactZonalVelocity = DetermineViscousBurgersEquationExactZonalVelocity(nu,s,uL,uR,x0,x,time)
     if UseAveragedQuantities:
         ExactZonalVelocity = np.dot(ExactZonalVelocity,myQuadratureOnHexagon.w)
     return ExactZonalVelocity
@@ -854,6 +1123,7 @@ def DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,t
     c0 = myExactSolutionParameters.c0
     etaHat1 = myExactSolutionParameters.etaHat1
     etaHat2 = myExactSolutionParameters.etaHat2
+    f0_MidLatitude = myExactSolutionParameters.f0_MidLatitude
     f0 = myExactSolutionParameters.f0
     g = myExactSolutionParameters.g
     kX1 = myExactSolutionParameters.kX1
@@ -886,25 +1156,23 @@ def DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,t
                                                                                       time)
                                    + DetermineInertiaGravityWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,
                                                                                         time))
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactMeridionalVelocity = (DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,
-                                                                                       omega1,x,y,time)
-                                   + DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,
-                                                                                         omega2,x,y,time))
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactMeridionalVelocity = (DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,
-                                                                                         y,time)
-                                   + DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,
-                                                                                           x,y,time))
-    elif (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-          or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactMeridionalVelocity = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactMeridionalVelocity = (
+        (DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         if time == 0.0:
-            ExactMeridionalVelocity = (
-            DetermineCoastalKelvinInertiaGravityRossbyWaveInitialMeridionalVelocity(etaHat1,f0,g,R0x,R0y,x0,y0,x,y))
+            ExactMeridionalVelocity = DetermineRossbyWaveInitialMeridionalVelocity(etaHat1,f0_MidLatitude,g,R0x,R0y,x0,
+                                                                                   y0,x,y)
         else:
             ExactMeridionalVelocity = 0.0
             return ExactMeridionalVelocity
-    elif ProblemType == 'Equatorial_Kelvin_Wave':
+    elif (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Diffusion_Equation' 
+          or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation'):
         ExactMeridionalVelocity = 0.0
         return ExactMeridionalVelocity
     elif ProblemType == 'Equatorial_Yanai_Wave':
@@ -934,6 +1202,20 @@ def DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,t
     if UseAveragedQuantities:
         ExactMeridionalVelocity = np.dot(0.5*dvEdge*ExactMeridionalVelocity,myQuadratureOnEdge.w)/dvEdge
     return ExactMeridionalVelocity
+
+
+def DetermineExactMeridionalVelocityZonalGradient(ProblemType,myExactSolutionParameters,x,y,time,
+                                                  UseAveragedQuantities=False,myQuadratureOnEdge=[],dvEdge=1.0,
+                                                  angleEdge=0.0):
+    ExactMeridionalVelocityZonalGradient = 0.0
+    return ExactMeridionalVelocityZonalGradient
+
+
+def DetermineExactMeridionalVelocityMeridionalGradient(ProblemType,myExactSolutionParameters,x,y,time,
+                                                       UseAveragedQuantities=False,myQuadratureOnEdge=[],dvEdge=1.0,
+                                                       angleEdge=0.0):
+    ExactMeridionalVelocityMeridionalGradient = 0.0
+    return ExactMeridionalVelocityMeridionalGradient
 
 
 def DetermineExactMeridionalVelocities(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
@@ -968,16 +1250,16 @@ def DetermineExactMeridionalVelocities(ProblemType,myExactSolutionParameters,x,y
                                                                                        time)
         ExactMeridionalVelocity_2 = DetermineInertiaGravityWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,
                                                                                        time)
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactMeridionalVelocity_1 = DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,
-                                                                                        omega1,x,y,time)
-        ExactMeridionalVelocity_2 = DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,
-                                                                                        omega2,x,y,time)
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactMeridionalVelocity_1 = DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,
-                                                                                          y,time)
-        ExactMeridionalVelocity_2 = DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,
-                                                                                          y,time)
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactMeridionalVelocity_1 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
+        ExactMeridionalVelocity_2 = (
+        DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactMeridionalVelocity_1 = (
+        DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
+        ExactMeridionalVelocity_2 = (
+        DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time))
     elif ProblemType == 'Equatorial_Kelvin_Wave':
         return ExactMeridionalVelocities
     elif ProblemType == 'Equatorial_Yanai_Wave':
@@ -1022,6 +1304,7 @@ def DetermineExactMeridionalVelocityAtCellCenter(ProblemType,myExactSolutionPara
     c0 = myExactSolutionParameters.c0
     etaHat1 = myExactSolutionParameters.etaHat1
     etaHat2 = myExactSolutionParameters.etaHat2
+    f0_MidLatitude = myExactSolutionParameters.f0_MidLatitude
     f0 = myExactSolutionParameters.f0
     g = myExactSolutionParameters.g
     kX1 = myExactSolutionParameters.kX1
@@ -1054,25 +1337,23 @@ def DetermineExactMeridionalVelocityAtCellCenter(ProblemType,myExactSolutionPara
                                                                                       time)
                                    + DetermineInertiaGravityWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,
                                                                                         time))
-    elif ProblemType == 'Planetary_Rossby_Wave':
-        ExactMeridionalVelocity = (DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,
-                                                                                       omega1,x,y,time)
-                                   + DeterminePlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,
-                                                                                         omega2,x,y,time))
-    elif ProblemType == 'Topographic_Rossby_Wave':
-        ExactMeridionalVelocity = (DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,
-                                                                                         y,time)
-                                   + DetermineTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,
-                                                                                           x,y,time))
-    elif (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave' 
-          or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
+        ExactMeridionalVelocity = (
+        (DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveExactMeridionalVelocity(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
+        ExactMeridionalVelocity = (
+        (DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveExactMeridionalVelocity(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
         if time == 0.0:
-            ExactMeridionalVelocity = (
-            DetermineCoastalKelvinInertiaGravityRossbyWaveInitialMeridionalVelocity(etaHat1,f0,g,R0x,R0y,x0,y0,x,y))
+            ExactMeridionalVelocity = DetermineRossbyWaveInitialMeridionalVelocity(etaHat1,f0_MidLatitude,g,R0x,R0y,x0,
+                                                                                   y0,x,y)
         else:
             ExactMeridionalVelocity = 0.0
             return ExactMeridionalVelocity
-    elif ProblemType == 'Equatorial_Kelvin_Wave':
+    elif (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Diffusion_Equation' 
+          or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation'):
         ExactMeridionalVelocity = 0.0
         return ExactMeridionalVelocity
     elif ProblemType == 'Equatorial_Yanai_Wave':
@@ -1115,6 +1396,43 @@ def DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time,
     return ExactNormalVelocity
 
 
+def DetermineExactTangentialVelocity(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
+                                     myQuadratureOnEdge=[],dvEdge=1.0,angleEdge=0.0):
+    ExactZonalVelocity = DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,
+                                                     UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge)
+    ExactMeridionalVelocity = DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,time,
+                                                               UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                               angleEdge)
+    ExactTangentialVelocity = ExactMeridionalVelocity*np.cos(angleEdge) - ExactZonalVelocity*np.sin(angleEdge)
+    return ExactTangentialVelocity
+
+
+def DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time,
+                                                UseAveragedQuantities=False,myQuadratureOnEdge=[],dvEdge=1.0,
+                                                angleEdge=0.0):
+    ExactZonalVelocity = DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,x,y,time,
+                                                     UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge)
+    ExactMeridionalVelocity = DetermineExactMeridionalVelocity(ProblemType,myExactSolutionParameters,x,y,time,
+                                                               UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                               angleEdge)
+    ExactNormalVelocity = ExactZonalVelocity*np.cos(angleEdge) + ExactMeridionalVelocity*np.sin(angleEdge)
+    ExactTangentialVelocity = ExactMeridionalVelocity*np.cos(angleEdge) - ExactZonalVelocity*np.sin(angleEdge)
+    return ExactNormalVelocity, ExactTangentialVelocity
+
+
+def DetermineExactRelativeVorticity(ProblemType,myExactSolutionParameters,x,y,time):
+    etaHat1 = myExactSolutionParameters.etaHat1
+    kX1 = myExactSolutionParameters.kX1
+    kY1 = myExactSolutionParameters.kY1
+    omega1 = myExactSolutionParameters.omega1
+    if ProblemType == 'NonLinear_Manufactured_Solution':
+        ExactRelativeVorticity = DetermineNonLinearManufacturedSolutionExactRelativeVorticity(etaHat1,kX1,kY1,omega1,x,
+                                                                                              y,time)
+    else:
+        ExactRelativeVorticity = 0.0
+    return ExactRelativeVorticity
+
+
 def DetermineSurfaceElevationSourceTerm(ProblemType,myExactSolutionParameters,x,y,time,UseAveragedQuantities=False,
                                         myQuadratureOnHexagon=[],HexagonLength=1.0):
     alpha0 = myExactSolutionParameters.alpha0
@@ -1134,10 +1452,12 @@ def DetermineSurfaceElevationSourceTerm(ProblemType,myExactSolutionParameters,x,
     if UseAveragedQuantities:
         x += myQuadratureOnHexagon.x[:]*HexagonLength
         y += myQuadratureOnHexagon.y[:]*HexagonLength
-    if ProblemType == 'Topographic_Rossby_Wave':
+    if ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         SurfaceElevationSourceTerm = (
-        (DetermineTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-         + DetermineTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+        (DetermineManufacturedTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat1,f0,g,kX1,kY1,omega1,x,y,
+                                                                              time)
+         + DetermineManufacturedTopographicRossbyWaveSurfaceElevationSourceTerm(alpha0,etaHat2,f0,g,kX2,kY2,omega2,x,y,
+                                                                                time)))
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         SurfaceElevationSourceTerm = (
         DetermineNonLinearManufacturedSolutionSurfaceElevationSourceTerm(etaHat1,H0,kX1,kY1,omega1,x,y,time))
@@ -1168,14 +1488,14 @@ def DetermineZonalVelocitySourceTerm(ProblemType,myExactSolutionParameters,x,y,t
     if UseAveragedQuantities:
         x += 0.5*dvEdge*np.cos(angleEdge)*myQuadratureOnEdge.x[:]
         y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
-    if ProblemType == 'Planetary_Rossby_Wave':
+    if ProblemType == 'Manufactured_Planetary_Rossby_Wave':
         ZonalVelocitySourceTerm = (
-        (DeterminePlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-         + DeterminePlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
-    elif ProblemType == 'Topographic_Rossby_Wave':
+        (DetermineManufacturedPlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedPlanetaryRossbyWaveZonalVelocitySourceTerm(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         ZonalVelocitySourceTerm = (
-        (DetermineTopographicRossbyWaveZonalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-         + DetermineTopographicRossbyWaveZonalVelocitySourceTerm(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+        (DetermineManufacturedTopographicRossbyWaveZonalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveZonalVelocitySourceTerm(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ZonalVelocitySourceTerm = (
         DetermineNonLinearManufacturedSolutionZonalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
@@ -1206,14 +1526,17 @@ def DetermineMeridionalVelocitySourceTerm(ProblemType,myExactSolutionParameters,
     if UseAveragedQuantities:
         x += 0.5*dvEdge*np.cos(angleEdge)*myQuadratureOnEdge.x[:]
         y += 0.5*dvEdge*np.sin(angleEdge)*myQuadratureOnEdge.x[:]
-    if ProblemType == 'Planetary_Rossby_Wave':
+    if ProblemType == 'Manufactured_Planetary_Rossby_Wave':
         MeridionalVelocitySourceTerm = (
-        (DeterminePlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-         + DeterminePlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
-    elif ProblemType == 'Topographic_Rossby_Wave':
+        (DetermineManufacturedPlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat1,f0,g,kX1,kY1,omega1,x,y,
+                                                                              time)
+         + DetermineManufacturedPlanetaryRossbyWaveMeridionalVelocitySourceTerm(beta0,etaHat2,f0,g,kX2,kY2,omega2,x,y,
+                                                                                time)))
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         MeridionalVelocitySourceTerm = (
-        (DetermineTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
-         + DetermineTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat2,f0,g,kX2,kY2,omega2,x,y,time)))
+        (DetermineManufacturedTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time)
+         + DetermineManufacturedTopographicRossbyWaveMeridionalVelocitySourceTerm(etaHat2,f0,g,kX2,kY2,omega2,x,y,
+                                                                                  time)))
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         MeridionalVelocitySourceTerm = (
         DetermineNonLinearManufacturedSolutionMeridionalVelocitySourceTerm(etaHat1,f0,g,kX1,kY1,omega1,x,y,time))
@@ -1311,6 +1634,9 @@ def DetermineSolutionAmplitude(ProblemType,myExactSolutionParameters):
     lY = myExactSolutionParameters.lY
     omega1 = myExactSolutionParameters.omega1
     omega2 = myExactSolutionParameters.omega2
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
     SurfaceElevationAmplitude = np.zeros(2)
     ZonalVelocityAmplitude = np.zeros(2)
     MeridionalVelocityAmplitude = np.zeros(2)
@@ -1332,14 +1658,14 @@ def DetermineSolutionAmplitude(ProblemType,myExactSolutionParameters):
         etaHat1*g/(omega1**2.0 - f0**2.0)*np.sqrt((omega1*kY1)**2.0 + (f0*kX1)**2.0))
         MeridionalVelocityAmplitude[1] = (
         etaHat2*g/(omega2**2.0 - f0**2.0)*np.sqrt((omega2*kY2)**2.0 + (f0*kX2)**2.0))
-    elif ProblemType == 'Planetary_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave':
         SurfaceElevationAmplitude[0] = etaHat1
         SurfaceElevationAmplitude[1] = etaHat2
         ZonalVelocityAmplitude[0] = etaHat1*g*np.sqrt((beta0*kY1*lY)**2.0 + (kX1*omega1)**2.0)/f0**2.0
         ZonalVelocityAmplitude[1] = etaHat2*g*np.sqrt((beta0*kY2*lY)**2.0 + (kX2*omega2)**2.0)/f0**2.0
         MeridionalVelocityAmplitude[0] = etaHat1*g*np.sqrt((beta0*kX1*lY)**2.0 + (kY1*omega1)**2.0)/f0**2.0
         MeridionalVelocityAmplitude[1] = etaHat2*g*np.sqrt((beta0*kX2*lY)**2.0 + (kY2*omega1)**2.0)/f0**2.0
-    elif ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         SurfaceElevationAmplitude[0] = etaHat1
         SurfaceElevationAmplitude[1] = etaHat2
         ZonalVelocityAmplitude[0] = etaHat1*g*kX1*omega1/f0**2.0
@@ -1353,10 +1679,14 @@ def DetermineSolutionAmplitude(ProblemType,myExactSolutionParameters):
         ZonalVelocityAmplitude[1] = etaHat2*g*omega2*kX2/(omega2**2.0 - f0**2.0)
         MeridionalVelocityAmplitude[0] = etaHat1*g*f0*kX1/(omega1**2.0 - f0**2.0)
         MeridionalVelocityAmplitude[1] = etaHat2*g*f0*kX2/(omega2**2.0 - f0**2.0)
+    elif ProblemType == 'Diffusion_Equation':
+        ZonalVelocityAmplitude[0] = 1.0
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         SurfaceElevationAmplitude[0] = etaHat1
         ZonalVelocityAmplitude[0] = etaHat1
         MeridionalVelocityAmplitude[0] = etaHat1
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        ZonalVelocityAmplitude[0] = s + 0.5*(uL - uR)
     return SurfaceElevationAmplitude, ZonalVelocityAmplitude, MeridionalVelocityAmplitude
 
 
@@ -1375,16 +1705,16 @@ def DetermineExactSolutionLimits(ProblemType,myExactSolutionParameters):
     # kX1*lX = kY1*lY = 2.0*np.pi and kX2*lX = kY2*lY = 4.0*np.pi for every other two-dimensional geophysical wave.
     omega1 = myExactSolutionParameters.omega1
     omega2 = myExactSolutionParameters.omega2
+    s = myExactSolutionParameters.s
+    uL = myExactSolutionParameters.uL
+    uR = myExactSolutionParameters.uR
     ExactSurfaceElevationLimits = np.zeros(2)
     ExactZonalVelocityLimits = np.zeros(2)
     ExactMeridionalVelocityLimits = np.zeros(2)    
     if ProblemType == 'Plane_Gaussian_Wave':
         ExactSurfaceElevationLimits[1] = 1.0/g
-        ExactSurfaceElevationLimits[0] = -ExactSurfaceElevationLimits[1]
         ExactZonalVelocityLimits[1] = kX1/c0
-        ExactZonalVelocityLimits[0] = -ExactZonalVelocityLimits[1]
         ExactMeridionalVelocityLimits[1] = kY1/c0
-        ExactMeridionalVelocityLimits[0] = -ExactMeridionalVelocityLimits[1]
     elif ProblemType == 'Coastal_Kelvin_Wave':
         ExactSurfaceElevationLimits[1] = abs(H0*etaHat1*float(DetermineKelvinWaveAmplitude()))
         ExactSurfaceElevationLimits[0] = -ExactSurfaceElevationLimits[1]
@@ -1401,7 +1731,7 @@ def DetermineExactSolutionLimits(ProblemType,myExactSolutionParameters):
         (abs(etaHat1*g/(omega1**2.0 - f0**2.0)*np.sqrt((omega1*kY1)**2.0 + (f0*kX1)**2.0)) 
          + abs(etaHat2*g/(omega2**2.0 - f0**2.0)*np.sqrt((omega2*kY2)**2.0 + (f0*kX2)**2.0))))
         ExactMeridionalVelocityLimits[0] = -ExactMeridionalVelocityLimits[1]   
-    elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+    elif ProblemType == 'Manufactured_Planetary_Rossby_Wave' or ProblemType == 'Manufactured_Topographic_Rossby_Wave':
         ExactSurfaceElevationLimits[1] = etaHat1 + etaHat2
         ExactSurfaceElevationLimits[0] = -ExactSurfaceElevationLimits[1]
     elif ProblemType == 'Equatorial_Kelvin_Wave':
@@ -1418,6 +1748,11 @@ def DetermineExactSolutionLimits(ProblemType,myExactSolutionParameters):
         ExactMeridionalVelocityLimits[1] = (
         etaHat1*g*f0*kX1/(omega1**2.0 - f0**2.0) + etaHat2*g*f0*kX2/(omega2**2.0 - f0**2.0))
         ExactMeridionalVelocityLimits[0] = -ExactMeridionalVelocityLimits[1]
+    elif ProblemType == 'Diffusion_Equation':
+        ExactZonalVelocityLimits[1] = 1.0
+        ExactZonalVelocityLimits[0] = -ExactZonalVelocityLimits[1]
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        ExactSurfaceElevationLimits[1] = 1.0/4.0
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ExactSurfaceElevationLimits[1] = etaHat1
         ExactSurfaceElevationLimits[0] = -ExactSurfaceElevationLimits[1]               
@@ -1425,6 +1760,9 @@ def DetermineExactSolutionLimits(ProblemType,myExactSolutionParameters):
         ExactZonalVelocityLimits[0] = -ExactZonalVelocityLimits[1]
         ExactMeridionalVelocityLimits[1] = etaHat1
         ExactMeridionalVelocityLimits[0] = -ExactMeridionalVelocityLimits[1]
+    elif ProblemType == 'Viscous_Burgers_Equation':
+        ExactZonalVelocityLimits[1] = s + 0.5*(uL - uR)
+        ExactZonalVelocityLimits[0] = s - 0.5*(uL - uR)
     return ExactSurfaceElevationLimits, ExactZonalVelocityLimits, ExactMeridionalVelocityLimits
 
 
@@ -1458,14 +1796,16 @@ def DetermineCoordinatesAlongSection(ProblemType,lX,lY,nPlotAlongSection,y=0.0):
     if ProblemType == 'Coastal_Kelvin_Wave':
         rPlotAlongSection, xPlotAlongSection, yPlotAlongSection = (
         DetermineCoastalCoordinates(lY,nPlotAlongSection))
-    elif (ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'Planetary_Rossby_Wave' 
-          or ProblemType == 'Topographic_Rossby_Wave' or ProblemType == 'NonLinear_Manufactured_Solution'):    
+    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+          or ProblemType == 'Manufactured_Planetary_Rossby_Wave' 
+          or ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Diffusion_Equation'
+          or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution'):    
         DiagonalType = 'SouthWest-NorthEast'
         rPlotAlongSection, xPlotAlongSection, yPlotAlongSection = (
         DetermineDiagonalCoordinates(DiagonalType,lX,lY,nPlotAlongSection))        
     elif (ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave' 
           or ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Equatorial_Inertia_Gravity_Wave'
-          or ProblemType == 'Barotropic_Tide'):
+          or ProblemType == 'Barotropic_Tide' or ProblemType == 'Viscous_Burgers_Equation'):
         rPlotAlongSection, xPlotAlongSection, yPlotAlongSection = (
         DetermineCoordinatesAlongZonalSection(lX,nPlotAlongSection,y))
     return rPlotAlongSection, xPlotAlongSection, yPlotAlongSection
@@ -1474,12 +1814,20 @@ def DetermineCoordinatesAlongSection(ProblemType,lX,lY,nPlotAlongSection,y=0.0):
 def DetermineExactStateVariablesAlongSection(ProblemType,myExactSolutionParameters,xPlotAlongSection,yPlotAlongSection,
                                              time):
     nPlotAlongSection = len(xPlotAlongSection) - 1    
-    if ProblemType == 'NonLinear_Manufactured_Solution':
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
         ExactStateVariablesAlongSection = np.zeros(nPlotAlongSection+1)
         for iPlotAlongSection in range(0,nPlotAlongSection+1): 
-            ExactStateVariablesAlongSection[iPlotAlongSection] = (
-            DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,xPlotAlongSection[iPlotAlongSection],
-                                           yPlotAlongSection[iPlotAlongSection],time))
+            if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+                ExactStateVariablesAlongSection[iPlotAlongSection] = (
+                DetermineExactZonalVelocity(ProblemType,myExactSolutionParameters,xPlotAlongSection[iPlotAlongSection],
+                                            yPlotAlongSection[iPlotAlongSection],time))            
+            else:
+                ExactStateVariablesAlongSection[iPlotAlongSection] = (
+                DetermineExactSurfaceElevation(ProblemType,myExactSolutionParameters,
+                                               xPlotAlongSection[iPlotAlongSection],
+                                               yPlotAlongSection[iPlotAlongSection],time))
     elif ProblemType == 'Barotropic_Tide':
         ExactStateVariablesAlongSection = np.zeros((7,nPlotAlongSection+1))
         for iPlotAlongSection in range(0,nPlotAlongSection+1): 
@@ -1524,7 +1872,9 @@ def WriteExactStateVariablesAlongSectionToFile(ProblemType,OutputDirectory,rPlot
     filename = filename + '.curve'
     outputfile = open(filename,'w')
     outputfile.write('#phi\n')
-    if ProblemType == 'NonLinear_Manufactured_Solution':
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
         for iPlotAlongSection in range(0,nPlotAlongSection+1):
             outputfile.write('%.15g %.15g\n' %(rPlotAlongSection[iPlotAlongSection],
                                                ExactStateVariablesAlongSection[iPlotAlongSection]))
@@ -1566,8 +1916,10 @@ def ReadExactStateVariablesAlongSectionFromFile(ProblemType,OutputDirectory,file
     data = np.loadtxt(data)
     nPlotAlongSection = data.shape[0] - 1
     rPlotAlongSection = np.zeros(nPlotAlongSection+1)
-    if ProblemType == 'NonLinear_Manufactured_Solution':
-        ExactStateVariablesAlongSection = np.zeros((nPlotAlongSection+1))
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
+        ExactStateVariablesAlongSection = np.zeros(nPlotAlongSection+1)
         for iPlotAlongSection in range(0,nPlotAlongSection+1):
             rPlotAlongSection[iPlotAlongSection] = data[iPlotAlongSection,0]
             ExactStateVariablesAlongSection[iPlotAlongSection] = data[iPlotAlongSection,1]      
@@ -1627,25 +1979,40 @@ def SpecifyPlottingAttributesAlongSection(myNameList,yMaximumAmplitude):
     else:
         yLatitude = 0.0
         Latitude = 0.0
-        TitleAlongSection = 'Exact Surface Elevation'
-        FileNameAlongSection = 'ExactSurfaceElevationAlongSection'
-    nPlotAlongSection = 150
+        if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+            TitleAlongSection = 'Exact Zonal Velocity'
+            FileNameAlongSection = 'ExactZonalVelocityAlongSection'
+        else:
+            TitleAlongSection = 'Exact Surface Elevation'
+            FileNameAlongSection = 'ExactSurfaceElevationAlongSection'
+    if (myNameList.ProblemType == 'Plane_Gaussian_Wave' or myNameList.ProblemType == 'Diffusion_Equation'
+        or myNameList.ProblemType == 'Advection_Diffusion_Equation' 
+        or myNameList.ProblemType == 'Viscous_Burgers_Equation'):
+        nPlotAlongSection = 300
+    else:
+        nPlotAlongSection = 150
     rPlotAlongSection, xPlotAlongSection, yPlotAlongSection = (
     DetermineCoordinatesAlongSection(ProblemType,lX,lY,nPlotAlongSection,yLatitude))
     if ProblemType == 'Coastal_Kelvin_Wave':
         xLabelAlongSection = 'Distance Along Coastline from South to North (km)'
-    elif (ProblemType == 'Inertia_Gravity_Wave' or ProblemType == 'Planetary_Rossby_Wave' 
-          or ProblemType == 'Topographic_Rossby_Wave' or ProblemType == 'NonLinear_Manufactured_Solution'):
-        xLabelAlongSection = 'Distance Along South-West to North-East Diagonal (km)'    
+    elif ProblemType == 'Advection_Diffusion_Equation':
+        xLabelAlongSection = 'Distance Along\nSouth-West to North-East Diagonal (m)'   
+    elif (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
+          or ProblemType == 'Manufactured_Planetary_Rossby_Wave' 
+          or ProblemType == 'Manufactured_Topographic_Rossby_Wave' or ProblemType == 'Diffusion_Equation'
+          or ProblemType == 'NonLinear_Manufactured_Solution'):
+        xLabelAlongSection = 'Distance Along\nSouth-West to North-East Diagonal (km)' 
     elif ProblemType_EquatorialWave:
         if ProblemType == 'Equatorial_Kelvin_Wave' or ProblemType == 'Equatorial_Yanai_Wave':
             xLabelAlongSection = 'Distance Along the Equator (km)'
         else:
             xLabelAlongSection = 'Distance Along %.2f\u00b0 N Latitude (km)' %Latitude
-    elif ProblemType == 'Barotropic_Tide':
+    elif ProblemType == 'Barotropic_Tide' or ProblemType == 'Viscous_Burgers_Equation':
         xLabelAlongSection = 'Distance Along Any Zonal Section (km)'
     if ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
         yLabelAlongSection = 'Meridional Velocity (m/s)'
+    elif ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+        yLabelAlongSection = 'Zonal Velocity (m/s)'
     else:
         yLabelAlongSection = 'Surface Elevation (m)'
     LabelsAlongSection = [xLabelAlongSection,yLabelAlongSection]
@@ -1684,7 +2051,9 @@ framealpha=1.0,titlepad=1.035,ProblemType_EquatorialWave=False,FigureFormat='pdf
     ax = fig.add_subplot(111) # Create an axes object in the figure
     x = rPlotAlongSection
     y = ExactStateVariablesAlongSection
-    if ProblemType == 'NonLinear_Manufactured_Solution':
+    if (ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+        or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+        or ProblemType == 'Viscous_Burgers_Equation'):
         ax.plot(x[:],y[:],linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0])
     elif ProblemType == 'Barotropic_Tide':
         ax.plot(x[:],y[0,:],linewidth=linewidths[0],linestyle=linestyles[0],color=colors[0],label=legends[0])
@@ -1703,9 +2072,12 @@ framealpha=1.0,titlepad=1.035,ProblemType_EquatorialWave=False,FigureFormat='pdf
     plt.xlabel(labels[0],fontsize=labelfontsizes[0],labelpad=labelpads[0])
     plt.ylabel(labels[1],fontsize=labelfontsizes[1],labelpad=labelpads[1])
     plt.xticks(fontsize=tickfontsizes[0])
-    plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
+    if not(ProblemType == 'Advection_Diffusion_Equation'):
+        plt.gca().get_xaxis().set_major_formatter(FuncFormatter(lambda x, p: format(int(x/1000.0), '')))
     plt.yticks(fontsize=tickfontsizes[1])
-    if not(ProblemType == 'NonLinear_Manufactured_Solution'):
+    if not(ProblemType == 'Plane_Gaussian_Wave' or ProblemType == 'Diffusion_Equation' 
+           or ProblemType == 'Advection_Diffusion_Equation' or ProblemType == 'NonLinear_Manufactured_Solution' 
+           or ProblemType == 'Viscous_Burgers_Equation'):
         if legendWithinBox:
             ax.legend(fontsize=legendfontsize,loc=legendposition,shadow=shadow,framealpha=framealpha) 
         else:

@@ -99,10 +99,12 @@ def ForwardEulerMethod(myMPASOceanShallowWater):
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,UseAveragedQuantities,
-                                              myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
             dt*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge])
@@ -141,10 +143,12 @@ def ExplicitMidpointMethod(myMPASOceanShallowWater,TimeIntegrator='ExplicitMidpo
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+0.5*dt,
-                                              UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+0.5*dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
             0.5*dt*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge])
@@ -171,10 +175,12 @@ def ExplicitMidpointMethod(myMPASOceanShallowWater,TimeIntegrator='ExplicitMidpo
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                              UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
             NormalVelocitiesCurrent[iEdge] + dt*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge])
@@ -228,11 +234,13 @@ myMPASOceanShallowWater,TimeIntegrator='WilliamsonLowStorageThirdOrderRungeKutta
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,timeNext,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,timeNext,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
                 gRK3[iStep]*dt*TemporaryNormalVelocityTendency[iEdge])
@@ -310,11 +318,13 @@ myMPASOceanShallowWater,TimeIntegrator='CarpenterKennedyLowStorageFourthOrderRun
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,timeNext,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,timeNext,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
                 gRK4[iStep]*dt*TemporaryNormalVelocityTendency[iEdge])
@@ -368,11 +378,13 @@ def SecondOrderAdamsBashforthMethod(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
                 dt*(AB2[0]*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge]
@@ -406,11 +418,13 @@ def ThirdOrderAdamsBashforthMethod(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
                 dt*(AB3[0]*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge]
@@ -446,11 +460,13 @@ def FourthOrderAdamsBashforthMethod(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
                 dt*(AB4[0]*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge]
@@ -488,11 +504,13 @@ def LeapfrogTrapezoidalMethod(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
                 (myMPASOceanShallowWater.mySolution.normalVelocityLast[iEdge]
@@ -514,11 +532,13 @@ def LeapfrogTrapezoidalMethod(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
                 NormalVelocitiesCurrent[iEdge] + dt*NormalVelocityTendencies[iEdge])
@@ -572,11 +592,13 @@ def LFTRAndLFAM3MethodWithFBFeedback(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
                 (myMPASOceanShallowWater.mySolution.normalVelocityLast[iEdge]
@@ -610,11 +632,13 @@ def LFTRAndLFAM3MethodWithFBFeedback(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
                 NormalVelocitiesCurrent[iEdge] + dt*NormalVelocityTendencies[iEdge])
@@ -644,10 +668,12 @@ def ForwardBackwardMethod(myMPASOceanShallowWater):
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,UseAveragedQuantities,
-                                              myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
             dt*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge])
@@ -678,10 +704,12 @@ def ForwardBackwardMethodWithRK2Feedback(myMPASOceanShallowWater):
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,UseAveragedQuantities,
-                                              myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += (
             dt*myMPASOceanShallowWater.mySolution.normalVelocityTendency[iEdge])
@@ -701,10 +729,12 @@ def ForwardBackwardMethodWithRK2Feedback(myMPASOceanShallowWater):
         dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
         angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
         if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-            # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact counterparts.
-            myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-            ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,UseAveragedQuantities,
-                                              myQuadratureOnEdge,dvEdge,angleEdge))
+            # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their exact 
+            # counterparts.
+            (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+             myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+            ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                             UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
         else:
             myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
             NormalVelocities_1[iEdge] + dt*NormalVelocityTendencies[iEdge])
@@ -757,11 +787,13 @@ def GeneralizedForwardBackwardMethodWithAB2AM3Step(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += dt*NormalVelocityTendencies[iEdge]
                 myMPASOceanShallowWater.mySolution.normalVelocityTendencyLast[iEdge] = (
@@ -830,11 +862,13 @@ def GeneralizedForwardBackwardMethodWithAB3AM4Step(myMPASOceanShallowWater):
             dvEdge = myMPASOceanShallowWater.myMesh.dvEdge[iEdge]
             angleEdge = myMPASOceanShallowWater.myMesh.angleEdge[iEdge]
             if myMPASOceanShallowWater.myMesh.boundaryEdge[iEdge] == 1.0:
-                # Specify the normal velocities at the non-periodic boundary edges to be equal to their exact 
-                # counterparts.
-                myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] = (
-                ESST.DetermineExactNormalVelocity(ProblemType,myExactSolutionParameters,x,y,time+dt,
-                                                  UseAveragedQuantities,myQuadratureOnEdge,dvEdge,angleEdge))
+                # Specify the normal and tangential velocities at the non-periodic boundary edges to be equal to their 
+                # exact counterparts.
+                (myMPASOceanShallowWater.mySolution.normalVelocity[iEdge], 
+                 myMPASOceanShallowWater.mySolution.tangentialVelocity[iEdge]) = (
+                ESST.DetermineExactNormalAndTangentialVelocities(ProblemType,myExactSolutionParameters,x,y,time+dt,
+                                                                 UseAveragedQuantities,myQuadratureOnEdge,dvEdge,
+                                                                 angleEdge))
             else:
                 myMPASOceanShallowWater.mySolution.normalVelocity[iEdge] += dt*NormalVelocityTendencies[iEdge]
                 myMPASOceanShallowWater.mySolution.normalVelocityTendencySecondLast[iEdge] = (

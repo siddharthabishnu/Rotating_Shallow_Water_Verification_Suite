@@ -10,7 +10,7 @@ import numpy as np
 
 class Solution:
     
-    def __init__(mySolution,nCells,nEdges,nVertices,TimeIntegrator):
+    def __init__(mySolution,ProblemType,TimeIntegrator,nCells,nEdges,nVertices):
         mySolution.uExact = np.zeros(nCells)
         mySolution.vExact = np.zeros(nCells)
         mySolution.sshExact = np.zeros(nCells)
@@ -26,6 +26,18 @@ class Solution:
         mySolution.normalVelocitySourceTerm = np.zeros(nEdges)
         mySolution.normalVelocityTendency = np.zeros(nEdges)
         mySolution.tangentialVelocity = np.zeros(nEdges)
+        mySolution.circulation = np.zeros(nVertices)
+        mySolution.velocityDivergence = np.zeros(nCells)
+        mySolution.kineticEnergyCell = np.zeros(nCells)
+        mySolution.layerThickness = np.zeros(nCells)
+        mySolution.sshEdge = np.zeros(nEdges)
+        mySolution.layerThicknessEdge = np.zeros(nEdges)
+        mySolution.normalizedRelativeVorticityEdge = np.zeros(nEdges)
+        mySolution.relativeVorticity = np.zeros(nVertices)
+        mySolution.relativeVorticityCell = np.zeros(nCells)
+        mySolution.relativeVorticityEdge = np.zeros(nEdges)
+        if ProblemType == 'Diffusion_Equation' or ProblemType == 'Viscous_Burgers_Equation':
+            mySolution.normalVelocityLaplacianAtEdge = np.zeros(nEdges)
         if (TimeIntegrator == 'SecondOrderAdamsBashforthMethod' or TimeIntegrator == 'ThirdOrderAdamsBashforthMethod'
             or TimeIntegrator == 'FourthOrderAdamsBashforthMethod' 
             or TimeIntegrator == 'LFTRAndLFAM3MethodWithFBFeedback'
@@ -43,15 +55,3 @@ class Solution:
         if TimeIntegrator == 'LeapfrogTrapezoidalMethod' or TimeIntegrator == 'LFTRAndLFAM3MethodWithFBFeedback':
             mySolution.sshLast = np.zeros(nCells)
             mySolution.normalVelocityLast = np.zeros(nEdges)
-        mySolution.circulation = np.zeros(nVertices)
-        mySolution.divergence = np.zeros(nCells)
-        mySolution.kineticEnergyCell = np.zeros(nCells)
-        mySolution.layerThickness = np.zeros(nCells)
-        mySolution.layerThicknessEdge = np.zeros(nEdges)
-        mySolution.normalizedPlanetaryVorticityEdge = np.zeros(nEdges)
-        mySolution.normalizedPlanetaryVorticityVertex = np.zeros(nVertices)
-        mySolution.normalizedRelativeVorticityCell = np.zeros(nCells)
-        mySolution.normalizedRelativeVorticityEdge = np.zeros(nEdges)
-        mySolution.normalizedRelativeVorticityVertex = np.zeros(nVertices)
-        mySolution.relativeVorticity = np.zeros(nVertices)
-        mySolution.relativeVorticityCell = np.zeros(nCells)

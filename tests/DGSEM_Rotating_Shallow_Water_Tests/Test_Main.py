@@ -11,6 +11,7 @@ import sys
 sys.path.append(os.path.realpath('../..') + '/src/DGSEM_Rotating_Shallow_Water/')
 from IPython.utils import io
 with io.capture_output() as captured:
+    import Initialization
     import Main
     
     
@@ -37,9 +38,10 @@ if do_Test_FormatSimulationTime:
 def Test_DetermineCourantNumberForGivenTimeStepAndCheckItsValue():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     Main.DetermineCourantNumberForGivenTimeStepAndCheckItsValue(ProblemType)
             
 
@@ -51,9 +53,10 @@ if do_Test_DetermineCourantNumberForGivenTimeStepAndCheckItsValue:
 def Test_DetermineNumberOfTimeStepsForSimulation():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     Main.DetermineNumberOfTimeStepsForSimulation(ProblemType)
             
 
@@ -65,9 +68,10 @@ if do_Test_DetermineNumberOfTimeStepsForSimulation:
 def Test_DetermineExactSolutions():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' 
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' 
+    # or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
+    # or 'Diffusion_Equation' or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' 
+    # or 'Viscous_Burgers_Equation'.
     PrintPhaseSpeedOfWaveModes = True
     PrintAmplitudesOfWaveModes = True
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
@@ -80,12 +84,13 @@ def Test_DetermineExactSolutions():
     nEta = 10
     nXiPlot = 20
     nEtaPlot = 20
+    ReadFromSELFOutputData = False
     CheckStateVariableLimits = False
     PlotFigures = True
     Main.DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                  LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                  Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,nEtaPlot,
-                                 CheckStateVariableLimits,PlotFigures)
+                                 ReadFromSELFOutputData,CheckStateVariableLimits,PlotFigures)
     
     
 do_Test_DetermineExactSolutions = False
@@ -96,18 +101,26 @@ if do_Test_DetermineExactSolutions:
 def Test_DetermineExactAndNumericalSolutions():
     ProblemType = 'Coastal_Kelvin_Wave'
     # Choose ProblemType to be 'Plane_Gaussian_Wave' or 'Coastal_Kelvin_Wave' or 'Inertia_Gravity_Wave' 
-    # or 'Planetary_Rossby_Wave' or 'Topographic_Rossby_Wave' or 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-    # or 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave'
-    # or 'Equatorial_Rossby_Wave' or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' 
-    # or 'NonLinear_Manufactured_Solution'.
+    # or 'Manufactured_Planetary_Rossby_Wave' or 'Manufactured_Topographic_Rossby_Wave' or 'Planetary_Rossby_Wave' 
+    # or 'Topographic_Rossby_Wave' or 'Equatorial_Kelvin_Wave' or 'Equatorial_Yanai_Wave' or 'Equatorial_Rossby_Wave' 
+    # or 'Equatorial_Inertia_Gravity_Wave' or 'Barotropic_Tide' or 'Diffusion_Equation' 
+    # or 'Advection_Diffusion_Equation' or 'NonLinear_Manufactured_Solution' or 'Viscous_Burgers_Equation'.
+    ProblemType_RossbyWave = Initialization.Specify_ProblemType_RossbyWave(ProblemType)
     PrintPhaseSpeedOfWaveModes = True
     PrintAmplitudesOfWaveModes = True
     TimeIntegrator = 'WilliamsonLowStorageThirdOrderRungeKuttaMethod'
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
-    ReadFromSELFOutputData = False
-    if ReadFromSELFOutputData:
+    if ProblemType_RossbyWave:
+        ReadFromSELFOutputData = True
+    else:
+        ReadFromSELFOutputData = False
+    if ProblemType_RossbyWave:
+        PlotNumericalSolution = True
+    else:
+        PlotNumericalSolution = False
+    if ReadFromSELFOutputData and ProblemType_RossbyWave:
         nElementsX = 10
         nElementsY = 10
         nXi = 7
@@ -117,18 +130,17 @@ def Test_DetermineExactAndNumericalSolutions():
     else:
         nElementsX = 5
         nElementsY = 5
-        nXi = 10
-        nEta = 10
+        if ReadFromSELFOutputData and ProblemType == 'Viscous_Burgers_Equation':
+            nXi = 10 
+            nEta = 10
+        else:
+            nXi = 10
+            nEta = 10
         nXiPlot = 20
         nEtaPlot = 20
     CheckStateVariableLimits = False
     PlotFigures = True
     ComputeOnlyExactSolution = False
-    if (ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Planetary_Rossby_Wave'
-        or ProblemType == 'Coastal_Kelvin_Inertia_Gravity_Topographic_Rossby_Wave'):
-        PlotNumericalSolution = True
-    else:
-        PlotNumericalSolution = False
     Restart = False
     Restart_iTime = 0
     Restart_FileName = ''

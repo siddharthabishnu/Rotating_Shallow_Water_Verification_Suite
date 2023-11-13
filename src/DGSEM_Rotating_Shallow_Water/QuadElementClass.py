@@ -13,14 +13,11 @@ with io.capture_output() as captured:
 
 class QuadElement:
     
-    def __init__(myQuadElement,NodeIDs,ElementIDX,ElementIDY,ElementID,BoundaryCurve,myDGNodalStorage2D):
+    def __init__(myQuadElement,NodeIDs,ElementIDX,ElementIDY,ElementID,BoundaryCurve,myDGNodalStorage2D,
+                 QuadElementType='CurvedSidedQuadrilateral',xCoordinate=np.zeros(4),yCoordinate=np.zeros(4)):
         myQuadElement.NodeIDs = NodeIDs
         myQuadElement.ElementIDX = ElementIDX
         myQuadElement.ElementIDY = ElementIDY
         myQuadElement.ElementID = ElementID
-        myQuadElement.myMappedGeometry2D = MG2D.MappedGeometry2D(myDGNodalStorage2D,BoundaryCurve)
-        
-    def ConstructEmptyQuadElement(myQuadElement,nXi,nEta):
-        myQuadElement.NodeIDs = np.zeros(4,dtype=int)
-        myQuadElement.ElementID = 0
-        myQuadElement.myMappedGeometry2D = MG2D.ConstructEmptyMappedGeometry2D(nXi,nEta)
+        myQuadElement.myMappedGeometry2D = MG2D.MappedGeometry2D(myDGNodalStorage2D,BoundaryCurve,QuadElementType,
+                                                                 xCoordinate,yCoordinate)

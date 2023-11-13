@@ -23,10 +23,10 @@ def TestQuadMesh():
     nXi = 4
     nEta = 4
     myDGNodalStorage2D = DGNS2D.DGNodalStorage2D(nXi,nEta)
-    ProblemType = 'Coastal_Kelvin_Wave'
     ProblemType_EquatorialWave = False
+    QuadElementType = 'CurvedSidedQuadrilateral'
     PrintEdgeProperties = True
-    myQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,ProblemType_EquatorialWave,
+    myQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType_EquatorialWave,QuadElementType,
                              PrintEdgeProperties)
     print('Checking correct assignment of element IDs and element sides to the edges after specifying boundary edges!')
     print('iEdge EdgeID NodeIDs ElementIDs ElementSides')
@@ -61,12 +61,12 @@ def TestQuadMesh():
     nEta = 3
     myDGNodalStorage2D = DGNS2D.DGNodalStorage2D(nXi,nEta)
     PrintEdgeProperties = False
-    myCoarseQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,
-                                   ProblemType_EquatorialWave,PrintEdgeProperties)
+    myCoarseQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType_EquatorialWave,
+                                   QuadElementType,PrintEdgeProperties)
     nElementsX = 4
     nElementsY = 4
-    myFineQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType,ProblemType_EquatorialWave,
-                                 PrintEdgeProperties)
+    myFineQuadMesh = QM.QuadMesh(lX,lY,nElementsX,nElementsY,myDGNodalStorage2D,ProblemType_EquatorialWave,
+                                 QuadElementType,PrintEdgeProperties)
     linewidths = [2.5,2.5]
     linestyles = ['-','--']
     colors = ['r','b']
