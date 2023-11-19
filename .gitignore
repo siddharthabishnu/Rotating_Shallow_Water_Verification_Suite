@@ -3,6 +3,8 @@ commits/
 meshes/MPAS_Ocean_Shallow_Water_Meshes/
 notes/
 references/
+src/DGSEM_Rotating_Shallow_Water/__pycache__/
+src/MPAS_Ocean_Shallow_Water/__pycache__/
 
 # Grid files
 *.info

@@ -14,27 +14,30 @@ from IPython.utils import io
 with io.capture_output() as captured: 
     import CommonRoutines as CR
     
-    
+
+# Global constants
+eta0 = 0.1
+f = 10.0**(-4.0)
+g = 10.0
+
+
 def ProblemSpecificPrefix_1():
     prefix = 'Expt1_'
     return prefix
 
     
 def SurfaceElevation_1(lX,lY,x,y):
-    eta0 = 0.1
     eta = eta0*np.sin(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
     return eta
 
 
 def SurfaceElevationGradient_1(lX,lY,x,y):
-    eta0 = 0.1
     eta_x = eta0*(2.0*np.pi/lX)*np.cos(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
     eta_y = eta0*(2.0*np.pi/lY)*np.sin(2.0*np.pi*x/lX)*np.cos(2.0*np.pi*y/lY)
     return eta_x, eta_y
 
 
 def SurfaceElevationDoubleDerivatives_1(lX,lY,x,y):
-    eta0 = 0.1
     eta = SurfaceElevation_1(lX,lY,x,y)
     eta_xx = -(2.0*np.pi/lX)**2.0*eta
     eta_yy = -(2.0*np.pi/lY)**2.0*eta
@@ -51,7 +54,6 @@ def SurfaceElevationLaplacian_1(lX,lY,x,y):
 
 
 def SurfaceElevationGradientOfLaplacian_1(lX,lY,x,y):
-    eta0 = 0.1
     eta_x = eta0*(2.0*np.pi/lX)*np.cos(2.0*np.pi*x/lX)*np.sin(2.0*np.pi*y/lY)
     eta_y = eta0*(2.0*np.pi/lY)*np.sin(2.0*np.pi*x/lX)*np.cos(2.0*np.pi*y/lY)
     Laplacian_eta_x = -((2.0*np.pi/lX)**2.0 + (2.0*np.pi/lY)**2.0)*eta_x
@@ -65,7 +67,6 @@ def ProblemSpecificPrefix_2():
 
 
 def SurfaceElevation_2(lX,lY,x,y):
-    eta0 = 0.1
     eta = eta0*np.exp(-((np.sin(2.0*np.pi*x/lX))**2.0 + (np.sin(2.0*np.pi*y/lY))**2.0))
     return eta
 
@@ -75,7 +76,6 @@ def SurfaceElevationGradient_2_FunctionalForm():
     lY = sp.Symbol('lY')
     x = sp.Symbol('x')
     y = sp.Symbol('y')
-    eta0 = 0.1
     eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
     eta_x = sp.diff(eta,x)
     eta_y = sp.diff(eta,y)
@@ -99,7 +99,6 @@ def SurfaceElevationDoubleDerivatives_2_FunctionalForm():
     lY = sp.Symbol('lY')
     x = sp.Symbol('x')
     y = sp.Symbol('y')
-    eta0 = 0.1
     eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
     eta_xx = sp.diff(eta,x,x)
     eta_xy = sp.diff(eta,x,y)
@@ -126,7 +125,6 @@ def SurfaceElevationLaplacian_2_FunctionalForm():
     lY = sp.Symbol('lY')
     x = sp.Symbol('x')
     y = sp.Symbol('y')
-    eta0 = 0.1
     eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
     eta_xx = sp.diff(eta,x,x)
     eta_yy = sp.diff(eta,y,y)
@@ -149,7 +147,6 @@ def SurfaceElevationGradientOfLaplacian_2_FunctionalForm():
     lY = sp.Symbol('lY')
     x = sp.Symbol('x')
     y = sp.Symbol('y')
-    eta0 = 0.1
     eta = eta0*sp.exp(-((sp.sin(2.0*sp.pi*x/lX))**2.0 + (sp.sin(2.0*sp.pi*y/lY))**2.0))
     eta_xx = sp.diff(eta,x,x)
     eta_yy = sp.diff(eta,y,y)
@@ -202,8 +199,6 @@ def SurfaceElevationGradientAtEdge_TangentialComponent(lX,lY,x,y,angleEdge):
 
 def Velocity(lX,lY,x,y):
     eta_x, eta_y = SurfaceElevationGradient(lX,lY,x,y) 
-    f = 10.0**(-4.0)
-    g = 10.0
     v = g*eta_x/f
     u = -g*eta_y/f
     return u, v
@@ -222,8 +217,6 @@ def VelocityAtEdge_TangentialComponent(lX,lY,x,y,angleEdge):
 
 
 def ZonalVelocityGradientAtEdge_NormalComponent(lX,lY,x,y,angleEdge):
-    f = 10.0**(-4.0)
-    g = 10.0
     eta_xx, eta_xy, eta_yy = SurfaceElevationDoubleDerivatives(lX,lY,x,y)
     u_x = -g/f*eta_xy
     u_y = -g/f*eta_yy
@@ -232,8 +225,6 @@ def ZonalVelocityGradientAtEdge_NormalComponent(lX,lY,x,y,angleEdge):
 
 
 def MeridionalVelocityGradientAtEdge_NormalComponent(lX,lY,x,y,angleEdge):
-    f = 10.0**(-4.0)
-    g = 10.0
     eta_xx, eta_xy, eta_yy = SurfaceElevationDoubleDerivatives(lX,lY,x,y)
     v_x = g/f*eta_xx
     v_y = g/f*eta_xy
@@ -242,15 +233,11 @@ def MeridionalVelocityGradientAtEdge_NormalComponent(lX,lY,x,y,angleEdge):
 
 
 def VelocityCurl(lX,lY,x,y):
-    f = 10.0**(-4.0)
-    g = 10.0
     zeta = g/f*SurfaceElevationLaplacian(lX,lY,x,y)
     return zeta
 
 
 def VelocityLaplacian(lX,lY,x,y):
-    f = 10.0**(-4.0)
-    g = 10.0
     Laplacian_eta_x, Laplacian_eta_y = SurfaceElevationGradientOfLaplacian(lX,lY,x,y)
     Laplacian_v = g/f*Laplacian_eta_x
     Laplacian_u = -g/f*Laplacian_eta_y

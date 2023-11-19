@@ -88,14 +88,15 @@ def DetermineNumericalSpatialOperatorsAndError(ProblemType,nElementsX,nXi,WriteS
     nEta = nXi
     nXiPlot = 10
     nEtaPlot = nXiPlot
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     RiemannSolver = 'BassiRebay'
     myDGSEM2D = DGSEM2DClass.DGSEM2D(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
                                      LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
                                      Generalized_FB_with_AB3_AM4_Step_Type,nElementsX,nElementsY,nXi,nEta,nXiPlot,
-                                     nEtaPlot,CourantNumber,UseCourantNumberToDetermineTimeStep,
-                                     RiemannSolver=RiemannSolver)
+                                     nEtaPlot,CourantNumber_Advection,CourantNumber_Diffusion,
+                                     UseCourantNumberToDetermineTimeStep,RiemannSolver=RiemannSolver)
     lX = myDGSEM2D.myNameList.lX
     lY = myDGSEM2D.myNameList.lY
     nElements = myDGSEM2D.myQuadMesh.nElements

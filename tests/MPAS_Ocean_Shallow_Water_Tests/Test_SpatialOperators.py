@@ -26,7 +26,8 @@ def SpecifyInitializationParameters(ConvergenceStudy=False,nCellsX=0,nCellsY=0):
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     Generalized_FB_with_AB2_AM3_Step_Type = 'ThirdOrderAccurate_WideStabilityRange'
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
-    CourantNumber = 0.5
+    CourantNumber_Advection = 0.5
+    CourantNumber_Diffusion = 0.5
     UseCourantNumberToDetermineTimeStep = True
     PrintBasicGeometry = False
     FixAngleEdge = True
@@ -59,10 +60,10 @@ def SpecifyInitializationParameters(ConvergenceStudy=False,nCellsX=0,nCellsY=0):
         nCellsX = 50
         nCellsY = nCellsX
     return [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-            Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-            UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-            SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-            BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY]
+            Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+            CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+            UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+            ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY]
     
 
 def SpecifyPlotParameters(MeshDirectory):
@@ -184,10 +185,11 @@ def SpecifyConvergencePlotParameters(MeshDirectory,SpatialOperator,PlotAgainstNu
 
 def TestSurfaceElevationNormalVelocity(PlotFigures=True,PlotNormalVelocity=True):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = SpecifyInitializationParameters()
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+    SpecifyInitializationParameters())
     for iProblemType in range(0,len(ProblemTypes)):
         ProblemType = ProblemTypes[iProblemType]
         BaseMeshFileName = BaseMeshFileNames[iProblemType]
@@ -198,8 +200,9 @@ def TestSurfaceElevationNormalVelocity(PlotFigures=True,PlotNormalVelocity=True)
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         if BoundaryCondition == 'NonPeriodic_x':
@@ -269,14 +272,14 @@ def TestSurfaceElevationNormalVelocity(PlotFigures=True,PlotNormalVelocity=True)
 do_TestSurfaceElevationNormalVelocity = False
 if do_TestSurfaceElevationNormalVelocity:
     TestSurfaceElevationNormalVelocity()
-    
+
     
 def TestNumericalGradientOperatorAtEdge_NormalComponent(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNorm = np.zeros(4)
     L2ErrorNorm = np.zeros(4)
@@ -290,8 +293,9 @@ def TestNumericalGradientOperatorAtEdge_NormalComponent(ConvergenceStudy=False,P
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -427,10 +431,10 @@ if do_TestConvergenceOfNumericalGradientOperatorAtEdge_NormalComponent:
 
 def TestNumericalDivergenceOperatorAtCellCenter(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNorm = np.zeros(4)
     L2ErrorNorm = np.zeros(4)
@@ -444,8 +448,9 @@ def TestNumericalDivergenceOperatorAtCellCenter(ConvergenceStudy=False,PlotFigur
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -570,10 +575,10 @@ if do_TestConvergenceOfNumericalDivergenceOperatorAtCellCenter:
     
 def TestNumericalCurlOperator(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNormAtVertices = np.zeros(4)
     L2ErrorNormAtVertices = np.zeros(4)
@@ -591,8 +596,9 @@ def TestNumericalCurlOperator(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -891,10 +897,10 @@ if do_TestConvergenceOfNumericalCurlOperator:
 
 def TestNumericalTangentialOperatorAlongEdge(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNorm = np.zeros(4)
     L2ErrorNorm = np.zeros(4)
@@ -908,8 +914,9 @@ def TestNumericalTangentialOperatorAlongEdge(ConvergenceStudy=False,PlotFigures=
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -1040,10 +1047,10 @@ if do_TestConvergenceOfNumericalTangentialOperatorAlongEdge:
     
 def TestNumericalEnergyOperatorAtCellCenter(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNorm = np.zeros(4)
     L2ErrorNorm = np.zeros(4)
@@ -1057,8 +1064,9 @@ def TestNumericalEnergyOperatorAtCellCenter(ConvergenceStudy=False,PlotFigures=T
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -1100,8 +1108,8 @@ def TestNumericalEnergyOperatorAtCellCenter(ConvergenceStudy=False,PlotFigures=T
             myNumericalKineticEnergy,nContours,labels,labelfontsizes,labelpads,tickfontsizes,useGivenColorBarLimits,
             ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,Show,DataType='Unstructured',
             colormap=ColorMap)  
-            useGivenColorBarLimits_Error = True
-            ColorBarLimits_Error = np.array([-MaxErrorNorm[iProblemType],MaxErrorNorm[iProblemType]])          
+            useGivenColorBarLimits_Error = False
+            ColorBarLimits_Error = np.array([0.0,0.0])          
             Title = 'Error of Kinetic Energy'
             FileName = prefix + 'KineticEnergy_Error'
             CR.PythonFilledContourPlot2DSaveAsPDF(
@@ -1185,10 +1193,10 @@ if do_TestConvergenceOfNumericalEnergyOperatorAtCellCenter:
 def TestNumericalLaplacianOperatorAtEdge(ConvergenceStudy=False,PlotFigures=True,nCellsX=0,nCellsY=0):
     Method = 2
     [PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,LF_TR_and_LF_AM3_with_FB_Feedback_Type,
-     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber,
-     UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,UseAveragedQuantities,
-     SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,ProblemTypes,
-     BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
+     Generalized_FB_with_AB2_AM3_Step_Type,Generalized_FB_with_AB3_AM4_Step_Type,CourantNumber_Advection,
+     CourantNumber_Diffusion,UseCourantNumberToDetermineTimeStep,PrintBasicGeometry,FixAngleEdge,PrintOutput,
+     UseAveragedQuantities,SpecifyBoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion,MeshDirectoryRoot,
+     ProblemTypes,BaseMeshFileNames,MeshFileNames,BoundaryConditions,nCellsX,nCellsY] = (
     SpecifyInitializationParameters(ConvergenceStudy,nCellsX,nCellsY))
     MaxErrorNorm = np.zeros(4)
     L2ErrorNorm = np.zeros(4)
@@ -1202,8 +1210,9 @@ def TestNumericalLaplacianOperatorAtEdge(ConvergenceStudy=False,PlotFigures=True
         ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitudesOfWaveModes,TimeIntegrator,
         LF_TR_and_LF_AM3_with_FB_Feedback_Type,Generalized_FB_with_AB2_AM3_Step_Type,
         Generalized_FB_with_AB3_AM4_Step_Type,nCellsX,nCellsY,PrintBasicGeometry,MeshDirectory,BaseMeshFileName,
-        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber,UseCourantNumberToDetermineTimeStep,
-        SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,DebugVersion)
+        MeshFileName,FixAngleEdge,PrintOutput,UseAveragedQuantities,CourantNumber_Advection,CourantNumber_Diffusion,
+        UseCourantNumberToDetermineTimeStep,SpecifyBoundaryCondition,BoundaryCondition,ReadDomainExtentsfromMeshFile,
+        DebugVersion)
         lX = myMPASOceanShallowWater.myMesh.lX
         lY = myMPASOceanShallowWater.myMesh.lY
         dx = myMPASOceanShallowWater.myMesh.dx
@@ -1270,8 +1279,8 @@ def TestNumericalLaplacianOperatorAtEdge(ConvergenceStudy=False,PlotFigures=True
             myNumericalNormalVelocityLaplacian[iEdgeStartingIndex:],marker,markersize,labels,labelfontsizes,labelpads,
             tickfontsizes,useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,
             Show,colormap=ColorMap)
-            useGivenColorBarLimits_Error = True
-            ColorBarLimits_Error = np.array([-MaxErrorNorm[iProblemType],MaxErrorNorm[iProblemType]])
+            useGivenColorBarLimits_Error = False
+            ColorBarLimits_Error = np.array([0.0,0.0])
             Title = 'Laplacian of Velocity Error'
             FileName = prefix + 'VelocityLaplacian_Error'
             CR.ScatterPlotWithColorBar(
