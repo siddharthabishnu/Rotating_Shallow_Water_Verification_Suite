@@ -1,4 +1,4 @@
-cff-version: 1.2.1
+cff-version: 1.2.2
 message: "If you use this software, please cite it as below."
 authors:
 - family-names: "Bishnu"
@@ -7,6 +7,6 @@ authors:
 title: "Rotating Shallow Water Verification Suite"
 date-released: 2023-11-19
 publisher: "Zenodo"
-version: 1.2.1
-doi: 10.5281/zenodo.10157836
-url: "https://doi.org/10.5281/zenodo.10157836"
+version: 1.2.2
+doi: 10.5281/zenodo.10157898
+url: "https://doi.org/10.5281/zenodo.10157898"

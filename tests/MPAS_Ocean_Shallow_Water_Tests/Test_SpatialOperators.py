@@ -493,8 +493,8 @@ def TestNumericalDivergenceOperatorAtCellCenter(ConvergenceStudy=False,PlotFigur
             myNumericalSurfaceElevationLaplacian,nContours,labels,labelfontsizes,labelpads,tickfontsizes,
             useGivenColorBarLimits,ColorBarLimits,nColorBarTicks,Title,titlefontsize,SaveAsPDF,FileName,Show,
             DataType='Unstructured',colormap=ColorMap)  
-            useGivenColorBarLimits_Error = True
-            ColorBarLimits_Error = np.array([-MaxErrorNorm[iProblemType],MaxErrorNorm[iProblemType]])
+            useGivenColorBarLimits_Error = False
+            ColorBarLimits_Error = np.array([0.0,0.0])
             Title = 'Error of Surface Elevation Laplacian'
             FileName = prefix + 'SurfaceElevationLaplacian_Error'
             CR.PythonFilledContourPlot2DSaveAsPDF(
