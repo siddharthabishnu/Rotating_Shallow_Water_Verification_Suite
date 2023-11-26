@@ -1,12 +1,12 @@
-cff-version: 1.2.2
+cff-version: 1.2.3
 message: "If you use this software, please cite it as below."
 authors:
 - family-names: "Bishnu"
   given-names: "Siddhartha"
   orcid: "https://orcid.org/0000-0002-4227-9738"
 title: "Rotating Shallow Water Verification Suite"
-date-released: 2023-11-19
+date-released: 2023-11-25
 publisher: "Zenodo"
-version: 1.2.2
-doi: 10.5281/zenodo.10157898
-url: "https://doi.org/10.5281/zenodo.10157898"
+version: 1.2.3
+doi: 10.5281/zenodo.10206974
+url: "https://doi.org/10.5281/zenodo.10206974"

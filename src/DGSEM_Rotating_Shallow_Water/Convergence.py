@@ -610,9 +610,9 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
     PlotConvergenceData_LogicalArray = np.ones(3,dtype=bool)
     if PlotOnlySurfaceElevationConvergenceData:
         PlotConvergenceData_LogicalArray[0:2] = False
-    # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
+        # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
      Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     if SingleTimeIntegrator:
@@ -784,9 +784,9 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
     PlotConvergenceData_LogicalArray = np.ones(3,dtype=bool)
     if PlotOnlySurfaceElevationConvergenceData:
         PlotConvergenceData_LogicalArray[0:2] = False
-    # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
+        # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
      Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
     nTimeIntegrators = len(TimeIntegrators)

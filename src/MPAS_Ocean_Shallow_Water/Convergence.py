@@ -549,10 +549,13 @@ def SpecifyProblemTypes(ConvergenceType):
     return ProblemTypes
     
 
-def SpecifyTimeIntegrators():
+def SpecifyTimeIntegrators(ConvergenceType='',ProblemType='',PlotConvergenceData=False):
     TimeIntegrators = ['ExplicitMidpointMethod','SecondOrderAdamsBashforthMethod',
                        'WilliamsonLowStorageThirdOrderRungeKuttaMethod','ThirdOrderAdamsBashforthMethod',
                        'CarpenterKennedyLowStorageFourthOrderRungeKuttaMethod','FourthOrderAdamsBashforthMethod']
+    if (ConvergenceType == 'Time' and (ProblemType == 'Planetary_Rossby_Wave' 
+                                       or ProblemType == 'Topographic_Rossby_Wave') and PlotConvergenceData):
+        TimeIntegrators = TimeIntegrators[0:4]
     LF_TR_and_LF_AM3_with_FB_Feedback_Types = ['' for x in range(0,len(TimeIntegrators))]
     Generalized_FB_with_AB2_AM3_Step_Types = ['' for x in range(0,len(TimeIntegrators))]
     Generalized_FB_with_AB3_AM4_Step_Types = ['' for x in range(0,len(TimeIntegrators))]
@@ -565,7 +568,8 @@ def SpecifyAsymptoticPointsForSlopeComputation(ConvergenceType,ProblemType,TimeI
         iPointLowerLimit = 0
         iPointUpperLimit = 4
     elif ConvergenceType == 'Space' or ConvergenceType == 'Time':
-        if ConvergenceType == 'Space' and ProblemType == 'Planetary_Rossby_Wave':
+        if ConvergenceType == 'Space' and (ProblemType == 'Planetary_Rossby_Wave' 
+                                           or ProblemType == 'Topographic_Rossby_Wave'):
             iPointLowerLimit = 1
             iPointUpperLimit = 3
         elif (ConvergenceType == 'Time' and ProblemType == 'Planetary_Rossby_Wave' 
@@ -628,11 +632,11 @@ def PlotConvergenceData(ConvergenceType,ProblemType,SingleTimeIntegrator=True,Si
     PlotConvergenceData_LogicalArray = np.ones(3,dtype=bool)
     if PlotOnlySurfaceElevationConvergenceData:
         PlotConvergenceData_LogicalArray[0:2] = False
-    # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
+        # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators(ConvergenceType,ProblemType,True)
     if SingleTimeIntegrator:
         iTimeIntegratorLowerLimit = SingleTimeIntegratorIndex
         iTimeIntegratorUpperLimit = SingleTimeIntegratorIndex + 1
@@ -788,6 +792,8 @@ def SpecifyLineStyles(ConvergenceType,ProblemType):
         if (ProblemType == 'Coastal_Kelvin_Wave' or ProblemType == 'Inertia_Gravity_Wave' 
             or ProblemType == 'Barotropic_Tide' or ProblemType == 'NonLinear_Manufactured_Solution'):
             linestyles  = ['-','-','--','-',':','-']
+        elif ProblemType == 'Planetary_Rossby_Wave' or ProblemType == 'Topographic_Rossby_Wave':
+            linestyles  = ['-','--',(0, (5, 5)),(0, (5, 10)),'-.',':']
     return linestyles
 
 
@@ -797,8 +803,11 @@ def SpecifyShadowAndFrameAlpha():
     return shadow, framealpha
                 
                 
-def SpecifyLegends(slopes):
+def SpecifyLegends(slopes,ConvergenceType='',ProblemType=''):
     legends = ['RK2','AB2','RK3','AB3','RK4','AB4']
+    if (ConvergenceType == 'Time' and (ProblemType == 'Planetary_Rossby_Wave' 
+                                       or ProblemType == 'Topographic_Rossby_Wave')):
+        legends = legends[0:4]
     for i_legend in range(0,len(legends)):
         legends[i_legend] += ': s = %.2f' %slopes[i_legend]
     legendfontsize = 14.0
@@ -814,11 +823,11 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
     PlotConvergenceData_LogicalArray = np.ones(3,dtype=bool)
     if PlotOnlySurfaceElevationConvergenceData:
         PlotConvergenceData_LogicalArray[0:2] = False
-    # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
-    # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
+        # PlotConvergenceData_LogicalArray[0] = PlotZonalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[1] = PlotMeridionalVelocityConvergenceData
+        # PlotConvergenceData_LogicalArray[2] = PlotSurfaceElevationConvergenceData
     [TimeIntegrators, LF_TR_and_LF_AM3_with_FB_Feedback_Types, Generalized_FB_with_AB2_AM3_Step_Types,
-     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators()
+     Generalized_FB_with_AB3_AM4_Step_Types] = SpecifyTimeIntegrators(ConvergenceType,ProblemType,True)
     nTimeIntegrators = len(TimeIntegrators)
     TimeIntegrator = TimeIntegrators[0]
     LF_TR_and_LF_AM3_with_FB_Feedback_Type = LF_TR_and_LF_AM3_with_FB_Feedback_Types[0]
@@ -963,7 +972,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of zonal velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SpecifyLegends(mZonalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mZonalVelocity,ConvergenceType,ProblemType)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -1004,7 +1013,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of meridional velocity'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SpecifyLegends(mMeridionalVelocity)
+        legends, legendfontsize, legendpads = SpecifyLegends(mMeridionalVelocity,ConvergenceType,ProblemType)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection) 
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):
@@ -1043,7 +1052,7 @@ def PlotAllConvergenceData(ConvergenceType,ProblemType,PlotOnlySurfaceElevationC
         elif ConvergenceType == 'SpaceAndTime':
             yLabel = 'L$^2$ error norm of SSH'
         labels = [xLabel,yLabel]
-        legends, legendfontsize, legendpads = SpecifyLegends(mSurfaceElevation)
+        legends, legendfontsize, legendpads = SpecifyLegends(mSurfaceElevation,ConvergenceType,ProblemType)
         if (((ConvergenceType == 'SpaceAndTime' or ConvergenceType == 'Space') 
              and PlotAgainstNumberOfCellsInZonalDirection)
             or (ConvergenceType == 'Time' and PlotAgainstNumberOfTimeSteps)):

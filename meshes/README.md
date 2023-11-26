@@ -1,1 +1,1 @@
-Please download the MPAS_Ocean_Shallow_Water_Meshes subdirectory from [here](https://zenodo.org/record/7419817), and place it in this directory.
+Please download the MPAS_Ocean_Shallow_Water_Meshes subdirectory from [here](https://doi.org/10.5281/zenodo.7411962), and place it in this directory.

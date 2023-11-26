@@ -843,9 +843,8 @@ class NameList:
         else:
             myNameList.Problem_is_Linear = True
         SimulateNonLinearRossbyWave = False
-        if SimulateNonLinearRossbyWave:
-            if myNameList.ProblemType_RossbyWave:
-                myNameList.Problem_is_Linear = False            
+        if myNameList.ProblemType_RossbyWave and SimulateNonLinearRossbyWave:
+            myNameList.Problem_is_Linear = False           
         if myNameList.ProblemType_ManufacturedRossbyWave or ProblemType == 'NonLinear_Manufactured_Solution':
             myNameList.NonTrivialSourceTerms = True
         else:
