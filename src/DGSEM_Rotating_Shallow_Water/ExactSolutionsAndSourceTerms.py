@@ -930,11 +930,7 @@ def DetermineSolutionAmplitude(ProblemType,myExactSolutionParameters):
     SurfaceElevationAmplitude = np.zeros(2)
     ZonalVelocityAmplitude = np.zeros(2)
     MeridionalVelocityAmplitude = np.zeros(2)
-    if ProblemType == 'Plane_Gaussian_Wave':
-        SurfaceElevationAmplitude[0] = 1.0/g
-        ZonalVelocityAmplitude[0] = kX1/c0
-        MeridionalVelocityAmplitude[0] = kY1/c0
-    elif ProblemType == 'Coastal_Kelvin_Wave':
+    if ProblemType == 'Coastal_Kelvin_Wave':
         SurfaceElevationAmplitude[0] = H0*etaHat1
         SurfaceElevationAmplitude[1] = H0*etaHat2
         MeridionalVelocityAmplitude[0] = c0*etaHat1
@@ -969,16 +965,6 @@ def DetermineSolutionAmplitude(ProblemType,myExactSolutionParameters):
         ZonalVelocityAmplitude[1] = etaHat2*g*omega2*kX2/(omega2**2.0 - f0**2.0)
         MeridionalVelocityAmplitude[0] = etaHat1*g*f0*kX1/(omega1**2.0 - f0**2.0)
         MeridionalVelocityAmplitude[1] = etaHat2*g*f0*kX2/(omega2**2.0 - f0**2.0)
-    elif ProblemType == 'Diffusion_Equation':
-        ZonalVelocityAmplitude[0] = 1.0
-    elif ProblemType == 'Advection_Diffusion_Equation':
-        SurfaceElevationAmplitude[0] = 1.0
-    elif ProblemType == 'NonLinear_Manufactured_Solution':
-        SurfaceElevationAmplitude[0] = etaHat1
-        ZonalVelocityAmplitude[0] = etaHat1
-        MeridionalVelocityAmplitude[0] = etaHat1
-    elif ProblemType == 'Viscous_Burgers_Equation':
-        ZonalVelocityAmplitude[0] = s + 0.5*(uL - uR)
     return SurfaceElevationAmplitude, ZonalVelocityAmplitude, MeridionalVelocityAmplitude
 
 
@@ -1044,7 +1030,7 @@ def DetermineExactSolutionLimits(ProblemType,myExactSolutionParameters):
         ExactZonalVelocityLimits[1] = 1.0
         ExactZonalVelocityLimits[0] = -ExactZonalVelocityLimits[1]
     elif ProblemType == 'Advection_Diffusion_Equation':
-        ExactSurfaceElevationLimits[1] = 1.0/4.0
+        ExactSurfaceElevationLimits[1] = 1.0
     elif ProblemType == 'NonLinear_Manufactured_Solution':
         ExactSurfaceElevationLimits[1] = etaHat1
         ExactSurfaceElevationLimits[0] = -ExactSurfaceElevationLimits[1]               

@@ -692,7 +692,7 @@ def SpecifyDumpFrequency(ProblemType,ProblemType_ManufacturedRossbyWave,ProblemT
     elif ProblemType == 'Equatorial_Rossby_Wave' or ProblemType == 'Advection_Diffusion_Equation':
         nDumpFrequency = 25
     elif ProblemType == 'Diffusion_Equation':
-        nDumpFrequency = 37
+        nDumpFrequency = 176
     elif ProblemType == 'Viscous_Burgers_Equation':
         if ReadFromSELFOutputData:
             nDumpFrequency = 11250
@@ -740,8 +740,8 @@ def SpecifyNumberOfTimeSteps(ProblemType,ProblemType_ManufacturedRossbyWave,Prob
         nTime_Minimum = 1042 + 1
         nTime = 1050 + 1
     elif ProblemType == 'Diffusion_Equation':
-        nTime_Minimum = 3644 + 1
-        nTime = 3700 + 1
+        nTime_Minimum = 17558 + 1
+        nTime = 17600 + 1
     elif ProblemType == 'Advection_Diffusion_Equation':
         nTime_Minimum = 2500 + 1
         nTime = 2500 + 1

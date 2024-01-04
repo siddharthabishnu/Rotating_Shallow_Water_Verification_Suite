@@ -242,7 +242,7 @@ def DetermineNumberOfTimeStepsForSimulation(ProblemType):
     abs_cX = max(abs(cX1),abs(cX2))
     abs_cY = max(abs(cY1),abs(cY2))
     if ProblemType == 'Diffusion_Equation':
-        FinalAmplitudeToInitialAmplitudeRatio = 0.75
+        FinalAmplitudeToInitialAmplitudeRatio = 0.25
         SimulationTime = np.log(1.0/FinalAmplitudeToInitialAmplitudeRatio)/kappa1
     else:
         if abs_cX != 0.0:
@@ -452,10 +452,6 @@ def DetermineExactSolutions(ProblemType,PrintPhaseSpeedOfWaveModes,PrintAmplitud
                         if ProblemType_EquatorialWave and not(ProblemType == 'Equatorial_Kelvin_Wave'):
                             StateVariableLimitsAlongSection = (
                             ESST.SpecifyStateVariableLimitsAlongSection(ExactMeridionalVelocityLimits,
-                                                                        ToleranceAsPercentage))
-                        elif ProblemType == 'Advection_Diffusion_Equation':
-                            StateVariableLimitsAlongSection = (
-                            ESST.SpecifyStateVariableLimitsAlongSection(4.0*ExactSurfaceElevationLimits,
                                                                         ToleranceAsPercentage))
                         elif ProblemType == 'Diffusion_Equation':
                             StateVariableLimitsAlongSection = (

@@ -130,12 +130,8 @@ def Test_DetermineExactAndNumericalSolutions():
     else:
         nElementsX = 5
         nElementsY = 5
-        if ReadFromSELFOutputData and ProblemType == 'Viscous_Burgers_Equation':
-            nXi = 10 
-            nEta = 10
-        else:
-            nXi = 10
-            nEta = 10
+        nXi = 10
+        nEta = 10
         nXiPlot = 20
         nEtaPlot = 20
     CheckStateVariableLimits = False

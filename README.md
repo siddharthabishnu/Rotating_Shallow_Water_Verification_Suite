@@ -1,6 +1,6 @@
 # Rotating_Shallow_Water_Verification_Suite (RSWVS)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10206974.svg)](https://doi.org/10.5281/zenodo.10206974)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10456943.svg)](https://doi.org/10.5281/zenodo.10456943)
 
 ## Overview
 
