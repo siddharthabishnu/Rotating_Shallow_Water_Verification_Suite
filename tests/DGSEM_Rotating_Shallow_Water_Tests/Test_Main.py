@@ -114,26 +114,22 @@ def Test_DetermineExactAndNumericalSolutions():
     Generalized_FB_with_AB3_AM4_Step_Type = 'ThirdOrderAccurate_MaximumStabilityRange'
     if ProblemType_RossbyWave:
         ReadFromSELFOutputData = True
-    else:
-        ReadFromSELFOutputData = False
-    if ProblemType_RossbyWave:
-        PlotNumericalSolution = True
-    else:
-        PlotNumericalSolution = False
-    if ReadFromSELFOutputData and ProblemType_RossbyWave:
         nElementsX = 10
         nElementsY = 10
         nXi = 7
         nEta = 7
         nXiPlot = 14
         nEtaPlot = 14
+        PlotNumericalSolution = True
     else:
+        ReadFromSELFOutputData = False
         nElementsX = 5
         nElementsY = 5
         nXi = 10
         nEta = 10
         nXiPlot = 20
         nEtaPlot = 20
+        PlotNumericalSolution = False
     CheckStateVariableLimits = False
     PlotFigures = True
     ComputeOnlyExactSolution = False
